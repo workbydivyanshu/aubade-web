@@ -141,7 +141,9 @@
         <div class="content-frame">
           <div class="content-frame__inner">
 
-            <!-- ── Greeting row ─────────────────────────────── -->
+            <!-- ── Home View ──────────────────────────────────── -->
+            <div id="view-home">
+              <!-- ── Greeting row ─────────────────────────────── -->
             <div class="greeting-row">
               <h1 class="greeting-row__text">Good evening</h1>
               <span id="folder-status" class="greeting-row__status"></span>
@@ -395,6 +397,49 @@
                 </a>
               </div>
             </section>
+
+            </div> <!-- End view-home -->
+
+            <!-- ── Album View ─────────────────────────────────── -->
+            <div id="view-album" style="display: none;">
+              <div class="album-header">
+                <div class="album-header__bg"></div>
+                <div class="album-header__scrim"></div>
+                
+                <div class="album-header__content">
+                  <div class="album-header__cover"></div>
+                  <div class="album-header__meta">
+                    <span class="album-header__eyebrow">ALBUM</span>
+                    <h1 class="album-header__title"></h1>
+                    <span class="album-header__artist"></span>
+                    <span class="album-header__stats"></span>
+                  </div>
+                  
+                  <div class="album-header__controls">
+                    <button class="album-btn album-btn--shuffle" type="button" aria-label="Shuffle album">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <button class="album-btn album-btn--play" type="button" aria-label="Play album">
+                      <svg viewBox="0 0 20 20">
+                        <path d="M7 4v12l10-6Z" fill="currentColor" stroke="none" />
+                      </svg>
+                      <span class="album-btn__label">Play</span>
+                    </button>
+                    <button class="album-btn album-btn--more" type="button" aria-label="More options">
+                      <svg viewBox="0 0 20 20" fill="currentColor">
+                        <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="album-tracks">
+                <!-- Track rows injected by JS -->
+              </div>
+            </div>
 
           </div>
         </div>

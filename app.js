@@ -522,6 +522,8 @@ async function init() {
     // permission requests without a user gesture.
     showReconnect(handle);
   }
+  
+  handleRoute();
 }
 
 init();
@@ -747,9 +749,172 @@ uiVolKnob.style.left = `${audio.volume * 100}%`;
 
 // Card wiring
 document.addEventListener('click', (e) => {
+  const playBtn = e.target.closest('.hero-card__play');
+  if (playBtn) {
+    const card = playBtn.closest('.hero-card');
+    if (card && card.dataset.album) {
+      playAlbum(card.dataset.album);
+    }
+    return;
+  }
+
   const card = e.target.closest('.shelf-card, .quick-card, .hero-card');
   if (card && card.dataset.album) {
     e.preventDefault();
-    playAlbum(card.dataset.album);
+    window.location.hash = '#album/' + encodeURIComponent(card.dataset.album);
   }
 });
+
+// ── Routing & Album View ────────────────────────────────────
+
+window.addEventListener('hashchange', handleRoute);
+
+function handleRoute() {
+  const hash = window.location.hash;
+  const viewHome = document.getElementById('view-home');
+  const viewAlbum = document.getElementById('view-album');
+  
+  if (hash.startsWith('#album/')) {
+    const key = decodeURIComponent(hash.substring(7));
+    if (library.albums && library.albums.length > 0) {
+      renderAlbumView(key);
+    }
+    viewHome.style.display = 'none';
+    viewAlbum.style.display = 'block';
+  } else {
+    viewAlbum.style.display = 'none';
+    viewHome.style.display = 'block';
+  }
+}
+
+document.querySelector('.top-bar__btn[aria-label="Go back"]')?.addEventListener('click', () => history.back());
+document.querySelector('.top-bar__btn[aria-label="Go forward"]')?.addEventListener('click', () => history.forward());
+
+function getCoverAccent(url) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 32;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, 32, 32);
+      try {
+        const data = ctx.getImageData(0, 0, 32, 32).data;
+        let r = 0, g = 0, b = 0, count = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i];
+          g += data[i+1];
+          b += data[i+2];
+          count++;
+        }
+        if (count === 0) return resolve(null);
+        r = Math.round(r / count);
+        g = Math.round(g / count);
+        b = Math.round(b / count);
+        
+        // Boost saturation/lightness slightly
+        const max = Math.max(r, g, b);
+        if (max > 0) {
+          const factor = Math.min(255 / max, 1.5);
+          r = Math.min(255, Math.round(r * factor));
+          g = Math.min(255, Math.round(g * factor));
+          b = Math.min(255, Math.round(b * factor));
+        }
+        resolve(`rgb(${r}, ${g}, ${b})`);
+      } catch (e) {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+async function renderAlbumView(key) {
+  const album = library.albums.find(a => key === albumKey(a));
+  if (!album) return;
+
+  const bg = document.querySelector('.album-header__bg');
+  const coverEl = document.querySelector('.album-header__cover');
+  const title = document.querySelector('.album-header__title');
+  const artist = document.querySelector('.album-header__artist');
+  const stats = document.querySelector('.album-header__stats');
+  const viewAlbum = document.getElementById('view-album');
+  const trackList = document.querySelector('.album-tracks');
+  const playBtn = document.querySelector('.album-btn--play');
+  const shuffleBtn = document.querySelector('.album-btn--shuffle');
+
+  title.textContent = album.album;
+  artist.textContent = album.albumArtist;
+
+  const year = album.year ? album.year + ' · ' : '';
+  const numSongs = album.tracks.length;
+  const songText = numSongs === 1 ? '1 song' : numSongs + ' songs';
+  
+  let totalSecs = 0;
+  for (const t of album.tracks) {
+    if (t.duration) totalSecs += t.duration;
+  }
+  const mins = Math.floor(totalSecs / 60);
+  stats.textContent = `${year}${songText} · ${mins} min`;
+
+  const grad = gradientFor(key);
+  bg.style.backgroundImage = 'none';
+  coverEl.style.backgroundImage = 'none';
+  coverEl.style.background = `linear-gradient(135deg,${grad})`;
+  bg.style.background = `linear-gradient(135deg,${grad})`;
+  viewAlbum.style.setProperty('--album-accent', 'var(--accent)');
+  
+  playBtn.onclick = () => playAlbum(key);
+  shuffleBtn.onclick = () => {
+    playerState.shuffle = true;
+    document.querySelector('button[aria-label="Shuffle"]').style.color = 'var(--accent)';
+    playAlbum(key);
+  };
+
+  const url = await coverUrlForAlbum(album);
+  if (url) {
+    bg.style.backgroundImage = `url(${url})`;
+    coverEl.style.backgroundImage = `url(${url})`;
+    const accent = await getCoverAccent(url);
+    if (accent) {
+      viewAlbum.style.setProperty('--album-accent', accent);
+    }
+  }
+
+  trackList.innerHTML = '';
+  album.tracks.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+    
+    const num = document.createElement('div');
+    num.className = 'track-row__num';
+    num.textContent = i + 1;
+    
+    const info = document.createElement('div');
+    info.className = 'track-row__info';
+    
+    const tTitle = document.createElement('span');
+    tTitle.className = 'track-row__title';
+    tTitle.textContent = t.title || t.name;
+    
+    const tArtist = document.createElement('span');
+    tArtist.className = 'track-row__artist';
+    tArtist.textContent = t.artist || album.albumArtist;
+    
+    info.append(tTitle, tArtist);
+    
+    const dur = document.createElement('div');
+    dur.className = 'track-row__duration';
+    dur.textContent = t.duration ? formatTime(t.duration) : '';
+    
+    row.append(num, info, dur);
+    
+    row.onclick = () => playAlbum(key, i);
+    
+    trackList.appendChild(row);
+  });
+}
