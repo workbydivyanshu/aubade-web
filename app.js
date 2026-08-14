@@ -643,9 +643,39 @@ const uiVolBar = document.querySelector('.player__vol-bar');
 const uiVolFill = document.querySelector('.player__vol-fill');
 const uiVolKnob = document.querySelector('.player__vol-knob');
 
+// Now Playing Elements
+const npOverlay = document.getElementById('now-playing');
+const npCloseBtn = document.getElementById('np-close');
+const npOpenBtn = document.querySelector('.player__icon-btn[aria-label="Expand now playing"]');
+const npBg = document.querySelector('.now-playing__bg');
+const npCover = document.getElementById('np-cover');
+const npTitle = document.getElementById('np-title');
+const npArtist = document.getElementById('np-artist');
+const npAlbum = document.getElementById('np-album');
+
+const npScrubber = document.querySelector('#np-scrubber .now-playing__track-bar');
+const npScrubFill = document.getElementById('np-track-fill');
+const npScrubKnob = document.getElementById('np-track-knob');
+const npTimeCurr = document.getElementById('np-time-curr');
+const npTimeRem = document.getElementById('np-time-rem');
+
+const npPlayBtn = document.getElementById('np-play');
+const npPlayIcon = npPlayBtn.querySelector('svg');
+const npPrevBtn = document.getElementById('np-prev');
+const npNextBtn = document.getElementById('np-next');
+const npShuffleBtn = document.getElementById('np-shuffle');
+const npRepeatBtn = document.getElementById('np-repeat');
+
+npOpenBtn.addEventListener('click', () => npOverlay.classList.add('is-open'));
+npCloseBtn.addEventListener('click', () => npOverlay.classList.remove('is-open'));
+
 function updatePlayerUI(record) {
   uiTitle.textContent = record.title || record.name;
   uiArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
+  
+  npTitle.textContent = record.title || record.name;
+  npArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
+  npAlbum.textContent = record.album || 'Unknown Album';
   
   const album = library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
   if (album) {
@@ -654,10 +684,18 @@ function updatePlayerUI(record) {
         uiCover.style.backgroundImage = `url(${url})`;
         uiCover.style.backgroundSize = 'cover';
         uiCover.style.backgroundPosition = 'center';
+        
+        npBg.style.backgroundImage = `url(${url})`;
+        npCover.style.backgroundImage = `url(${url})`;
       } else {
         const grad = gradientFor(albumKey(album));
         uiCover.style.background = `linear-gradient(135deg,${grad})`;
         uiCover.style.backgroundImage = 'none';
+        
+        npBg.style.background = `linear-gradient(135deg,${grad})`;
+        npBg.style.backgroundImage = 'none';
+        npCover.style.background = `linear-gradient(135deg,${grad})`;
+        npCover.style.backgroundImage = 'none';
       }
     });
   }
@@ -676,18 +714,27 @@ function updateScrubber() {
       uiScrubKnob.style.left = `${pct}%`;
       uiTimeCurrent.textContent = formatTime(audio.currentTime);
       uiTimeTotal.textContent = formatTime(audio.duration);
+      
+      npScrubFill.style.width = `${pct}%`;
+      npScrubKnob.style.left = `${pct}%`;
+      npTimeCurr.textContent = formatTime(audio.currentTime);
+      npTimeRem.textContent = '-' + formatTime(audio.duration - audio.currentTime);
     }
   }
   scrubRaf = requestAnimationFrame(updateScrubber);
 }
 
 audio.addEventListener('play', () => {
-  uiPlayIcon.innerHTML = `<path d="M6 5h3v10H6zm5 0h3v10h-3z" fill="currentColor" stroke="none" />`;
+  const pauseIcon = `<path d="M6 5h3v10H6zm5 0h3v10h-3z" fill="currentColor" stroke="none" />`;
+  uiPlayIcon.innerHTML = pauseIcon;
+  npPlayIcon.innerHTML = pauseIcon;
   if (!scrubRaf) scrubRaf = requestAnimationFrame(updateScrubber);
 });
 
 audio.addEventListener('pause', () => {
-  uiPlayIcon.innerHTML = `<path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />`;
+  const playIcon = `<path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />`;
+  uiPlayIcon.innerHTML = playIcon;
+  npPlayIcon.innerHTML = playIcon;
   if (scrubRaf) {
     cancelAnimationFrame(scrubRaf);
     scrubRaf = null;
@@ -703,9 +750,14 @@ uiPlayBtn.addEventListener('click', togglePlay);
 uiPrevBtn.addEventListener('click', prevTrack);
 uiNextBtn.addEventListener('click', nextTrack);
 
-uiShuffleBtn.addEventListener('click', () => {
+npPlayBtn.addEventListener('click', togglePlay);
+npPrevBtn.addEventListener('click', prevTrack);
+npNextBtn.addEventListener('click', nextTrack);
+
+const handleShuffle = () => {
   playerState.shuffle = !playerState.shuffle;
   uiShuffleBtn.style.color = playerState.shuffle ? 'var(--accent)' : '';
+  npShuffleBtn.style.color = playerState.shuffle ? 'var(--accent)' : '';
   
   if (playerState.queue.length > 0) {
     const currentTrack = playerState.queue[playerState.index];
@@ -716,24 +768,38 @@ uiShuffleBtn.addEventListener('click', () => {
     }
     playerState.index = playerState.queue.indexOf(currentTrack);
   }
-});
+};
+uiShuffleBtn.addEventListener('click', handleShuffle);
+npShuffleBtn.addEventListener('click', handleShuffle);
 
-uiRepeatBtn.addEventListener('click', () => {
+const handleRepeat = () => {
   playerState.repeat = !playerState.repeat;
   uiRepeatBtn.style.color = playerState.repeat ? 'var(--accent)' : '';
-});
+  npRepeatBtn.style.color = playerState.repeat ? 'var(--accent)' : '';
+};
+uiRepeatBtn.addEventListener('click', handleRepeat);
+npRepeatBtn.addEventListener('click', handleRepeat);
 
 // Scrubber interaction
-uiScrubber.addEventListener('click', (e) => {
+const handleScrub = (bar, e) => {
   if (!audio.duration) return;
-  const rect = uiScrubber.getBoundingClientRect();
+  const rect = bar.getBoundingClientRect();
   const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
   audio.currentTime = pct * audio.duration;
   
-  uiScrubFill.style.width = `${pct * 100}%`;
-  uiScrubKnob.style.left = `${pct * 100}%`;
+  const w = `${pct * 100}%`;
+  uiScrubFill.style.width = w;
+  uiScrubKnob.style.left = w;
   uiTimeCurrent.textContent = formatTime(audio.currentTime);
-});
+  
+  npScrubFill.style.width = w;
+  npScrubKnob.style.left = w;
+  npTimeCurr.textContent = formatTime(audio.currentTime);
+  npTimeRem.textContent = '-' + formatTime(audio.duration - audio.currentTime);
+};
+
+uiScrubber.addEventListener('click', (e) => handleScrub(uiScrubber, e));
+npScrubber.addEventListener('click', (e) => handleScrub(npScrubber, e));
 
 // Volume interaction
 uiVolBar.addEventListener('click', (e) => {

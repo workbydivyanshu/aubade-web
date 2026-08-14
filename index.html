@@ -566,6 +566,95 @@
           </button>
         </div>
       </footer>
+      <!-- ── Now Playing Overlay ────────────────────────────── -->
+      <div id="now-playing" class="now-playing">
+        <div class="now-playing__bg"></div>
+        <div class="now-playing__scrim"></div>
+        
+        <div class="now-playing__content">
+          <div class="now-playing__top">
+            <button class="np-btn" id="np-close" type="button" aria-label="Close now playing">
+              <svg viewBox="0 0 20 20">
+                <path d="m5 7.5 5 5 5-5" />
+              </svg>
+            </button>
+            <div class="now-playing__meta">
+              <span class="now-playing__eyebrow">NOW PLAYING</span>
+              <span class="now-playing__album" id="np-album"></span>
+            </div>
+            <button class="np-btn" type="button" aria-label="More options">
+              <svg viewBox="0 0 20 20" fill="currentColor" stroke="none">
+                <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
+              </svg>
+            </button>
+          </div>
+          
+          <div class="now-playing__body">
+            <div class="now-playing__left">
+              <div class="now-playing__cover" id="np-cover"></div>
+              <h1 class="now-playing__title" id="np-title"></h1>
+              <div class="now-playing__artist" id="np-artist"></div>
+              
+              <div class="now-playing__scrubber" id="np-scrubber">
+                <span class="now-playing__time" id="np-time-curr">0:00</span>
+                <div class="now-playing__track-bar">
+                  <div class="now-playing__track-bg"></div>
+                  <div class="now-playing__track-fill" id="np-track-fill"></div>
+                  <div class="now-playing__track-knob" id="np-track-knob"></div>
+                </div>
+                <span class="now-playing__time now-playing__time--right" id="np-time-rem">-0:00</span>
+              </div>
+              
+              <div class="now-playing__transport">
+                <button class="np-btn" id="np-shuffle" type="button" aria-label="Shuffle">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5" />
+                    <path d="M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75" />
+                    <path d="M14 12.5l2.25 2-2.25 2" />
+                    <path d="M12 5.5h4.25" />
+                    <path d="M14 3.5l2.25 2-2.25 2" />
+                  </svg>
+                </button>
+                <button class="np-btn" id="np-prev" type="button" aria-label="Previous">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M5.5 4.5v11" />
+                    <path d="M15.5 5 8 10l7.5 5V5Z" />
+                  </svg>
+                </button>
+                <button class="np-btn np-btn--play" id="np-play" type="button" aria-label="Play">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />
+                  </svg>
+                </button>
+                <button class="np-btn" id="np-next" type="button" aria-label="Next">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M14.5 4.5v11" />
+                    <path d="M4.5 5l7.5 5-7.5 5V5Z" />
+                  </svg>
+                </button>
+                <button class="np-btn" id="np-repeat" type="button" aria-label="Repeat">
+                  <svg viewBox="0 0 20 20">
+                    <path d="M15.5 6.5A3.5 3.5 0 0 0 12 3H4" />
+                    <path d="M6 1L4 3l2 2" />
+                    <path d="M4.5 13.5A3.5 3.5 0 0 0 8 17h8" />
+                    <path d="M14 19l2-2-2-2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div class="now-playing__right">
+              <div class="now-playing__lyrics">
+                <span class="np-lyric-placeholder">No lyrics found</span>
+                <!--
+                <div class="np-lyric-line np-lyric-line--active">Active line example</div>
+                <div class="np-lyric-line">Inactive line example</div>
+                -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <script src="app.js" type="module"></script>
   </body>

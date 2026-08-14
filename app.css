@@ -1172,3 +1172,272 @@ a {
   font-size: 14px;
   margin-inline-start: 16px;
 }
+
+/* ── Now Playing Overlay ──────────────────────────────────── */
+
+.now-playing {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  transform: translateY(100%);
+  transition: transform 0.25s ease-out;
+  overflow: hidden;
+}
+
+.now-playing.is-open {
+  transform: translateY(0);
+}
+
+.now-playing__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(80px);
+  transform: scale(1.5);
+  z-index: 0;
+}
+
+.now-playing__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(13,10,20,0.5); /* dark scrim to keep text readable */
+  z-index: 0;
+}
+
+.now-playing__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+.now-playing__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 48px;
+  inline-size: 100%;
+}
+
+.np-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  inline-size: 40px;
+  block-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.np-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.np-btn svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.now-playing__meta {
+  text-align: center;
+}
+
+.now-playing__eyebrow {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-block-end: 4px;
+}
+
+.now-playing__album {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.now-playing__body {
+  display: flex;
+  flex: 1;
+  padding: 0 48px 48px;
+  min-block-size: 0;
+}
+
+.now-playing__left {
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-inline-end: 64px;
+}
+
+.now-playing__cover {
+  inline-size: 400px;
+  block-size: 400px;
+  border-radius: 24px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  margin-block-end: 48px;
+}
+
+.now-playing__title {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  color: var(--text);
+  margin: 0 0 8px 0;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-playing__artist {
+  font-size: 18px;
+  color: var(--text-muted);
+  margin: 0 0 32px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-playing__scrubber {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-block-end: 32px;
+}
+
+.now-playing__time {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-inline-size: 40px;
+}
+
+.now-playing__time--right {
+  text-align: right;
+}
+
+.now-playing__track-bar {
+  flex: 1;
+  block-size: 24px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.now-playing__track-bg {
+  position: absolute;
+  inset-inline: 0;
+  block-size: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+.now-playing__track-fill {
+  position: absolute;
+  inset-inline-start: 0;
+  block-size: 4px;
+  background: var(--text);
+  border-radius: 2px;
+  inline-size: 0%;
+}
+
+.now-playing__track-knob {
+  position: absolute;
+  inset-inline-start: 0%;
+  block-size: 12px;
+  inline-size: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, 0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.now-playing__transport {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+}
+
+.np-btn--play {
+  inline-size: 76px;
+  block-size: 76px;
+  border-radius: 22px;
+  background: var(--text);
+  color: var(--page);
+}
+
+.np-btn--play:hover {
+  background: white;
+  transform: scale(1.04);
+}
+
+.np-btn--play svg {
+  inline-size: 32px;
+  block-size: 32px;
+  fill: currentColor;
+  stroke: none;
+}
+
+.now-playing__right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.now-playing__lyrics {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-block-size: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-block: 40px;
+}
+.now-playing__lyrics::-webkit-scrollbar {
+  display: none;
+}
+
+.np-lyric-placeholder {
+  font-size: 20px;
+  color: var(--text-dim);
+}
+
+.np-lyric-line {
+  font-size: 44px;
+  font-weight: 700;
+  padding-block: 12px;
+  color: rgba(255,255,255,0.3);
+  transition: color 0.3s;
+  max-inline-size: 800px;
+}
+
+.np-lyric-line--active {
+  color: var(--text);
+}
