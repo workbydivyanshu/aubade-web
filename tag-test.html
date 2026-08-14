@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tag Parser Test</title>
+    <style>
+      body { font-family: sans-serif; padding: 20px; }
+      pre { background: #eee; padding: 10px; }
+      .error { color: red; }
+    </style>
+  </head>
+  <body>
+    <h1>Tag Parser Test</h1>
+    <input type="file" id="file-picker" accept="audio/*" />
+    
+    <h2>Results:</h2>
+    <div id="results"></div>
+
+    <script type="module">
+      const filePicker = document.getElementById('file-picker');
+      const resultsDiv = document.getElementById('results');
+
+      filePicker.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        resultsDiv.innerHTML = '<i>Loading and parsing...</i>';
+
+        try {
+          const mm = await import('./vendor/music-metadata.mjs');
+          const metadata = await mm.parseBlob(file);
+          const common = metadata.common;
+          const format = metadata.format;
+
+          let coverInfo = 'No embedded cover art found.';
+          if (common.picture && common.picture.length > 0) {
+            const pic = common.picture[0];
+            coverInfo = `Found ${pic.format} cover art (${pic.data.length} bytes).`;
+          }
+
+          resultsDiv.innerHTML = `
+            <pre>
+Title: ${common.title}
+Artist: ${common.artist}
+Album: ${common.album}
+Album Artist: ${common.albumartist}
+Track Number: ${common.track ? common.track.no : 'N/A'}
+Duration: ${format.duration ? format.duration.toFixed(2) + ' seconds' : 'N/A'}
+Cover Art: ${coverInfo}
+            </pre>
+          `;
+        } catch (err) {
+          resultsDiv.innerHTML = `<div class="error">Error parsing file: ${err.message}</div>`;
+        }
+      });
+    </script>
+  </body>
+</html>
