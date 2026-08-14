@@ -692,6 +692,10 @@ function updatePlayerUI(record) {
         
         npBg.style.backgroundImage = `url(${url})`;
         npCover.style.backgroundImage = `url(${url})`;
+        // Set alongside the image: the gradient is applied as a `background`
+        // shorthand, which resets background-size and beats the stylesheet.
+        npCover.style.backgroundSize = 'cover';
+        npCover.style.backgroundPosition = 'center';
       } else {
         const grad = gradientFor(albumKey(album));
         uiCover.style.background = `linear-gradient(135deg,${grad})`;
@@ -846,11 +850,13 @@ function handleRoute() {
   const viewAlbum = document.getElementById('view-album');
   const viewSearch = document.getElementById('view-search');
   const viewLibrary = document.getElementById('view-library');
+  const viewArtist = document.getElementById('view-artist');
   
   viewHome.style.display = 'none';
   viewAlbum.style.display = 'none';
   viewSearch.style.display = 'none';
   viewLibrary.style.display = 'none';
+  viewArtist.style.display = 'none';
   
   document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
 
@@ -860,6 +866,12 @@ function handleRoute() {
       renderAlbumView(key);
     }
     viewAlbum.style.display = 'block';
+  } else if (hash.startsWith('#artist/')) {
+    const name = decodeURIComponent(hash.substring(8));
+    if (library.artists && library.artists.length > 0) {
+      renderArtistView(name);
+    }
+    viewArtist.style.display = 'block';
   } else if (hash.startsWith('#search')) {
     viewSearch.style.display = 'block';
     const searchNav = document.querySelector('a[href="#search"]');
@@ -952,6 +964,7 @@ async function renderAlbumView(key) {
 
   title.textContent = album.album;
   artist.textContent = album.albumArtist;
+  artist.href = `#artist/${encodeURIComponent(album.albumArtist)}`;
 
   const year = album.year ? album.year + ' · ' : '';
   const numSongs = album.tracks.length;
@@ -1211,8 +1224,9 @@ function doSearch() {
   searchArtistsList.innerHTML = '';
   const artistsToShow = artists.slice(0, 20);
   for (const a of artistsToShow) {
-    const row = document.createElement('div');
+    const row = document.createElement('a');
     row.className = 'search-row';
+    row.href = '#artist/' + encodeURIComponent(a.name);
     const numAlbums = a.albums.length;
     row.innerHTML = `
       <div class="search-artist-cover"></div>
@@ -1512,8 +1526,9 @@ function renderLibraryView() {
     const grid = document.createElement('div');
     grid.className = 'lib-grid--artists';
     for (const a of artists) {
-      const card = document.createElement('div');
+      const card = document.createElement('a');
       card.className = 'artist-card';
+      card.href = `#artist/${encodeURIComponent(a.name)}`;
       const numAlbums = a.albums.length;
       card.innerHTML = `
         <div class="artist-card__cover"></div>
@@ -1621,3 +1636,105 @@ function renderLibraryView() {
 }
 
 window.__DEBUG_LIBRARY = function() { return library; };
+
+// ── Artist View ──────────────────────────────────────────────
+
+async function renderArtistView(name) {
+  const artist = library.artists.find(a => a.name.toLowerCase() === name.toLowerCase());
+  if (!artist) return;
+
+  const bg = document.querySelector('.artist-header__bg');
+  const nameEl = document.querySelector('.artist-header__name');
+  const meta = document.querySelector('.artist-header__meta');
+  const viewArtist = document.getElementById('view-artist');
+  const playBtn = document.getElementById('artist-play-btn');
+  const shuffleBtn = document.getElementById('artist-shuffle-btn');
+  const albumsGrid = document.querySelector('.artist-grid--albums');
+  const songsList = document.querySelector('.artist-list--songs');
+
+  nameEl.textContent = artist.name;
+  
+  const allTracks = [];
+  artist.albums.forEach(a => allTracks.push(...a.tracks));
+  meta.textContent = `${artist.albums.length} album${artist.albums.length !== 1 ? 's' : ''} - ${allTracks.length} song${allTracks.length !== 1 ? 's' : ''}`;
+
+  bg.style.backgroundImage = 'none';
+  const aKey = albumKey(artist.albums[0] || {});
+  const grad = gradientFor(aKey || artist.name);
+  bg.style.background = `linear-gradient(135deg,${grad})`;
+  viewArtist.style.setProperty('--album-accent', 'var(--accent)');
+
+  if (artist.albums.length > 0) {
+    const url = await coverUrlForAlbum(artist.albums[0]);
+    if (url) {
+      bg.style.backgroundImage = `url(${url})`;
+      const accent = await getCoverAccent(url);
+      if (accent) {
+        viewArtist.style.setProperty('--album-accent', accent);
+      }
+    }
+  }
+
+  // Play controls
+  // Sort tracks by album year desc, then track index (since they are in albums)
+  const sortedAlbums = [...artist.albums].sort((a, b) => (b.year || 0) - (a.year || 0));
+  const sortedTracks = [];
+  for (const a of sortedAlbums) {
+    sortedTracks.push(...a.tracks);
+  }
+
+  const doPlay = (shuffle) => {
+    playerState.originalQueue = sortedTracks;
+    playerState.queue = shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
+    if (shuffle) {
+      document.querySelector('button[aria-label="Shuffle"]').style.color = 'var(--accent)';
+      playerState.shuffle = true;
+    }
+    playTrack(0);
+  };
+
+  playBtn.onclick = () => doPlay(false);
+  shuffleBtn.onclick = () => doPlay(true);
+
+  // Albums shelf
+  albumsGrid.innerHTML = '';
+  for (const a of sortedAlbums) {
+    albumsGrid.appendChild(makeShelfCard(a));
+  }
+
+  // Songs list
+  songsList.innerHTML = '';
+  const tracksToShow = sortedTracks.slice(0, 30);
+  for (const r of tracksToShow) {
+    const row = document.createElement('div');
+    row.className = 'search-row'; // reuse 52px style
+    row.innerHTML = `
+      <div class="search-row-cover"></div>
+      <div class="search-row-info">
+        <span class="search-row-title">${escapeHTML(r.title || r.name)}</span>
+        <span class="search-row-artist">${escapeHTML(r.album || 'Unknown Album')}</span>
+      </div>
+      <div class="search-row-duration">${formatTime(r.duration)}</div>
+    `;
+    row.addEventListener('click', () => {
+      playerState.originalQueue = sortedTracks;
+      playerState.queue = playerState.shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
+      const newIdx = playerState.queue.indexOf(r);
+      playTrack(newIdx);
+    });
+    songsList.appendChild(row);
+
+    const rAKey = albumKey({ albumArtist: r.albumArtist, album: r.album });
+    const album = library.albums.find(a => albumKey(a) === rAKey);
+    if (album) {
+      coverUrlForAlbum(album).then(url => {
+        const coverEl = row.querySelector('.search-row-cover');
+        if (url) {
+          coverEl.style.backgroundImage = `url(${url})`;
+        } else {
+          coverEl.style.background = `linear-gradient(135deg,${gradientFor(rAKey)})`;
+        }
+      });
+    }
+  }
+}

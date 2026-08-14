@@ -473,6 +473,8 @@ a {
 }
 
 .quick-card__cover {
+  background-size: cover;
+  background-position: center;
   flex: 0 0 56px;
   inline-size: 56px;
   block-size: 56px;
@@ -721,9 +723,24 @@ a {
 
 .shelf-card__cover {
   inline-size: 176px;
-  block-size: 176px;
+  /* Square by ratio rather than by a fixed height: in the library grid the
+     column is 1fr, so a fixed height leaves the box wider than it is tall. */
+  aspect-ratio: 1 / 1;
+  block-size: auto;
   border-radius: 8px;
   margin-block-end: 12px;
+  /* Set here rather than alongside each background-image assignment, so
+     artwork that is not square is cropped to fill instead of letterboxed
+     against black. Real libraries are full of odd aspect ratios. */
+  background-size: cover;
+  background-position: center;
+}
+
+/* In the library the columns are 1fr, so the card fills its track rather than
+   sitting at the shelf's fixed 176px. */
+.lib-grid--albums .shelf-card,
+.lib-grid--albums .shelf-card__cover {
+  inline-size: 100%;
 }
 
 .shelf-card__title {
@@ -773,6 +790,8 @@ a {
 }
 
 .player__cover {
+  background-size: cover;
+  background-position: center;
   flex: 0 0 auto;
   inline-size: 56px;
   block-size: 56px;
@@ -1669,3 +1688,75 @@ a {
   display: flex;
   flex-direction: column;
 }
+
+/* ── Artist View ───────────────────────────────────────────── */
+
+.artist-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  block-size: 320px;
+  padding-block-start: 64px;
+  padding-block-end: 40px;
+  padding-inline: 48px;
+  overflow: hidden;
+}
+
+.artist-header__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px);
+  transform: scale(1.4);
+  z-index: 0;
+}
+
+.artist-header__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(13,10,20,0.1) 0%, var(--page) 100%);
+  z-index: 0;
+}
+
+.artist-header__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  inline-size: 100%;
+}
+
+.artist-header__eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-block-end: 8px;
+}
+
+.artist-header__name {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+  color: var(--text);
+  margin: 0;
+  margin-block-end: 8px;
+}
+
+.artist-header__meta {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-block-end: 24px;
+}
+
+.artist-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+

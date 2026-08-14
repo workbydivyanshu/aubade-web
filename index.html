@@ -411,7 +411,7 @@
                   <div class="album-header__meta">
                     <span class="album-header__eyebrow">ALBUM</span>
                     <h1 class="album-header__title"></h1>
-                    <span class="album-header__artist"></span>
+                    <a class="album-header__artist" href="#"></a>
                     <span class="album-header__stats"></span>
                   </div>
                   
@@ -438,6 +438,45 @@
 
               <div class="album-tracks">
                 <!-- Track rows injected by JS -->
+              </div>
+            </div>
+
+            <!-- ── Artist View ────────────────────────────────── -->
+            <div id="view-artist" style="display: none;">
+              <div class="artist-header">
+                <div class="artist-header__bg"></div>
+                <div class="artist-header__scrim"></div>
+                <div class="artist-header__content">
+                  <span class="artist-header__eyebrow">ARTIST</span>
+                  <h1 class="artist-header__name"></h1>
+                  <span class="artist-header__meta"></span>
+                  
+                  <div class="artist-header__controls">
+                    <button class="album-btn album-btn--play" id="artist-play-btn" type="button" aria-label="Play all">
+                      <svg viewBox="0 0 20 20">
+                        <path d="M7 4v12l10-6Z" fill="currentColor" stroke="none" />
+                      </svg>
+                      <span class="album-btn__label">Play</span>
+                    </button>
+                    <button class="album-btn album-btn--shuffle" id="artist-shuffle-btn" type="button" aria-label="Shuffle all">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="artist-content" style="padding-inline: 48px; padding-block: 32px;">
+                <section class="artist-section" id="artist-albums-section">
+                  <h2 class="artist-section__title" style="font-size: 24px; font-weight: 700; margin-block-end: 24px;">Albums</h2>
+                  <div class="quick-grid artist-grid--albums"></div>
+                </section>
+                
+                <section class="artist-section" id="artist-songs-section" style="margin-block-start: 48px;">
+                  <h2 class="artist-section__title" style="font-size: 24px; font-weight: 700; margin-block-end: 16px;">Songs</h2>
+                  <div class="search-list search-list--songs artist-list--songs"></div>
+                </section>
               </div>
             </div>
 
