@@ -1,0 +1,118 @@
+/* Design tokens read off the reference at music.octavestreaming.com via
+   computed style. These are its literal values, not approximations. */
+
+:root {
+  color-scheme: dark;
+
+  --accent: #fb2c5a;
+  --accent-soft: #ff6f8b;
+
+  --text: #f5f5f7;
+  --text-muted: #a3a3ad;
+  --text-dim: #6b6b76;
+
+  --page: #000000;
+
+  /* Two ambient washes are what keep a black page from reading as flat. */
+  --bg-glow-1: #fb2c5a38;
+  --bg-glow-2: #7850ff2e;
+
+  /* Glass comes in five weights. Each has a translucent fill for when
+     backdrop-filter is available, a flat fill for when it is not, and an
+     opaque one for surfaces that must not show anything through. */
+  --glass-bg: #12141b6b;
+  --glass-bg-bar: #07080b85;
+  --glass-bg-floating: #12141c70;
+  --glass-bg-strong: #1012197a;
+  --glass-bg-subtle: #ffffff0f;
+
+  --glass-flat: #181a22d6;
+  --glass-flat-bar: #090a0de0;
+  --glass-flat-floating: #1a1c26db;
+  --glass-flat-strong: #161820e0;
+  --glass-flat-subtle: #ffffff17;
+
+  --glass-solid: #181a22f0;
+  --glass-solid-bar: #090a0dfa;
+  --glass-solid-floating: #1c1e28f5;
+  --glass-solid-strong: #161820f7;
+  --glass-solid-subtle: #282a34e6;
+
+  /* The saturation boost is the important part: blurring desaturates, and
+     putting the colour back is what makes a panel pick up the hue of the
+     artwork behind it rather than going grey. */
+  --glass-frost: blur(38px) saturate(210%) brightness(1.08);
+  --glass-frost-bar: blur(36px) saturate(200%) brightness(1.1);
+  --glass-frost-floating: blur(44px) saturate(220%) brightness(1.12);
+  --glass-frost-strong: blur(46px) saturate(220%) brightness(1.1);
+  --glass-frost-subtle: blur(24px) saturate(180%) brightness(1.04);
+
+  --glass-border: #ffffff2e;
+  --glass-sheen: #ffffff1f;
+
+  /* Now playing derives its colours from the artwork; these are the
+     defaults before a track is loaded. */
+  --np-text: #ffffff;
+  --np-lyric-shadow: 0 1px 14px #0000008c, 0 1px 2px #0006;
+
+  --top-bar-h: 3.5rem;
+  --sidebar-w: 256px;
+
+  --font: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont,
+    "SF Pro Display", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  /* Negative tracking at every size. A large part of why the reference does
+     not read as a default browser page. */
+  letter-spacing: -0.011em;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The lit top edge and shadowed bottom one. Without them a translucent fill
+   reads as a grey box rather than as glass. */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-frost);
+  -webkit-backdrop-filter: var(--glass-frost);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-bar {
+  background: var(--glass-bg-bar);
+  backdrop-filter: var(--glass-frost-bar);
+  -webkit-backdrop-filter: var(--glass-frost-bar);
+}
+
+.glass-strong {
+  background: var(--glass-bg-strong);
+  backdrop-filter: var(--glass-frost-strong);
+  -webkit-backdrop-filter: var(--glass-frost-strong);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass { background: var(--glass-flat); }
+  .glass-bar { background: var(--glass-flat-bar); }
+  .glass-strong { background: var(--glass-flat-strong); }
+}
