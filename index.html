@@ -145,6 +145,128 @@
           </div>
         </div>
       </main>
+
+      <!-- ── Player bar ─────────────────────────────────────── -->
+      <footer class="player glass-bar" aria-label="Now playing">
+        <!-- LEFT: cover, track info, action buttons -->
+        <div class="player__left">
+          <div class="player__cover" aria-hidden="true"></div>
+          <div class="player__track-info">
+            <span class="player__title">the cure</span>
+            <span class="player__artist">Olivia Rodrigo</span>
+          </div>
+          <button class="player__icon-btn" type="button" aria-label="Expand now playing">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="m6 12.5 4-5 4 5" />
+            </svg>
+          </button>
+          <button class="player__icon-btn" type="button" aria-label="Like">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M10 16s-5.25-3.2-5.25-7.1A3.05 3.05 0 0 1 10 6.75a3.05 3.05 0 0 1 5.25 2.15C15.25 12.8 10 16 10 16Z" />
+            </svg>
+          </button>
+          <button class="player__icon-btn" type="button" aria-label="Share">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <circle cx="14.5" cy="5" r="2.25" />
+              <circle cx="5.5" cy="10" r="2.25" />
+              <circle cx="14.5" cy="15" r="2.25" />
+              <path d="m7.5 8.75 5-2.5M7.5 11.25l5 2.5" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- CENTRE: transport + scrubber -->
+        <div class="player__centre">
+          <div class="player__transport">
+            <button class="player__icon-btn" type="button" aria-label="Shuffle">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5" />
+                <path d="M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75" />
+                <path d="M14 12.5l2.25 2-2.25 2" />
+                <path d="M12 5.5h4.25" />
+                <path d="M14 3.5l2.25 2-2.25 2" />
+              </svg>
+            </button>
+            <button class="player__icon-btn" type="button" aria-label="Previous">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <path d="M5.5 4.5v11" />
+                <path d="M15.5 5 8 10l7.5 5V5Z" />
+              </svg>
+            </button>
+            <button class="player__play-btn" type="button" aria-label="Play">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+            <button class="player__icon-btn" type="button" aria-label="Next">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <path d="M14.5 4.5v11" />
+                <path d="M4.5 5 12 10l-7.5 5V5Z" />
+              </svg>
+            </button>
+            <button class="player__icon-btn" type="button" aria-label="Repeat">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <path d="M4 7.5h12l-2.25-2.25" />
+                <path d="M16 12.5H4l2.25 2.25" />
+              </svg>
+            </button>
+          </div>
+          <div class="player__scrubber">
+            <span class="player__time">3:48</span>
+            <div class="player__track-bar">
+              <div class="player__track-fill" style="width: 62%"></div>
+              <div class="player__track-knob" style="left: 62%"></div>
+            </div>
+            <span class="player__time">4:57</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: utility icons + volume slider -->
+        <div class="player__right">
+          <button class="player__icon-btn" type="button" aria-label="Cast">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M3.5 13.5v2h2" />
+              <path d="M3.5 10a5.5 5.5 0 0 1 5.5 5.5" />
+              <path d="M3.5 6.5a9 9 0 0 1 9 9" />
+              <path d="M7 4.5h8.5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H14" />
+            </svg>
+          </button>
+          <button class="player__icon-btn" type="button" aria-label="Queue">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M3.5 5.5h10" />
+              <path d="M3.5 10h7" />
+              <path d="M3.5 14.5h5" />
+              <path d="M14.5 10v6" />
+              <path d="M11.5 13h6" />
+            </svg>
+          </button>
+          <button class="player__icon-btn" type="button" aria-label="Volume">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M3.5 8v4h2.75l3.25 3V5L6.25 8H3.5Z" />
+              <path d="M12.5 7a4 4 0 0 1 0 6" />
+              <path d="M14.25 5a7 7 0 0 1 0 10" />
+            </svg>
+          </button>
+          <div class="player__vol-bar">
+            <div class="player__vol-fill" style="width: 70%"></div>
+            <div class="player__vol-knob" style="left: 70%"></div>
+          </div>
+          <button class="player__icon-btn" type="button" aria-label="Mini player">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <rect x="3.5" y="3.5" width="13" height="9" rx="1.5" />
+              <rect x="9.5" y="14" width="7" height="5" rx="1" />
+            </svg>
+          </button>
+          <button class="player__icon-btn" type="button" aria-label="Fullscreen">
+            <svg aria-hidden="true" viewBox="0 0 20 20">
+              <path d="M4 7.5V4.5h3" />
+              <path d="M16 7.5V4.5h-3" />
+              <path d="M4 12.5v3h3" />
+              <path d="M16 12.5v3h-3" />
+            </svg>
+          </button>
+        </div>
+      </footer>
     </div>
     <script src="app.js" type="module"></script>
   </body>
