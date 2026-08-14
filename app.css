@@ -1432,12 +1432,13 @@ a {
 .now-playing__lyrics {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
   max-block-size: 100%;
   overflow-y: auto;
   scrollbar-width: none;
   padding-block: 40px;
+  padding-inline: 48px;
 }
 .now-playing__lyrics::-webkit-scrollbar {
   display: none;
@@ -1454,7 +1455,7 @@ a {
   padding-block: 12px;
   color: rgba(255,255,255,0.3);
   transition: color 0.3s;
-  max-inline-size: 800px;
+  max-inline-size: 620px;
 }
 
 .np-lyric-line--active {
@@ -1888,3 +1889,16 @@ input:checked + .toggle-slider:before {
   transform: translateX(18px);
 }
 
+
+/* ── Idle: nothing playing ────────────────────────────────── */
+
+/* The reference shows no player bar until a track starts. Zeroing the height
+   here also releases the space the sidebar and content frame reserve for it,
+   since both size themselves against this property. */
+#app.is-idle {
+  --player-h: 0px;
+}
+
+#app.is-idle .player {
+  display: none;
+}
