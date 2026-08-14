@@ -569,6 +569,7 @@ async function playTrack(index) {
     audio.play().catch(e => console.warn('Play blocked or failed:', e));
     
     updatePlayerUI(record);
+    loadLyrics(record).catch(e => console.warn('Lyrics failed:', e));
   } catch (err) {
     console.warn(`Could not play ${record.path}:`, err);
     nextTrack();
@@ -1227,4 +1228,179 @@ let searchTimeout;
 searchInput.addEventListener('input', () => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(doSearch, 120);
+});
+
+
+// ── Lyrics Parsing & Syncing ───────────────────────────────
+
+const lyricsCache = new Map();
+let currentLyrics = null;
+let currentLyricsActiveIndex = -1;
+const lyricsContainer = document.querySelector('.now-playing__lyrics');
+
+async function loadLyrics(record) {
+  lyricsContainer.innerHTML = '<span class="np-lyric-placeholder">Loading...</span>';
+  currentLyrics = null;
+  currentLyricsActiveIndex = -1;
+  
+  if (lyricsCache.has(record.path)) {
+    applyLyrics(lyricsCache.get(record.path));
+    return;
+  }
+  
+  try {
+    const dirHandle = await dbGet('musicDir');
+    if (!dirHandle) throw new Error('No directory handle');
+
+    const parts = record.path.split('/');
+    let current = dirHandle;
+    for (let i = 0; i < parts.length - 1; i++) {
+      current = await current.getDirectoryHandle(parts[i]);
+    }
+    
+    const audioName = parts[parts.length - 1];
+    const lrcName = audioName.replace(/\.[^/.]+$/, '.lrc');
+    
+    let lrcHandle;
+    try {
+      lrcHandle = await current.getFileHandle(lrcName);
+    } catch (e) {
+      applyLyrics(null);
+      return;
+    }
+    
+    const file = await lrcHandle.getFile();
+    const content = await file.text();
+    const parsed = parseLrc(content);
+    
+    lyricsCache.set(record.path, parsed);
+    applyLyrics(parsed);
+  } catch (err) {
+    applyLyrics(null);
+  }
+}
+
+function parseLrc(content) {
+  const lines = content.split('\n');
+  let offset = 0;
+  const parsedLines = [];
+  let hasTimestamps = false;
+
+  const timeRegex = /\[(\d{2,}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+
+  for (const line of lines) {
+    const offsetMatch = line.match(/\[offset:\s*([\+\-]?\d+)\]/i);
+    if (offsetMatch) {
+      offset = parseInt(offsetMatch[1], 10) / 1000;
+      break;
+    }
+  }
+
+  for (const line of lines) {
+    const rawText = line.replace(timeRegex, '').replace(/\[\w+:[^\]]*\]/g, '').trim();
+    
+    const timeMatches = [...line.matchAll(timeRegex)];
+    if (timeMatches.length > 0) {
+      hasTimestamps = true;
+      for (const match of timeMatches) {
+        const mins = parseInt(match[1], 10);
+        const secs = parseInt(match[2], 10);
+        let msStr = match[3] || '00';
+        if (msStr.length === 2) msStr += '0';
+        const ms = parseInt(msStr, 10);
+        
+        let time = mins * 60 + secs + ms / 1000;
+        time += offset;
+        
+        parsedLines.push({ time, text: rawText });
+      }
+    } else {
+      if (rawText && !line.match(/^\[\w+:/)) {
+         parsedLines.push({ time: -1, text: rawText });
+      }
+    }
+  }
+
+  if (hasTimestamps) {
+    const timed = parsedLines.filter(l => l.time >= 0);
+    timed.sort((a, b) => a.time - b.time);
+    return { synced: true, lines: timed };
+  } else {
+    return { synced: false, lines: parsedLines.filter(l => l.text) };
+  }
+}
+
+function applyLyrics(parsed) {
+  lyricsContainer.innerHTML = '';
+  if (!parsed || parsed.lines.length === 0) {
+    lyricsContainer.innerHTML = '<span class="np-lyric-placeholder">No lyrics found</span>';
+    currentLyrics = null;
+    return;
+  }
+  
+  currentLyrics = parsed;
+  currentLyricsActiveIndex = -1;
+  
+  for (let i = 0; i < parsed.lines.length; i++) {
+    const l = parsed.lines[i];
+    const div = document.createElement('div');
+    div.className = 'np-lyric-line';
+    div.textContent = l.text || ' '; // Allow blank lines to take up space
+    div.dataset.index = i;
+    
+    if (parsed.synced) {
+      div.style.cursor = 'pointer';
+      div.addEventListener('click', () => {
+        if (!isNaN(audio.duration) && isFinite(audio.duration)) {
+          audio.currentTime = l.time;
+        }
+      });
+    }
+    
+    lyricsContainer.appendChild(div);
+  }
+}
+
+audio.addEventListener('timeupdate', () => {
+  if (!currentLyrics || !currentLyrics.synced) return;
+  
+  const ct = audio.currentTime;
+  let newIdx = -1;
+  
+  // Find the last line whose time is <= currentTime
+  // Optimization: check forward from current index, or backward.
+  // Actually, since there are rarely >100 lines, binary search or linear is fine.
+  // Linear search backward is fast:
+  for (let i = currentLyrics.lines.length - 1; i >= 0; i--) {
+    if (currentLyrics.lines[i].time <= ct) {
+      newIdx = i;
+      break;
+    }
+  }
+  
+  if (newIdx !== currentLyricsActiveIndex) {
+    currentLyricsActiveIndex = newIdx;
+    
+    const domLines = lyricsContainer.querySelectorAll('.np-lyric-line');
+    domLines.forEach((el, i) => {
+      if (i === newIdx) {
+        el.classList.add('np-lyric-line--active');
+        el.style.opacity = '1';
+        
+        // smooth center scroll
+        const containerRect = lyricsContainer.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const scrollTarget = el.offsetTop - (lyricsContainer.clientHeight / 2) + (el.clientHeight / 2);
+        lyricsContainer.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+      } else {
+        el.classList.remove('np-lyric-line--active');
+        // Fade lines further away
+        const dist = Math.abs(i - newIdx);
+        let op = 0.3 - (dist * 0.01);
+        if (op < 0.25) op = 0.25;
+        if (newIdx === -1) op = 0.3; // If before first line
+        el.style.opacity = op.toString();
+      }
+    });
+  }
 });
