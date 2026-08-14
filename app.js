@@ -120,16 +120,21 @@ function albumKey(a) {
   return `${a.albumArtist.trim().toLowerCase()}\0${a.album.trim().toLowerCase()}`;
 }
 
-// A stable set of gradient placeholders, keyed by string hash
+// Stable gradient placeholders, chosen by a hash of the album key.
+//
+// Every dark end is kept clear of black on purpose. Most albums in a real
+// library have no embedded artwork, so these are what the shelves are mostly
+// made of, and the near-black starts an earlier set used disappeared against
+// the page — a card that reads as a hole rather than as a record.
 const GRADIENTS = [
   '#2d1b69,#b44593', '#1a3a2a,#4ecdc4', '#6b2d3e,#e8927c',
-  '#0d1b2a,#415a77', '#3d1c02,#c97b2a', '#1b1b3a,#6c63ff',
-  '#2a0a0a,#c0392b', '#0a2a1a,#27ae60', '#4a1942,#e84393',
-  '#2c3e50,#3498db', '#1a1a2e,#e94560', '#0f3443,#34e89e',
-  '#3c1053,#ad5389', '#141e30,#243b55', '#611818,#d4a373',
-  '#16222a,#3a6073', '#2b1055,#d53369', '#0c0c1d,#4834d4',
-  '#3a1c01,#e67e22', '#1d3557,#a8dadc', '#2d132c,#ee6352',
-  '#1a1a1a,#6d6d6d', '#134e5e,#71b280', '#4b134f,#c94b4b',
+  '#20344d,#415a77', '#3d1c02,#c97b2a', '#2e2e5e,#6c63ff',
+  '#2a0a0a,#c0392b', '#17472f,#27ae60', '#4a1942,#e84393',
+  '#2c3e50,#3498db', '#2c2c4a,#e94560', '#1d4d5e,#34e89e',
+  '#3c1053,#ad5389', '#25344d,#3d5a80', '#611818,#d4a373',
+  '#243845,#3a6073', '#2b1055,#d53369', '#232046,#4834d4',
+  '#3a1c01,#e67e22', '#2a4a6e,#a8dadc', '#2d132c,#ee6352',
+  '#333333,#6d6d6d', '#1e5a6b,#71b280', '#4b134f,#c94b4b',
 ];
 
 function gradientFor(key) {
@@ -273,6 +278,7 @@ function renderHero(heroEl, album) {
   if (!album) return;
   const key = albumKey(album);
   const grad = gradientFor(key);
+  heroEl.dataset.album = key;
 
   const coverEl = heroEl.querySelector('.hero-card__cover');
   if (coverEl) {
@@ -519,3 +525,231 @@ async function init() {
 }
 
 init();
+
+// ── Playback ────────────────────────────────────────────────
+
+const audio = new Audio();
+const playerState = {
+  queue: [],
+  index: -1,
+  shuffle: false,
+  repeat: false,
+  originalQueue: []
+};
+
+let currentObjectUrl = null;
+
+async function playTrack(index) {
+  if (index < 0 || index >= playerState.queue.length) return;
+  playerState.index = index;
+  const record = playerState.queue[index];
+
+  if (currentObjectUrl) {
+    URL.revokeObjectURL(currentObjectUrl);
+    currentObjectUrl = null;
+  }
+
+  try {
+    const dirHandle = await dbGet('musicDir');
+    if (!dirHandle) throw new Error('No music directory handle');
+
+    const parts = record.path.split('/');
+    let current = dirHandle;
+    for (let i = 0; i < parts.length - 1; i++) {
+      current = await current.getDirectoryHandle(parts[i]);
+    }
+    const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
+    const file = await fileHandle.getFile();
+    
+    currentObjectUrl = URL.createObjectURL(file);
+    audio.src = currentObjectUrl;
+    audio.play().catch(e => console.warn('Play blocked or failed:', e));
+    
+    updatePlayerUI(record);
+  } catch (err) {
+    console.warn(`Could not play ${record.path}:`, err);
+    nextTrack();
+  }
+}
+
+function playAlbum(key, startIndex = 0) {
+  const album = library.albums.find(a => key === albumKey(a));
+  if (!album) return;
+  
+  playerState.originalQueue = [...album.tracks];
+  if (playerState.shuffle) {
+    const startRecord = album.tracks[startIndex];
+    playerState.queue = seededShuffle([...album.tracks]);
+    let newIndex = playerState.queue.indexOf(startRecord);
+    if (newIndex === -1) newIndex = 0;
+    playTrack(newIndex);
+  } else {
+    playerState.queue = [...album.tracks];
+    playTrack(startIndex);
+  }
+}
+
+function togglePlay() {
+  if (audio.paused) {
+    if (playerState.queue.length > 0) audio.play();
+  } else {
+    audio.pause();
+  }
+}
+
+function nextTrack() {
+  if (playerState.index < playerState.queue.length - 1) {
+    playTrack(playerState.index + 1);
+  } else if (playerState.repeat && playerState.queue.length > 0) {
+    playTrack(0);
+  }
+}
+
+function prevTrack() {
+  if (audio.currentTime > 3) {
+    audio.currentTime = 0;
+  } else if (playerState.index > 0) {
+    playTrack(playerState.index - 1);
+  } else if (playerState.index === 0) {
+    audio.currentTime = 0;
+  }
+}
+
+function formatTime(secs) {
+  if (isNaN(secs)) return '0:00';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// UI Elements
+const uiPlayBtn = document.querySelector('.player__play-btn');
+const uiPlayIcon = uiPlayBtn.querySelector('svg');
+const uiPrevBtn = document.querySelector('button[aria-label="Previous"]');
+const uiNextBtn = document.querySelector('button[aria-label="Next"]');
+const uiShuffleBtn = document.querySelector('button[aria-label="Shuffle"]');
+const uiRepeatBtn = document.querySelector('button[aria-label="Repeat"]');
+const uiCover = document.querySelector('.player__cover');
+const uiTitle = document.querySelector('.player__title');
+const uiArtist = document.querySelector('.player__artist');
+const uiScrubber = document.querySelector('.player__track-bar');
+const uiScrubFill = document.querySelector('.player__track-fill');
+const uiScrubKnob = document.querySelector('.player__track-knob');
+const uiTimeCurrent = document.querySelector('.player__scrubber .player__time:first-child');
+const uiTimeTotal = document.querySelector('.player__scrubber .player__time:last-child');
+const uiVolBar = document.querySelector('.player__vol-bar');
+const uiVolFill = document.querySelector('.player__vol-fill');
+const uiVolKnob = document.querySelector('.player__vol-knob');
+
+function updatePlayerUI(record) {
+  uiTitle.textContent = record.title || record.name;
+  uiArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
+  
+  const album = library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
+  if (album) {
+    coverUrlForAlbum(album).then(url => {
+      if (url) {
+        uiCover.style.backgroundImage = `url(${url})`;
+        uiCover.style.backgroundSize = 'cover';
+        uiCover.style.backgroundPosition = 'center';
+      } else {
+        const grad = gradientFor(albumKey(album));
+        uiCover.style.background = `linear-gradient(135deg,${grad})`;
+        uiCover.style.backgroundImage = 'none';
+      }
+    });
+  }
+}
+
+// Scrubber update (RAF throttled)
+let scrubRaf;
+let lastUpdate = 0;
+function updateScrubber() {
+  const now = performance.now();
+  if (now - lastUpdate > 250) {
+    lastUpdate = now;
+    if (audio.duration) {
+      const pct = (audio.currentTime / audio.duration) * 100;
+      uiScrubFill.style.width = `${pct}%`;
+      uiScrubKnob.style.left = `${pct}%`;
+      uiTimeCurrent.textContent = formatTime(audio.currentTime);
+      uiTimeTotal.textContent = formatTime(audio.duration);
+    }
+  }
+  scrubRaf = requestAnimationFrame(updateScrubber);
+}
+
+audio.addEventListener('play', () => {
+  uiPlayIcon.innerHTML = `<path d="M6 5h3v10H6zm5 0h3v10h-3z" fill="currentColor" stroke="none" />`;
+  if (!scrubRaf) scrubRaf = requestAnimationFrame(updateScrubber);
+});
+
+audio.addEventListener('pause', () => {
+  uiPlayIcon.innerHTML = `<path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />`;
+  if (scrubRaf) {
+    cancelAnimationFrame(scrubRaf);
+    scrubRaf = null;
+  }
+});
+
+audio.addEventListener('ended', () => {
+  nextTrack();
+});
+
+// Controls wiring
+uiPlayBtn.addEventListener('click', togglePlay);
+uiPrevBtn.addEventListener('click', prevTrack);
+uiNextBtn.addEventListener('click', nextTrack);
+
+uiShuffleBtn.addEventListener('click', () => {
+  playerState.shuffle = !playerState.shuffle;
+  uiShuffleBtn.style.color = playerState.shuffle ? 'var(--accent)' : '';
+  
+  if (playerState.queue.length > 0) {
+    const currentTrack = playerState.queue[playerState.index];
+    if (playerState.shuffle) {
+      playerState.queue = seededShuffle([...playerState.originalQueue]);
+    } else {
+      playerState.queue = [...playerState.originalQueue];
+    }
+    playerState.index = playerState.queue.indexOf(currentTrack);
+  }
+});
+
+uiRepeatBtn.addEventListener('click', () => {
+  playerState.repeat = !playerState.repeat;
+  uiRepeatBtn.style.color = playerState.repeat ? 'var(--accent)' : '';
+});
+
+// Scrubber interaction
+uiScrubber.addEventListener('click', (e) => {
+  if (!audio.duration) return;
+  const rect = uiScrubber.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  audio.currentTime = pct * audio.duration;
+  
+  uiScrubFill.style.width = `${pct * 100}%`;
+  uiScrubKnob.style.left = `${pct * 100}%`;
+  uiTimeCurrent.textContent = formatTime(audio.currentTime);
+});
+
+// Volume interaction
+uiVolBar.addEventListener('click', (e) => {
+  const rect = uiVolBar.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  audio.volume = pct;
+  uiVolFill.style.width = `${pct * 100}%`;
+  uiVolKnob.style.left = `${pct * 100}%`;
+});
+// Init volume
+uiVolFill.style.width = `${audio.volume * 100}%`;
+uiVolKnob.style.left = `${audio.volume * 100}%`;
+
+// Card wiring
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.shelf-card, .quick-card, .hero-card');
+  if (card && card.dataset.album) {
+    e.preventDefault();
+    playAlbum(card.dataset.album);
+  }
+});
