@@ -314,7 +314,8 @@ function renderHome(lib) {
   enrichSearchIndex(lib);
   if (!lib || !lib.albums || lib.albums.length === 0) return;
 
-  const albums = lib.albums;
+  const hideSingles = localStorage.getItem('aubade_hide_singles') === 'true';
+  const albums = hideSingles ? lib.albums.filter(a => a.tracks.length > 1) : lib.albums;
 
   // Recently added: last 12 albums by array order (order of discovery)
   const recent = albums.slice(-12).reverse();
@@ -851,12 +852,14 @@ function handleRoute() {
   const viewSearch = document.getElementById('view-search');
   const viewLibrary = document.getElementById('view-library');
   const viewArtist = document.getElementById('view-artist');
+  const viewSettings = document.getElementById('view-settings');
   
   viewHome.style.display = 'none';
   viewAlbum.style.display = 'none';
   viewSearch.style.display = 'none';
   viewLibrary.style.display = 'none';
   viewArtist.style.display = 'none';
+  viewSettings.style.display = 'none';
   
   document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
 
@@ -866,6 +869,9 @@ function handleRoute() {
       renderAlbumView(key);
     }
     viewAlbum.style.display = 'block';
+  } else if (hash === '#settings') {
+    renderSettingsView();
+    viewSettings.style.display = 'flex';
   } else if (hash.startsWith('#artist/')) {
     const name = decodeURIComponent(hash.substring(8));
     if (library.artists && library.artists.length > 0) {
@@ -1493,7 +1499,8 @@ function renderLibraryView() {
   }
   
   if (currentLibView === 'albums') {
-    const albums = [...library.albums];
+    const hideSingles = localStorage.getItem('aubade_hide_singles') === 'true';
+    const albums = hideSingles ? library.albums.filter(a => a.tracks.length > 1) : [...library.albums];
     
     // Sort
     albums.sort((a, b) => {
@@ -1736,5 +1743,115 @@ async function renderArtistView(name) {
         }
       });
     }
+  }
+}
+
+// ── Settings View ────────────────────────────────────────────
+
+const viewSettings = document.getElementById('view-settings');
+document.querySelector('.top-bar__avatar').addEventListener('click', () => {
+  window.location.hash = '#settings';
+});
+
+function renderSettingsView() {
+  // Folder name
+  const folderNameEl = document.getElementById('settings-folder-name');
+  dbGet('musicDir').then(handle => {
+    if (handle && handle.name) {
+      folderNameEl.textContent = handle.name;
+    } else {
+      folderNameEl.textContent = 'No folder selected';
+    }
+  });
+
+  // Library stats
+  const statsEl = document.getElementById('settings-library-stats');
+  const numSongs = library.tracks ? library.tracks.length : 0;
+  const numAlbums = library.albums ? library.albums.length : 0;
+  const numArtists = library.artists ? library.artists.length : 0;
+  statsEl.textContent = `${numSongs} song${numSongs !== 1 ? 's' : ''}, ${numAlbums} album${numAlbums !== 1 ? 's' : ''}, ${numArtists} artist${numArtists !== 1 ? 's' : ''}`;
+
+  // Toggles
+  const singlesToggle = document.getElementById('settings-toggle-singles');
+  singlesToggle.checked = localStorage.getItem('aubade_hide_singles') === 'true';
+
+  // Volume
+  const volLabel = document.getElementById('settings-volume-label');
+  const updateVolLabel = () => {
+    volLabel.textContent = `Volume: ${Math.round(audio.volume * 100)}%`;
+  };
+  updateVolLabel();
+  audio.addEventListener('volumechange', updateVolLabel);
+
+  // Bindings (only once)
+  if (!viewSettings._bound) {
+    viewSettings._bound = true;
+    
+    document.getElementById('settings-btn-rescan').addEventListener('click', async (e) => {
+      const handle = await dbGet('musicDir');
+      if (handle) {
+        const btn = e.target;
+        btn.textContent = 'Scanning...';
+        btn.disabled = true;
+        // reuse statusEl for inline update? We'll just update btn text
+        await indexDir(handle, { set textContent(v) { btn.textContent = v; } });
+        btn.textContent = 'Rescan';
+        btn.disabled = false;
+        renderSettingsView(); // Update stats
+      }
+    });
+
+    document.getElementById('settings-btn-change-folder').addEventListener('click', () => {
+      pickFolder().then(() => renderSettingsView());
+    });
+
+    singlesToggle.addEventListener('change', (e) => {
+      localStorage.setItem('aubade_hide_singles', e.target.checked);
+      // It takes effect on next render of library/home
+    });
+
+    document.getElementById('settings-btn-reset-vol').addEventListener('click', () => {
+      audio.volume = 1;
+      const volBar = document.querySelector('.player__vol-fill');
+      if (volBar) volBar.style.width = '100%';
+    });
+
+    document.getElementById('settings-btn-clear-cache').addEventListener('click', () => {
+      // Clear memory cache and revoke URLs
+      for (const [key, url] of coverCache.entries()) {
+        if (url) URL.revokeObjectURL(url);
+      }
+      coverCache.clear();
+      // It will reload automatically when needed
+    });
+
+    document.getElementById('settings-btn-reset').addEventListener('click', (e) => {
+      const controls = document.getElementById('settings-reset-controls');
+      controls.innerHTML = `
+        <span style="font-size: 13px; color: var(--text);">Are you sure?</span>
+        <button class="settings-btn" id="settings-btn-cancel-reset" type="button">Cancel</button>
+        <button class="settings-btn settings-btn--danger" id="settings-btn-confirm-reset" type="button">Reset</button>
+      `;
+      
+      document.getElementById('settings-btn-cancel-reset').addEventListener('click', () => {
+        // Restore reset button
+        controls.innerHTML = `<button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>`;
+        // Rebind reset (easiest is just trigger re-render of settings, which doesn't touch DOM, so we can't do that easily... Let's just re-attach the listener, or reload settings)
+        viewSettings._bound = false;
+        renderSettingsView();
+      });
+
+      document.getElementById('settings-btn-confirm-reset').addEventListener('click', async () => {
+        const db = await openDB();
+        const tx = db.transaction(['handles', 'library'], 'readwrite');
+        tx.objectStore('handles').clear();
+        tx.objectStore('library').clear();
+        tx.oncomplete = () => {
+          library = { tracks: [], albums: [], artists: [] };
+          window.location.hash = '#home';
+          window.location.reload();
+        };
+      });
+    });
   }
 }

@@ -1760,3 +1760,131 @@ a {
   gap: 16px;
 }
 
+
+/* ── Settings View ─────────────────────────────────────────── */
+
+.settings-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-card__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.settings-card__title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent);
+}
+
+.settings-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-card__label {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.settings-card__desc {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.settings-card__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-btn {
+  height: 34px;
+  border-radius: 17px;
+  padding-inline: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.settings-btn--danger {
+  background: rgba(239, 68, 68, 0.15); /* Tailwind red-500 @ 15% */
+  color: #ef4444; /* Tailwind red-500 */
+}
+
+.settings-btn--danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  transition: .2s;
+  border-radius: 22px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: \;
+  height: 18px;
+  width: 18px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--accent);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(18px);
+}
+

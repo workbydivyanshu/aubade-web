@@ -539,6 +539,104 @@
               </div>
             </div>
 
+            <!-- ── Settings View ────────────────────────────────── -->
+            <div id="view-settings" style="display: none; padding-inline: 48px; padding-block-start: 64px; padding-block-end: 48px; display: flex; flex-direction: column; align-items: center;">
+              <div style="width: 100%; max-width: 840px; display: flex; flex-direction: column; gap: 16px;">
+                
+                <!-- Music folder card -->
+                <div class="settings-card">
+                  <h2 class="settings-card__title">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A2.5 2.5 0 014.5 3h3.793a1.5 1.5 0 011.06.44l1.415 1.414A.5.5 0 0011.121 5H15.5A2.5 2.5 0 0118 7.5v7A2.5 2.5 0 0115.5 17h-11A2.5 2.5 0 012 14.5v-9z"/></svg>
+                    Music folder
+                  </h2>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label" id="settings-folder-name">No folder selected</span>
+                      <span class="settings-card__desc" id="settings-folder-desc">Select a directory containing your audio files.</span>
+                    </div>
+                    <div class="settings-card__controls">
+                      <button class="settings-btn" id="settings-btn-rescan" type="button">Rescan</button>
+                      <button class="settings-btn" id="settings-btn-change-folder" type="button">Change folder</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Library card -->
+                <div class="settings-card">
+                  <h2 class="settings-card__title">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zm0 6a2 2 0 100 4h12a2 2 0 100-4H4zm0 6a2 2 0 100 4h12a2 2 0 100-4H4z"/></svg>
+                    Library
+                  </h2>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label" id="settings-library-stats">0 songs, 0 albums, 0 artists</span>
+                      <span class="settings-card__desc">Current index statistics</span>
+                    </div>
+                  </div>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label">Hide single-track albums</span>
+                      <span class="settings-card__desc">Exclude singles from Albums view and home shelves.</span>
+                    </div>
+                    <div class="settings-card__controls">
+                      <label class="toggle-switch">
+                        <input type="checkbox" id="settings-toggle-singles">
+                        <span class="toggle-slider"></span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Playback card -->
+                <div class="settings-card">
+                  <h2 class="settings-card__title">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+                    Playback
+                  </h2>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label" id="settings-volume-label">Volume: 100%</span>
+                      <span class="settings-card__desc">Current audio level</span>
+                    </div>
+                    <div class="settings-card__controls">
+                      <button class="settings-btn" id="settings-btn-reset-vol" type="button">Reset to 100%</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Data card -->
+                <div class="settings-card">
+                  <h2 class="settings-card__title">
+                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                    Data
+                  </h2>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label">Clear cover cache</span>
+                      <span class="settings-card__desc">Frees up memory used by album artwork.</span>
+                    </div>
+                    <div class="settings-card__controls">
+                      <button class="settings-btn settings-btn--danger" id="settings-btn-clear-cache" type="button">Clear</button>
+                    </div>
+                  </div>
+                  <div class="settings-card__row">
+                    <div class="settings-card__info">
+                      <span class="settings-card__label">Reset library</span>
+                      <span class="settings-card__desc">Removes all indexed tracks and forgets the folder.</span>
+                    </div>
+                    <div class="settings-card__controls" id="settings-reset-controls">
+                      <button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="text-align: center; color: var(--text-dim); font-size: 13px; margin-block-start: 16px;">
+                  Aubade © 2026
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
