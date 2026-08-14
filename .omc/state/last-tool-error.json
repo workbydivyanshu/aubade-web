@@ -1,7 +1,0 @@
-{
-  "tool_name": "mcp__Claude_Browser__computer",
-  "tool_input_preview": "{\"action\":\"screenshot\",\"tabId\":\"seed\"}",
-  "error": "computer timed out after 30s. The Browser pane may be stuck (modal dialog, navigation hang, or unresponsive renderer). Check preview_console_logs for errors.",
-  "timestamp": "2026-08-14T14:16:37.984Z",
-  "retry_count": 2
-}
