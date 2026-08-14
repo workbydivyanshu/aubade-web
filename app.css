@@ -248,3 +248,129 @@ a {
   line-height: 1;
   text-align: center;
 }
+
+/* ── Main area (right of sidebar) ─────────────────────────── */
+
+.main {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: var(--sidebar-w);
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top bar ──────────────────────────────────────────────── */
+
+.top-bar {
+  flex: 0 0 var(--top-bar-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: 20px;
+  background: transparent;
+}
+
+.top-bar__left,
+.top-bar__right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-bar__btn {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+
+.top-bar__btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.top-bar__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.top-bar__btn svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.top-bar__avatar {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f472b6, #ec4899, #db2777);
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.top-bar__avatar:hover {
+  opacity: 0.85;
+}
+
+.top-bar__avatar:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.top-bar__avatar svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Content frame ────────────────────────────────────────── */
+
+.content-frame {
+  flex: 1 1 0;
+  min-block-size: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.content-frame::-webkit-scrollbar {
+  display: none;
+}
+
+.content-frame__inner {
+  padding-inline: 32px;
+}
+
+/* ── Placeholder (temporary until content is built) ───────── */
+
+.placeholder-block {
+  block-size: 2400px;
+  margin-block: 24px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+}
