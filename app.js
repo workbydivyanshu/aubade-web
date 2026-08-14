@@ -311,6 +311,7 @@ function seededShuffle(arr) {
 }
 
 function renderHome(lib) {
+  enrichSearchIndex(lib);
   if (!lib || !lib.albums || lib.albums.length === 0) return;
 
   const albums = lib.albums;
@@ -836,20 +837,35 @@ document.addEventListener('click', (e) => {
 window.addEventListener('hashchange', handleRoute);
 
 function handleRoute() {
-  const hash = window.location.hash;
+  const hash = window.location.hash || '#home';
   const viewHome = document.getElementById('view-home');
   const viewAlbum = document.getElementById('view-album');
+  const viewSearch = document.getElementById('view-search');
   
+  viewHome.style.display = 'none';
+  viewAlbum.style.display = 'none';
+  viewSearch.style.display = 'none';
+  
+  document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
+
   if (hash.startsWith('#album/')) {
     const key = decodeURIComponent(hash.substring(7));
     if (library.albums && library.albums.length > 0) {
       renderAlbumView(key);
     }
-    viewHome.style.display = 'none';
     viewAlbum.style.display = 'block';
+  } else if (hash.startsWith('#search')) {
+    viewSearch.style.display = 'block';
+    const searchNav = document.querySelector('a[href="#search"]');
+    if (searchNav) searchNav.classList.add('sidebar__nav-item--selected');
+    setTimeout(() => {
+      const input = document.getElementById('search-input');
+      if (input) input.focus();
+    }, 50);
   } else {
-    viewAlbum.style.display = 'none';
     viewHome.style.display = 'block';
+    const homeNav = document.querySelector('a[href="#home"]');
+    if (homeNav) homeNav.classList.add('sidebar__nav-item--selected');
   }
 }
 
@@ -984,3 +1000,231 @@ async function renderAlbumView(key) {
     trackList.appendChild(row);
   });
 }
+
+// ── Search ───────────────────────────────────────────────────
+
+const searchInput = document.getElementById('search-input');
+const viewSearch = document.getElementById('view-search');
+const searchEmpty = document.getElementById('search-empty');
+const searchQueryDisplay = document.getElementById('search-query-display');
+const searchResults = document.getElementById('search-results');
+
+const searchSongs = document.getElementById('search-songs');
+const searchAlbums = document.getElementById('search-albums');
+const searchArtists = document.getElementById('search-artists');
+
+const searchSongsList = document.querySelector('.search-list--songs');
+const searchAlbumsList = document.querySelector('.search-grid--albums');
+const searchArtistsList = document.querySelector('.search-list--artists');
+
+const searchSongsCap = document.getElementById('search-songs-cap');
+const searchAlbumsCap = document.getElementById('search-albums-cap');
+const searchArtistsCap = document.getElementById('search-artists-cap');
+
+function enrichSearchIndex(lib) {
+  if (!lib.tracks) return;
+  for (const t of lib.tracks) {
+    if (!t._searchStr) {
+      t._searchStr = `${t.title || ''} ${t.artist || ''} ${t.albumArtist || ''} ${t.album || ''}`.toLowerCase();
+    }
+  }
+}
+
+function escapeHTML(s) {
+  if (typeof s !== 'string') return s;
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function doSearch() {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) {
+    searchEmpty.style.display = 'none';
+    searchResults.style.display = 'none';
+    return;
+  }
+  
+  if (!library.tracks || library.tracks.length === 0) return;
+  enrichSearchIndex(library);
+
+  // Match logic
+  // Score: 2 for prefix match in title/album/artist, 1 for middle match, 0 for no match
+  const matchTrack = (t) => {
+    let score = 0;
+    if (t.title && t.title.toLowerCase().startsWith(q)) score = Math.max(score, 2);
+    else if (t.title && t.title.toLowerCase().includes(q)) score = Math.max(score, 1);
+    
+    if (t.artist && t.artist.toLowerCase().startsWith(q)) score = Math.max(score, 2);
+    else if (t.artist && t.artist.toLowerCase().includes(q)) score = Math.max(score, 1);
+    
+    if (t.album && t.album.toLowerCase().startsWith(q)) score = Math.max(score, 2);
+    else if (t.album && t.album.toLowerCase().includes(q)) score = Math.max(score, 1);
+    
+    if (t.albumArtist && t.albumArtist.toLowerCase().startsWith(q)) score = Math.max(score, 2);
+    else if (t.albumArtist && t.albumArtist.toLowerCase().includes(q)) score = Math.max(score, 1);
+    
+    // Fallback to precomputed string
+    if (score === 0 && t._searchStr.includes(q)) score = 1;
+    
+    return score;
+  };
+  
+  const matchedTracks = [];
+  for (const t of library.tracks) {
+    const score = matchTrack(t);
+    if (score > 0) {
+      matchedTracks.push({ track: t, score });
+    }
+  }
+  
+  if (matchedTracks.length === 0) {
+    searchQueryDisplay.textContent = searchInput.value;
+    searchEmpty.style.display = 'flex';
+    searchResults.style.display = 'none';
+    return;
+  }
+  
+  searchEmpty.style.display = 'none';
+  searchResults.style.display = 'flex';
+  
+  matchedTracks.sort((a, b) => b.score - a.score);
+  
+  // Extract unique albums and artists from matched tracks
+  const matchedAlbumKeys = new Set();
+  const matchedArtistKeys = new Set();
+  
+  for (const m of matchedTracks) {
+    if (m.track.albumArtist && m.track.album) {
+      matchedAlbumKeys.add(`${m.track.albumArtist.trim().toLowerCase()} ${m.track.album.trim().toLowerCase()}`);
+    }
+    if (m.track.albumArtist) {
+      matchedArtistKeys.add(m.track.albumArtist.toLowerCase());
+    }
+  }
+  
+  const albums = library.albums.filter(a => matchedAlbumKeys.has(albumKey(a)));
+  const artists = library.artists.filter(a => matchedArtistKeys.has(a.name.toLowerCase()));
+  
+  // Render Songs
+  searchSongsList.innerHTML = '';
+  const songsToShow = matchedTracks.slice(0, 20);
+  for (const m of songsToShow) {
+    const r = m.track;
+    const row = document.createElement('div');
+    row.className = 'search-row';
+    row.innerHTML = `
+      <div class="search-row-cover"></div>
+      <div class="search-row-info">
+        <span class="search-row-title">${escapeHTML(r.title || r.name)}</span>
+        <span class="search-row-artist">${escapeHTML(r.artist || r.albumArtist || 'Unknown Artist')}</span>
+      </div>
+      <div class="search-row-duration">${formatTime(r.duration)}</div>
+    `;
+    row.addEventListener('click', () => {
+      // Find index in main library queue
+      const idx = library.tracks.indexOf(r);
+      if (idx !== -1) {
+        playerState.originalQueue = library.tracks;
+        playerState.queue = playerState.shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
+        const newIdx = playerState.queue.indexOf(r);
+        playTrack(newIdx);
+      }
+    });
+    searchSongsList.appendChild(row);
+    
+    // Async cover
+    const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
+    if (aKey) {
+      const album = library.albums.find(a => albumKey(a) === aKey);
+      if (album) {
+        coverUrlForAlbum(album).then(url => {
+          const coverEl = row.querySelector('.search-row-cover');
+          if (url) {
+            coverEl.style.backgroundImage = `url(${url})`;
+          } else {
+            coverEl.style.background = `linear-gradient(135deg,${gradientFor(aKey)})`;
+          }
+        });
+      }
+    }
+  }
+  
+  if (matchedTracks.length > 20) {
+    searchSongsCap.style.display = 'block';
+  } else {
+    searchSongsCap.style.display = 'none';
+  }
+  searchSongs.style.display = songsToShow.length > 0 ? 'block' : 'none';
+  
+  // Render Albums
+  searchAlbumsList.innerHTML = '';
+  const albumsToShow = albums.slice(0, 20);
+  for (const a of albumsToShow) {
+    const card = document.createElement('a');
+    card.className = 'shelf-card';
+    card.href = '#album/' + encodeURIComponent(albumKey(a));
+    card.innerHTML = `
+      <div class="shelf-card__cover"></div>
+      <span class="shelf-card__title">${escapeHTML(a.album)}</span>
+      <span class="shelf-card__artist">${escapeHTML(a.albumArtist)}</span>
+    `;
+    searchAlbumsList.appendChild(card);
+    
+    coverUrlForAlbum(a).then(url => {
+      const coverEl = card.querySelector('.shelf-card__cover');
+      if (url) {
+        coverEl.style.backgroundImage = `url(${url})`;
+      } else {
+        coverEl.style.background = `linear-gradient(135deg,${gradientFor(albumKey(a))})`;
+      }
+    });
+  }
+  
+  if (albums.length > 20) {
+    searchAlbumsCap.style.display = 'block';
+  } else {
+    searchAlbumsCap.style.display = 'none';
+  }
+  searchAlbums.style.display = albumsToShow.length > 0 ? 'block' : 'none';
+  
+  // Render Artists
+  searchArtistsList.innerHTML = '';
+  const artistsToShow = artists.slice(0, 20);
+  for (const a of artistsToShow) {
+    const row = document.createElement('div');
+    row.className = 'search-row';
+    const numAlbums = a.albums.length;
+    row.innerHTML = `
+      <div class="search-artist-cover"></div>
+      <div class="search-row-info">
+        <span class="search-row-title">${escapeHTML(a.name)}</span>
+        <span class="search-row-artist">${numAlbums} album${numAlbums !== 1 ? 's' : ''}</span>
+      </div>
+    `;
+    searchArtistsList.appendChild(row);
+    
+    // Assign random gradient for artist for now, or use first album cover
+    if (a.albums.length > 0) {
+      coverUrlForAlbum(a.albums[0]).then(url => {
+        const coverEl = row.querySelector('.search-artist-cover');
+        if (url) {
+          coverEl.style.backgroundImage = `url(${url})`;
+        } else {
+          coverEl.style.background = `linear-gradient(135deg,${gradientFor(a.name)})`;
+        }
+      });
+    }
+  }
+  
+  if (artists.length > 20) {
+    searchArtistsCap.style.display = 'block';
+  } else {
+    searchArtistsCap.style.display = 'none';
+  }
+  searchArtists.style.display = artistsToShow.length > 0 ? 'block' : 'none';
+}
+
+let searchTimeout;
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(doSearch, 120);
+});

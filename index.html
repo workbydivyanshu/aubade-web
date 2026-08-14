@@ -441,6 +441,46 @@
               </div>
             </div>
 
+            <!-- ── Search View ────────────────────────────────── -->
+            <div id="view-search" style="display: none;">
+              <div class="search-header">
+                <div class="search-input-wrapper">
+                  <svg aria-hidden="true" viewBox="0 0 20 20">
+                    <circle cx="8.75" cy="8.75" r="5.25" fill="none" stroke="currentColor" stroke-width="1.75"/>
+                    <path d="m12.75 12.75 3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                  </svg>
+                  <input type="text" id="search-input" placeholder="Songs, albums, artists" autocomplete="off" spellcheck="false" />
+                </div>
+              </div>
+
+              <div id="search-empty" style="display: none;">
+                <p>No results for "<span id="search-query-display"></span>"</p>
+              </div>
+
+              <div id="search-results" style="display: none;">
+                <!-- Songs Section -->
+                <section id="search-songs" class="search-section" style="display: none;">
+                  <h2 class="search-section__title">Songs</h2>
+                  <div class="search-list search-list--songs"></div>
+                  <div class="search-cap-msg" id="search-songs-cap" style="display: none;">Showing first 20</div>
+                </section>
+
+                <!-- Albums Section -->
+                <section id="search-albums" class="search-section" style="display: none;">
+                  <h2 class="search-section__title">Albums</h2>
+                  <div class="quick-grid search-grid--albums"></div>
+                  <div class="search-cap-msg" id="search-albums-cap" style="display: none;">Showing first 20</div>
+                </section>
+
+                <!-- Artists Section -->
+                <section id="search-artists" class="search-section" style="display: none;">
+                  <h2 class="search-section__title">Artists</h2>
+                  <div class="search-list search-list--artists"></div>
+                  <div class="search-cap-msg" id="search-artists-cap" style="display: none;">Showing first 20</div>
+                </section>
+              </div>
+            </div>
+
           </div>
         </div>
       </main>
