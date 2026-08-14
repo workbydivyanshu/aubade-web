@@ -510,7 +510,10 @@ async function init() {
   }
 
   const handle = await dbGet('musicDir');
-  if (!handle) return;
+  if (!handle) {
+    handleRoute();
+    return;
+  }
 
   const perm = await handle.queryPermission({ mode: 'read' });
   if (perm === 'granted') {
@@ -842,10 +845,12 @@ function handleRoute() {
   const viewHome = document.getElementById('view-home');
   const viewAlbum = document.getElementById('view-album');
   const viewSearch = document.getElementById('view-search');
+  const viewLibrary = document.getElementById('view-library');
   
   viewHome.style.display = 'none';
   viewAlbum.style.display = 'none';
   viewSearch.style.display = 'none';
+  viewLibrary.style.display = 'none';
   
   document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
 
@@ -863,6 +868,21 @@ function handleRoute() {
       const input = document.getElementById('search-input');
       if (input) input.focus();
     }, 50);
+  } else if (hash.startsWith('#library')) {
+    viewLibrary.style.display = 'block';
+    const libNav = document.querySelector('a[href="#library"]');
+    if (libNav) libNav.classList.add('sidebar__nav-item--selected');
+    
+    // Check if ?view= is present
+    const qIndex = hash.indexOf('?');
+    if (qIndex !== -1) {
+      const params = new URLSearchParams(hash.substring(qIndex));
+      const v = params.get('view');
+      if (v) {
+        localStorage.setItem('aubade_lib_view', v);
+      }
+    }
+    renderLibraryView();
   } else {
     viewHome.style.display = 'block';
     const homeNav = document.querySelector('a[href="#home"]');
@@ -1404,3 +1424,200 @@ audio.addEventListener('timeupdate', () => {
     });
   }
 });
+
+// ── Library Grid ─────────────────────────────────────────────
+
+const libFilterPill = document.getElementById('lib-filter-pill');
+const libSortBtn = document.getElementById('lib-sort-btn');
+const libCountLine = document.getElementById('lib-count-line');
+const libContent = document.getElementById('lib-content');
+
+let currentLibView = localStorage.getItem('aubade_lib_view') || 'albums';
+let currentLibSort = localStorage.getItem('aubade_lib_sort') || 'Name'; // Name, Artist, Year, Recently added
+
+const SORTS = ['Name', 'Artist', 'Year', 'Recently added'];
+
+if (libFilterPill) {
+  libFilterPill.addEventListener('click', (e) => {
+    if (e.target.tagName !== 'BUTTON') return;
+    currentLibView = e.target.dataset.view;
+    localStorage.setItem('aubade_lib_view', currentLibView);
+    renderLibraryView();
+  });
+}
+
+if (libSortBtn) {
+  libSortBtn.addEventListener('click', () => {
+    let idx = SORTS.indexOf(currentLibSort);
+    idx = (idx + 1) % SORTS.length;
+    currentLibSort = SORTS[idx];
+    localStorage.setItem('aubade_lib_sort', currentLibSort);
+    renderLibraryView();
+  });
+}
+
+let libObserver = null;
+let songsToRender = [];
+let songsRenderedCount = 0;
+const SONGS_BATCH_SIZE = 100;
+
+function renderLibraryView() {
+  currentLibView = localStorage.getItem('aubade_lib_view') || 'albums';
+  if (!library.tracks || library.tracks.length === 0) return;
+  
+  // Update UI state
+  Array.from(libFilterPill.children).forEach(btn => {
+    if (btn.dataset.view === currentLibView) btn.classList.add('seg-pill__seg--active');
+    else btn.classList.remove('seg-pill__seg--active');
+  });
+  libSortBtn.textContent = 'Sort: ' + currentLibSort;
+  
+  libContent.innerHTML = '';
+  if (libObserver) {
+    libObserver.disconnect();
+    libObserver = null;
+  }
+  
+  if (currentLibView === 'albums') {
+    const albums = [...library.albums];
+    
+    // Sort
+    albums.sort((a, b) => {
+      if (currentLibSort === 'Name') return a.album.localeCompare(b.album);
+      if (currentLibSort === 'Artist') return a.albumArtist.localeCompare(b.albumArtist) || a.album.localeCompare(b.album);
+      if (currentLibSort === 'Year') return (b.year || 0) - (a.year || 0);
+      return 0; // Recently added might just be order in DB/library
+    });
+    
+    libCountLine.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
+    
+    const grid = document.createElement('div');
+    grid.className = 'lib-grid--albums';
+    for (const a of albums) {
+      grid.appendChild(makeShelfCard(a));
+    }
+    libContent.appendChild(grid);
+    
+  } else if (currentLibView === 'artists') {
+    const artists = [...library.artists];
+    
+    artists.sort((a, b) => {
+      if (currentLibSort === 'Name' || currentLibSort === 'Artist') return a.name.localeCompare(b.name);
+      if (currentLibSort === 'Year') return b.albums.length - a.albums.length; // fallback
+      return 0;
+    });
+    
+    libCountLine.textContent = `${artists.length} artist${artists.length !== 1 ? 's' : ''}`;
+    
+    const grid = document.createElement('div');
+    grid.className = 'lib-grid--artists';
+    for (const a of artists) {
+      const card = document.createElement('div');
+      card.className = 'artist-card';
+      const numAlbums = a.albums.length;
+      card.innerHTML = `
+        <div class="artist-card__cover"></div>
+        <span class="artist-card__name">${escapeHTML(a.name)}</span>
+        <span class="artist-card__count">${numAlbums} album${numAlbums !== 1 ? 's' : ''}</span>
+      `;
+      
+      if (a.albums.length > 0) {
+        coverUrlForAlbum(a.albums[0]).then(url => {
+          const coverEl = card.querySelector('.artist-card__cover');
+          if (url) {
+            coverEl.style.backgroundImage = `url(${url})`;
+          } else {
+            coverEl.style.background = `linear-gradient(135deg,${gradientFor(a.name)})`;
+          }
+        });
+      }
+      grid.appendChild(card);
+    }
+    libContent.appendChild(grid);
+    
+  } else if (currentLibView === 'songs') {
+    songsToRender = [...library.tracks];
+    
+    songsToRender.sort((a, b) => {
+      if (currentLibSort === 'Name') return (a.title || a.name).localeCompare(b.title || b.name);
+      if (currentLibSort === 'Artist') return (a.artist || '').localeCompare(b.artist || '');
+      if (currentLibSort === 'Year') return (b.year || 0) - (a.year || 0);
+      return 0;
+    });
+    
+    libCountLine.textContent = `${songsToRender.length} song${songsToRender.length !== 1 ? 's' : ''}`;
+    
+    const list = document.createElement('div');
+    list.className = 'lib-list--songs search-list--songs'; // reuse styling from search
+    libContent.appendChild(list);
+    
+    const sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    libContent.appendChild(sentinel);
+    
+    songsRenderedCount = 0;
+    
+    const renderBatch = () => {
+      const frag = document.createDocumentFragment();
+      const end = Math.min(songsRenderedCount + SONGS_BATCH_SIZE, songsToRender.length);
+      
+      for (let i = songsRenderedCount; i < end; i++) {
+        const r = songsToRender[i];
+        const row = document.createElement('div');
+        row.className = 'search-row'; // Reuse row style
+        row.innerHTML = `
+          <div class="search-row-cover"></div>
+          <div class="search-row-info">
+            <span class="search-row-title">${escapeHTML(r.title || r.name)}</span>
+            <span class="search-row-artist">${escapeHTML(r.artist || r.albumArtist || 'Unknown Artist')}</span>
+          </div>
+          <div class="search-row-duration">${formatTime(r.duration)}</div>
+        `;
+        row.addEventListener('click', () => {
+          // Play from this library context
+          playerState.originalQueue = songsToRender;
+          playerState.queue = playerState.shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
+          const newIdx = playerState.queue.indexOf(r);
+          playTrack(newIdx);
+        });
+        frag.appendChild(row);
+        
+        // cover
+        const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
+        if (aKey) {
+          const album = library.albums.find(a => albumKey(a) === aKey);
+          if (album) {
+            coverUrlForAlbum(album).then(url => {
+              const coverEl = row.querySelector('.search-row-cover');
+              if (url) {
+                coverEl.style.backgroundImage = `url(${url})`;
+              } else {
+                coverEl.style.background = `linear-gradient(135deg,${gradientFor(aKey)})`;
+              }
+            });
+          }
+        }
+      }
+      list.appendChild(frag);
+      songsRenderedCount = end;
+      
+      if (songsRenderedCount >= songsToRender.length && libObserver) {
+        libObserver.disconnect();
+      }
+    };
+    
+    // Initial batch
+    renderBatch();
+    
+    if (songsRenderedCount < songsToRender.length) {
+      libObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          renderBatch();
+        }
+      });
+      libObserver.observe(sentinel);
+    }
+  }
+}
+
+window.__DEBUG_LIBRARY = function() { return library; };

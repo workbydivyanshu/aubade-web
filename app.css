@@ -1610,3 +1610,62 @@ a {
   flex-wrap: wrap;
   gap: 24px;
 }
+
+/* ── Library View ───────────────────────────────── */
+
+.lib-grid--albums {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  row-gap: 24px;
+  column-gap: 16px;
+}
+
+.lib-grid--artists {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr));
+  row-gap: 32px;
+  column-gap: 16px;
+}
+
+.artist-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  text-decoration: none;
+}
+.artist-card__cover {
+  inline-size: 176px;
+  block-size: 176px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  margin-block-end: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+.artist-card:hover .artist-card__cover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.artist-card__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-block-end: 4px;
+  text-align: center;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.artist-card__count {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.lib-list--songs {
+  display: flex;
+  flex-direction: column;
+}

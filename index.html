@@ -51,7 +51,7 @@
             </svg>
             <span>Browse</span>
           </a>
-          <a class="sidebar__nav-item" href="#albums">
+          <a class="sidebar__nav-item" href="#library?view=albums">
             <svg aria-hidden="true" viewBox="0 0 20 20">
               <circle cx="10" cy="10" r="6.5" />
               <circle cx="10" cy="10" r="1.75" />
@@ -59,7 +59,7 @@
             </svg>
             <span>Albums</span>
           </a>
-          <a class="sidebar__nav-item" href="#artists">
+          <a class="sidebar__nav-item" href="#library?view=artists">
             <svg aria-hidden="true" viewBox="0 0 20 20">
               <circle cx="10" cy="6.75" r="3" />
               <path d="M4.75 16.25c.75-3 2.5-4.5 5.25-4.5s4.5 1.5 5.25 4.5" />
@@ -478,6 +478,25 @@
                   <div class="search-list search-list--artists"></div>
                   <div class="search-cap-msg" id="search-artists-cap" style="display: none;">Showing first 20</div>
                 </section>
+              </div>
+            </div>
+
+            <!-- ── Library View ───────────────────────────────── -->
+            <div id="view-library" style="display: none; padding-block-end: 48px;">
+              <div class="greeting-row" style="margin-block-end: 8px;">
+                <h1 class="greeting-row__text">Your Library</h1>
+                <div style="flex: 1;"></div>
+                <div class="seg-pill glass-strong" id="lib-filter-pill">
+                  <button class="seg-pill__seg" data-view="albums" type="button">Albums</button>
+                  <button class="seg-pill__seg" data-view="artists" type="button">Artists</button>
+                  <button class="seg-pill__seg seg-pill__seg--active" data-view="songs" type="button">Songs</button>
+                </div>
+                <button class="seg-pill__seg glass-strong" id="lib-sort-btn" style="margin-inline-start: 12px; border-radius: 99px; block-size: 32px; padding: 0 16px; font-weight: 500; font-size: 13px;" type="button">Sort: Name</button>
+              </div>
+              <div id="lib-count-line" style="font-size: 14px; color: var(--text-muted); margin-block-end: 32px; padding-inline: 48px;"></div>
+              
+              <div id="lib-content" style="padding-inline: 48px;">
+                <!-- Content injected here -->
               </div>
             </div>
 
