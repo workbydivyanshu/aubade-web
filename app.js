@@ -361,11 +361,9 @@ function renderHome(lib) {
   // Recently added: last 12 albums by array order (order of discovery)
   const recent = albums.slice(-12).reverse();
 
-  // Most played: no play counts yet, so alphabetical by artist
   const byArtist = [...albums].sort((a, b) =>
     a.albumArtist.localeCompare(b.albumArtist)
   );
-  const played = byArtist.slice(0, 12);
 
   // Rediscover: 12 random albums, session-stable
   const shuffled = seededShuffle(albums);
@@ -390,12 +388,20 @@ function renderHome(lib) {
   const shelfRecent = document.getElementById('shelf-recent');
   if (shelfRecent) renderShelfRow(shelfRecent, recent);
 
-  // Update shelf 2 subtitle since there are no play counts
+  // Most played is real now. Until something has actually been played there is
+  // nothing honest to put here, so the shelf stays away rather than showing an
+  // alphabetical list under a heading that claims otherwise.
   const shelfPlayed = document.getElementById('shelf-played');
   if (shelfPlayed) {
-    const sub = shelfPlayed.querySelector('.shelf__subtitle');
-    if (sub) sub.textContent = 'Your library, A to Z';
-    renderShelfRow(shelfPlayed, played);
+    const ranked = albumsByPlays(albums).slice(0, 12);
+    if (ranked.length === 0) {
+      shelfPlayed.hidden = true;
+    } else {
+      shelfPlayed.hidden = false;
+      const sub = shelfPlayed.querySelector('.shelf__subtitle');
+      if (sub) sub.textContent = 'The records you keep coming back to';
+      renderShelfRow(shelfPlayed, ranked);
+    }
   }
 
   const shelfRediscover = document.getElementById('shelf-rediscover');
@@ -1724,6 +1730,58 @@ function applyLyrics(parsed) {
     
     lyricsContainer.appendChild(div);
   }
+}
+
+// ── Play counts ──────────────────────────────────────────────
+// The home page has been calling a shelf "Most played" while sorting it
+// alphabetically by artist. Nothing counted plays, so nothing could.
+//
+// A play registers once past 30 seconds or the halfway mark, whichever comes
+// first, so skipping through a record does not inflate it.
+
+const PLAY_THRESHOLD_SECONDS = 30;
+let countedThisTrack = null;
+
+function playCounts() {
+  return JSON.parse(localStorage.getItem('aubade_play_counts') || '{}');
+}
+
+function recordPlay(record) {
+  const counts = playCounts();
+  const prev = counts[record.path] || { n: 0, last: 0 };
+  counts[record.path] = { n: prev.n + 1, last: Date.now() };
+  localStorage.setItem('aubade_play_counts', JSON.stringify(counts));
+}
+
+audio.addEventListener('timeupdate', () => {
+  const record = playerState.queue[playerState.index];
+  if (record && countedThisTrack !== record.path) {
+    const half = audio.duration ? audio.duration / 2 : Infinity;
+    if (audio.currentTime >= Math.min(PLAY_THRESHOLD_SECONDS, half)) {
+      countedThisTrack = record.path;
+      recordPlay(record);
+    }
+  }
+});
+
+audio.addEventListener('loadstart', () => { countedThisTrack = null; });
+
+/** Albums ranked by how much of them has actually been played. */
+function albumsByPlays(albums) {
+  const counts = playCounts();
+  const scored = albums.map((a) => {
+    let plays = 0;
+    let last = 0;
+    for (const t of a.tracks) {
+      const c = counts[t.path];
+      if (!c) continue;
+      plays += c.n;
+      if (c.last > last) last = c.last;
+    }
+    return { album: a, plays, last };
+  }).filter((s) => s.plays > 0);
+  scored.sort((x, y) => y.plays - x.plays || y.last - x.last);
+  return scored.map((s) => s.album);
 }
 
 audio.addEventListener('timeupdate', () => {
