@@ -157,24 +157,50 @@ async function coverUrlForAlbum(album) {
     return null;
   }
 
+  // A bare catch here used to swallow every failure and cache null, which made
+  // a thrown error indistinguishable from an album that genuinely has no art.
+  // Name the stage so a failure says which step broke.
+  let stage = 'start';
   try {
     // Re-walk to find the file handle for this track
+    stage = 'dbGet(musicDir)';
     const dirHandle = await dbGet('musicDir');
-    if (!dirHandle) { coverCache.set(key, null); return null; }
+    if (!dirHandle) {
+      console.warn('[cover-diag] no musicDir handle in IndexedDB for:', album.album);
+      coverCache.set(key, null);
+      return null;
+    }
+
+    stage = 'queryPermission';
+    if (dirHandle.queryPermission) {
+      const perm = await dirHandle.queryPermission({ mode: 'read' });
+      if (perm !== 'granted') {
+        console.warn('[cover-diag] permission is "' + perm + '" (not granted) for:', album.album);
+        return null; // not cached: permission can still be granted later
+      }
+    }
 
     // Navigate the path segments to reach the file
     const parts = firstTrack.path.split('/');
     let current = dirHandle;
     for (let i = 0; i < parts.length - 1; i++) {
+      stage = 'getDirectoryHandle("' + parts[i] + '")';
       current = await current.getDirectoryHandle(parts[i]);
     }
+    stage = 'getFileHandle("' + parts[parts.length - 1] + '")';
     const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
+    stage = 'getFile';
     const file = await fileHandle.getFile();
 
+    stage = 'import(music-metadata)';
     const { parseBlob } = await import('./vendor/music-metadata.mjs');
+    stage = 'parseBlob (' + file.size + ' bytes, type "' + file.type + '")';
     const metadata = await parseBlob(file, { duration: false });
     const pics = metadata.common.picture;
     if (!pics || pics.length === 0) {
+      console.warn('[cover-diag] parsed fine but no embedded picture:', album.album,
+        '| container:', metadata.format && metadata.format.container,
+        '| tag types:', (metadata.native && Object.keys(metadata.native).join(',')) || 'none');
       coverCache.set(key, null);
       return null;
     }
@@ -183,7 +209,9 @@ async function coverUrlForAlbum(album) {
     const url = URL.createObjectURL(blob);
     coverCache.set(key, url);
     return url;
-  } catch {
+  } catch (err) {
+    console.warn('[cover-diag] threw at stage "' + stage + '" for:', album.album,
+      '| path:', firstTrack.path, '|', err && err.name, '-', err && err.message);
     coverCache.set(key, null);
     return null;
   }
