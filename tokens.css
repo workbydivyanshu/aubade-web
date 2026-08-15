@@ -57,7 +57,7 @@
 
   --top-bar-h: 3.5rem;
   --sidebar-w: 256px;
-  --player-h: 90px;
+  --player-h: 88px;
 
   /* Corner radius, measured off the live site rather than chosen.
      Octave's artwork radius is a flat 36px, not a proportion — a 176px

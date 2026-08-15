@@ -804,7 +804,7 @@ a {
   flex: 0 0 auto;
   inline-size: 56px;
   block-size: 56px;
-  border-radius: var(--radius-art-sm);
+  border-radius: 20px;
   background:
     linear-gradient(135deg, #e8927c 0%, #c97b9a 40%, #9a6fb0 100%);
 }
@@ -819,19 +819,19 @@ a {
 
 .player__title {
   color: var(--text);
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 22.5px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .player__artist {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7);
   font-size: 12px;
   font-weight: 400;
-  line-height: 20px;
+  line-height: 16px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -891,8 +891,8 @@ a {
 .player__play-btn {
   display: grid;
   place-items: center;
-  inline-size: 48px;
-  block-size: 48px;
+  inline-size: 40px;
+  block-size: 40px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -1313,11 +1313,11 @@ a {
 
 .now-playing__eyebrow {
   display: block;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 1.2px;
-  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 16.5px;
+  font-weight: 500;
+  letter-spacing: 1.1px;
+  color: rgba(255, 255, 255, 0.6);
   text-transform: uppercase;
   margin-block-end: 4px;
 }
@@ -1344,9 +1344,9 @@ a {
 }
 
 .now-playing__cover {
-  inline-size: 288px;
-  block-size: 288px;
-  border-radius: var(--radius-art-lg);
+  inline-size: 279px;
+  block-size: 279px;
+  border-radius: 25.6px;
   background-size: cover;
   background-position: center;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
@@ -1369,21 +1369,23 @@ a {
 }
 
 .now-playing__title {
-  font-size: 48px;
+  font-size: 25.6px;
   font-weight: 700;
-  letter-spacing: -1.2px;
+  letter-spacing: -0.64px;
   color: var(--text);
   margin: 0 0 4px 0;
-  line-height: 48px;
+  line-height: 32px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .now-playing__subtitle {
-  font-size: 18px;
-  line-height: 28px;
-  color: var(--text-muted);
+  font-size: 16.8px;
+  line-height: 23.1px;
+  font-weight: 400;
+  letter-spacing: -0.176px;
+  color: rgba(255, 255, 255, 0.72);
   margin: 0 0 16px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1432,9 +1434,9 @@ a {
 }
 
 .now-playing__time {
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 16.5px;
+  color: rgba(255, 255, 255, 0.75);
   font-variant-numeric: tabular-nums;
   min-inline-size: 40px;
 }
@@ -1490,18 +1492,18 @@ a {
 }
 
 .np-quality-row__format {
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--text-muted);
-  font-weight: 500;
+  font-size: 11px;
+  line-height: 16.5px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
   letter-spacing: 0.5px;
 }
 
 .np-quality-row__speed {
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--text-muted);
-  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
   background: none;
   border: none;
   cursor: pointer;
@@ -1522,8 +1524,8 @@ a {
 }
 
 .np-btn--play {
-  inline-size: 76px;
-  block-size: 76px;
+  inline-size: 72px;
+  block-size: 72px;
   border-radius: 22px;
   background: var(--text);
   color: var(--page);
@@ -1723,10 +1725,11 @@ a {
 }
 
 .np-lyric-line {
-  font-size: 44px;
+  font-size: 36px;
   font-weight: 700;
   filter: blur(2.5px);
   transition: color 0.3s, filter 0.3s;
+  line-height: 45px;
   padding-block: 12px;
   color: rgba(255, 255, 255, 0.68);
   max-inline-size: 620px;

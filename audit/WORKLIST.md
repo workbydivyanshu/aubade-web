@@ -29,11 +29,24 @@ thresholding the image, not by eye — the eye got one of these badly wrong.
 | Thing | Method | Result |
 | --- | --- | --- |
 | Cover | saturation extent of the pink band | ratio 0.713, so 285px against our 400px. Changed to 288. Correct. |
-| Title | height of the capital C in each | 72px vs 73px — **the same 48px**. It looked much larger in ours only because "Chasing Midnight" is a longer string than "Chuck's Mantra". Do not change it. |
-| Subtitle | glyph extent | ratio 0.914, suggesting ~16px against our 18px. Too noisy to act on; the two strings differ. |
+| Title | height of the capital C in each | ~~72px vs 73px, the same 48px~~ **WRONG — see below.** |
+| Subtitle | glyph extent | ratio 0.914, suggesting ~16px against our 18px. Also wrong; it is 16.8px. |
 
-The lesson worth keeping: sharp rectangular edges survive eyeballing, text sizes
-do not.
+**The title measurement was wrong, twice.** Two `getComputedStyle` dumps off the
+running site put the now-playing title at 25.6px/700, -0.64px tracking, 32px
+line box — not the 48px I twice concluded from the screenshots. The crop I
+measured sat at CSS y≈530, and the title is at y=453: I was measuring the
+scrubber times and quality row, and reporting it as the title.
+
+The cover ratio came out right, but that looks like luck rather than method.
+The honest lesson is narrower than the one I first wrote: **do not derive type
+sizes from screenshots at all.** A rectangle with hard edges can be measured; a
+glyph inside an unknown crop cannot. Ask for a dump instead — it takes the user
+thirty seconds and it is exact.
+
+Both dumps also agree that nothing in the now-playing view scales with viewport:
+identical values at 839px and 1394px wide. The earlier caution about responsive
+type was unnecessary, though checking it was not.
 
 ## Discarded — measured wrong, no work needed
 
