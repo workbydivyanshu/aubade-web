@@ -587,6 +587,25 @@ const playerState = {
 
 let currentObjectUrl = null;
 
+// A run of unplayable files should stop and say so rather than skip forever.
+let consecutiveFailures = 0;
+let toastTimer = null;
+
+function showToast(message) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast glass-strong';
+    el.setAttribute('role', 'status');
+    document.getElementById('app').append(el);
+  }
+  el.textContent = message;
+  el.classList.add('is-open');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('is-open'), 5000);
+}
+
 async function playTrack(index) {
   if (playerState.queue.length === 0) {
     playerState.index = -1;
@@ -620,8 +639,25 @@ async function playTrack(index) {
     
     updatePlayerUI(record);
     loadLyrics(record).catch(e => console.warn('Lyrics failed:', e));
+    consecutiveFailures = 0;
   } catch (err) {
     console.warn(`Could not play ${record.path}:`, err);
+    // Skipping a bad file is right; skipping the whole queue in silence is
+    // not. Lapsed folder permission fails every track, so an unbounded skip
+    // walks thousands of them and lands on idle looking like a dead button.
+    consecutiveFailures++;
+    if (err && err.name === 'NotAllowedError') {
+      consecutiveFailures = 0;
+      clearPlayerUI();
+      showToast('Lost access to your music folder. Open Settings to reconnect it.');
+      return;
+    }
+    if (consecutiveFailures >= 3 || consecutiveFailures >= playerState.queue.length) {
+      consecutiveFailures = 0;
+      clearPlayerUI();
+      showToast('Could not play these files. They may have moved or been renamed.');
+      return;
+    }
     nextTrack();
   }
 }
@@ -734,10 +770,13 @@ function clearPlayerUI() {
   npBg.style.backgroundImage = 'none';
   document.querySelector('.player__time:first-of-type').textContent = '0:00';
   document.querySelector('.player__time:last-of-type').textContent = '0:00';
-  uiTrackFill.style.width = '0%';
-  uiTrackKnob.style.left = '0%';
-  npTrackFill.style.width = '0%';
-  npTrackKnob.style.left = '0%';
+  // These four were written against names that were never declared, so this
+  // function threw a ReferenceError every time it ran — meaning the UI was
+  // never actually cleared when playback stopped or a file failed to load.
+  uiScrubFill.style.width = '0%';
+  uiScrubKnob.style.left = '0%';
+  npScrubFill.style.width = '0%';
+  npScrubKnob.style.left = '0%';
   uiPlayBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   uiPlayBtn.disabled = true;
   // Clear format
@@ -2191,12 +2230,30 @@ const npMenu = document.getElementById('np-menu');
 
 npMenuBtn.addEventListener('click', (e) => {
   e.stopPropagation();
-  npMenu.style.display = npMenu.style.display === 'none' ? 'block' : 'none';
+  const opening = npMenu.style.display === 'none';
+  if (opening) syncNpMenuLabels();
+  npMenu.style.display = opening ? 'block' : 'none';
 });
 
 function closeNpMenu() {
   npMenu.style.display = 'none';
 }
+
+document.getElementById('np-credits-close').addEventListener('click', () => {
+  document.getElementById('np-credits').classList.remove('is-open');
+});
+
+// Share had markup but no handler. There is no link to share for a local
+// file, so it copies what identifies the track.
+document.getElementById('np-share-btn').addEventListener('click', async () => {
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  const text = `${record.title || record.name} — ${record.artist || record.albumArtist}`;
+  try {
+    await navigator.clipboard.writeText(text);
+    flashButton(document.getElementById('np-share-btn'));
+  } catch { /* clipboard blocked */ }
+});
 
 document.addEventListener('click', (e) => {
   if (!npMenu.contains(e.target) && e.target !== npMenuBtn) {
@@ -2205,7 +2262,9 @@ document.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeNpMenu();
+  if (e.key !== 'Escape') return;
+  closeNpMenu();
+  document.getElementById('np-credits').classList.remove('is-open');
 });
 
 npMenu.addEventListener('click', (e) => {
@@ -2235,11 +2294,124 @@ npMenu.addEventListener('click', (e) => {
       closeNpMenu();
       break;
     }
-    case 'show-library': {
-      npOverlay.classList.remove('is-open');
+    case 'like': {
+      document.getElementById('np-heart-btn').click();
       closeNpMenu();
-      window.location.hash = '#library';
+      break;
+    }
+    case 'play-next': {
+      playerState.queue.splice(playerState.index + 1, 0, record);
+      playerState.originalQueue.splice(playerState.index + 1, 0, record);
+      closeNpMenu();
+      break;
+    }
+    case 'add-queue': {
+      playerState.queue.push(record);
+      playerState.originalQueue.push(record);
+      closeNpMenu();
+      break;
+    }
+    case 'toggle-lyrics': {
+      document.getElementById('np-lyrics-toggle').click();
+      closeNpMenu();
+      break;
+    }
+    case 'credits': {
+      closeNpMenu();
+      showCredits(record);
       break;
     }
   }
 });
+
+// The indexer keeps only what the library views need, but the files carry
+// more — composer, lyricist, label, ISRC, copyright. Read those on demand for
+// the one track being asked about, and cache so reopening is free.
+const creditsCache = new Map();
+
+async function readCredits(record) {
+  if (creditsCache.has(record.path)) return creditsCache.get(record.path);
+  let credits = null;
+  try {
+    const dirHandle = await dbGet('musicDir');
+    if (dirHandle) {
+      const parts = record.path.split('/');
+      let cur = dirHandle;
+      for (let i = 0; i < parts.length - 1; i++) cur = await cur.getDirectoryHandle(parts[i]);
+      const file = await (await cur.getFileHandle(parts[parts.length - 1])).getFile();
+      const { parseBlob } = await import('./vendor/music-metadata.mjs');
+      // duration:true for the same reason cover extraction needs it — the
+      // early-exit path truncates comments that span many Ogg pages.
+      const md = await parseBlob(file, { duration: true });
+      const c = md.common || {};
+      const f = md.format || {};
+      credits = {
+        composer: (c.composer || []).join(', '),
+        lyricist: (c.lyricist || []).join(', '),
+        label: (c.label || []).join(', '),
+        isrc: (c.isrc || []).join(', '),
+        copyright: c.copyright || '',
+        codec: f.codec || f.container || '',
+        sampleRate: f.sampleRate ? Math.round(f.sampleRate / 1000) + ' kHz' : '',
+        bitrate: f.bitrate ? Math.round(f.bitrate / 1000) + ' kbps' : '',
+        channels: f.numberOfChannels === 1 ? 'Mono' : f.numberOfChannels === 2 ? 'Stereo' : '',
+      };
+    }
+  } catch { credits = null; }
+  creditsCache.set(record.path, credits);
+  return credits;
+}
+
+async function showCredits(record) {
+  const panel = document.getElementById('np-credits');
+  const body = document.getElementById('np-credits-body');
+  panel.classList.add('is-open');
+  body.innerHTML = '<p class="np-credits__empty">Reading tags…</p>';
+
+  const c = await readCredits(record);
+  const rows = [
+    ['Title', record.title || record.name],
+    ['Artist', record.artist || record.albumArtist],
+    ['Album', record.album],
+    ['Year', record.year || ''],
+    ['Composer', c && c.composer],
+    ['Lyricist', c && c.lyricist],
+    ['Label', c && c.label],
+    ['Copyright', c && c.copyright],
+    ['ISRC', c && c.isrc],
+    ['Format', c && [c.codec, c.sampleRate, c.bitrate, c.channels].filter(Boolean).join(' · ')],
+  ].filter(([, v]) => v);
+
+  body.innerHTML = '';
+  if (rows.length === 0) {
+    body.innerHTML = '<p class="np-credits__empty">No credits in this file.</p>';
+    return;
+  }
+  for (const [label, value] of rows) {
+    const row = document.createElement('div');
+    row.className = 'np-credits__row';
+    const k = document.createElement('span');
+    k.className = 'np-credits__key';
+    k.textContent = label;
+    const v = document.createElement('span');
+    v.className = 'np-credits__value';
+    v.textContent = value;
+    row.append(k, v);
+    body.append(row);
+  }
+}
+
+// The menu's two toggling rows should say what pressing them will do.
+function syncNpMenuLabels() {
+  const record = playerState.queue[playerState.index];
+  const likeItem = npMenu.querySelector('[data-action="like"] [data-label]');
+  if (likeItem && record) {
+    const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+    likeItem.textContent = liked[record.path] ? 'Remove from Liked Songs' : 'Add to Liked Songs';
+  }
+  const lyricsItem = npMenu.querySelector('[data-action="toggle-lyrics"] [data-label]');
+  const right = document.querySelector('.now-playing__right');
+  if (lyricsItem && right) {
+    lyricsItem.textContent = right.style.display === 'none' ? 'Show lyrics' : 'Hide lyrics';
+  }
+}
