@@ -2563,3 +2563,85 @@ input:checked + .toggle-slider:before {
     animation: none;
   }
 }
+
+/* ─ Browse ────────────────────────────────────────────────────
+   Octave's tile grid, measured on its search page: 263x132 cells at a
+   2:1 ratio, 36px radius, label 18px/600 with -0.45px tracking. */
+
+.browse-section {
+  padding-inline: 32px;
+  margin-block-end: 40px;
+}
+
+.browse-section .shelf__title {
+  margin-block-end: 16px;
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.browse-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 2 / 1;
+  padding: 16px 18px;
+  border-radius: var(--radius-art);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  transition: transform 0.15s var(--ease-out);
+}
+
+.browse-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 62%);
+}
+
+.browse-tile:hover {
+  transform: translateY(-2px);
+}
+
+.browse-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.browse-tile__label,
+.browse-tile__count {
+  position: relative;
+  z-index: 1;
+}
+
+.browse-tile__label {
+  font-size: 18px;
+  line-height: 22.5px;
+  font-weight: 600;
+  letter-spacing: -0.45px;
+  color: #fff;
+}
+
+.browse-tile__count {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.browse-count {
+  margin: 0 0 20px;
+  padding-inline: 32px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+#view-browse .lib-grid--albums {
+  padding-inline: 32px;
+}
