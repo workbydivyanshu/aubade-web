@@ -1337,11 +1337,10 @@ a {
 }
 
 .now-playing__left {
-  flex: 0 0 49%;
+  flex: 0 0 50%;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-inline-end: 64px;
 }
 
 .now-playing__cover {
@@ -1674,7 +1673,7 @@ a {
   overflow-y: auto;
   scrollbar-width: none;
   padding-block: 40px;
-  padding-inline: 70px 48px;
+  padding-inline: 60px 48px;
 }
 .now-playing__lyrics::-webkit-scrollbar {
   display: none;
