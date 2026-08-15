@@ -1,7 +1,11 @@
+import { state } from './state.js';
 import { openDB, dbGet, dbSet } from './db.js';
 import { albumKey } from './library.js';
 import { gradientFor, coverUrlForAlbum, getCoverAccent } from './art.js';
 import { parseLrc } from './lrc.js';
+
+// Only ever mutated, so an alias is safe and keeps the call sites short.
+const playerState = state.player;
 
 // ── IndexedDB (aubade / handles + library) ──────────────────
 // FileSystemDirectoryHandle is structured-cloneable, so it stores
@@ -31,11 +35,10 @@ async function* walkDir(dirHandle, prefix = '') {
 
 // ── Library ─────────────────────────────────────────────────
 
-let library = { tracks: [], albums: [], artists: [] };
-export function getLibrary() { return library; }
+export function getLibrary() { return state.library; }
 
-// Kept for backward compat but now just returns library.tracks
-export function getTracks() { return library.tracks; }
+// Kept for backward compat but now just returns state.library.tracks
+export function getTracks() { return state.library.tracks; }
 
 function buildLibrary(records) {
   // Group albums by case-insensitive (albumArtist + album)
@@ -77,8 +80,8 @@ function buildLibrary(records) {
 
   const artists = [...artistMap.values()];
 
-  library = { tracks: records, albums, artists };
-  return library;
+  state.library = { tracks: records, albums, artists };
+  return state.library;
 }
 
 function formatStatus(lib, failed) {
@@ -94,7 +97,7 @@ function formatStatus(lib, failed) {
 // Stable gradient placeholders, chosen by a hash of the album key.
 //
 // Every dark end is kept clear of black on purpose. Most albums in a real
-// library have no embedded artwork, so these are what the shelves are mostly
+// Many files have no embedded artwork, so these are what the shelves are mostly
 // made of, and the near-black starts an earlier set used disappeared against
 // the page — a card that reads as a hole rather than as a record.
 
@@ -367,7 +370,7 @@ async function indexDir(dirHandle, statusEl) {
 
   worker.terminate();
 
-  // Phase 3: build library and persist
+  // Phase 3: build the library and persist it
   const lib = buildLibrary(records);
   await dbSet('index', lib, 'library');
 
@@ -406,9 +409,9 @@ function showReconnect(handle) {
       // Check for cached index first
       const cached = await dbGet('index', 'library');
       if (cached) {
-        library = cached;
-        statusEl.textContent = formatStatus(library, 0);
-        renderHome(library);
+        state.library = cached;
+        statusEl.textContent = formatStatus(state.library, 0);
+        renderHome(state.library);
       } else {
         await indexDir(handle, statusEl);
       }
@@ -426,13 +429,13 @@ async function init() {
 
   foldersBtn.addEventListener('click', pickFolder);
 
-  // Check for a cached library index first — works even without
+  // Check for a cached state.library index first — works even without
   // folder handle (e.g. if handle was cleared but index persists)
   const cached = await dbGet('index', 'library');
   if (cached) {
-    library = cached;
-    statusEl.textContent = formatStatus(library, 0);
-    renderHome(library);
+    state.library = cached;
+    statusEl.textContent = formatStatus(state.library, 0);
+    renderHome(state.library);
   }
 
   const handle = await dbGet('musicDir');
@@ -466,13 +469,6 @@ init();
 const audio = new Audio();
 audio.id = 'player-audio';
 document.body.append(audio);
-const playerState = {
-  queue: [],
-  index: -1,
-  shuffle: false,
-  repeat: false,
-  originalQueue: []
-};
 
 let currentObjectUrl = null;
 
@@ -552,7 +548,7 @@ async function playTrack(index) {
 }
 
 function playAlbum(key, startIndex = 0) {
-  const album = library.albums.find(a => key === albumKey(a));
+  const album = state.library.albums.find(a => key === albumKey(a));
   if (!album) return;
   
   playerState.originalQueue = [...album.tracks];
@@ -630,7 +626,7 @@ function setupMediaSession() {
 
 /** Artwork for the OS widget. Object URLs work; a missing cover is fine. */
 async function mediaSessionArtwork(record) {
-  const album = (library.albums || []).find((a) => albumKey(a) ===
+  const album = (state.library.albums || []).find((a) => albumKey(a) ===
     `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
   if (!album) return [];
   const url = await coverUrlForAlbum(album);
@@ -836,7 +832,7 @@ function updatePlayerUI(record) {
     if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
   }
   
-  const album = library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
+  const album = state.library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
   if (album) {
     coverUrlForAlbum(album).then(url => {
       if (url) {
@@ -1037,7 +1033,7 @@ function handleRoute() {
     if (nav) nav.classList.add('sidebar__nav-item--selected');
   } else if (hash.startsWith('#album/')) {
     const key = decodeURIComponent(hash.substring(7));
-    if (library.albums && library.albums.length > 0) {
+    if (state.library.albums && state.library.albums.length > 0) {
       renderAlbumView(key);
     }
     viewAlbum.style.display = 'block';
@@ -1046,7 +1042,7 @@ function handleRoute() {
     viewSettings.style.display = 'flex';
   } else if (hash.startsWith('#artist/')) {
     const name = decodeURIComponent(hash.substring(8));
-    if (library.artists && library.artists.length > 0) {
+    if (state.library.artists && state.library.artists.length > 0) {
       renderArtistView(name);
     }
     viewArtist.style.display = 'block';
@@ -1095,7 +1091,7 @@ function flashButton(btn) {
 }
 
 async function renderAlbumView(key) {
-  const album = library.albums.find(a => key === albumKey(a));
+  const album = state.library.albums.find(a => key === albumKey(a));
   if (!album) return;
 
   const bg = document.querySelector('.album-header__bg');
@@ -1224,7 +1220,7 @@ function browseFacets() {
   const genres = new Map();
   const decades = new Map();
   const years = new Map();
-  for (const a of library.albums || []) {
+  for (const a of state.library.albums || []) {
     const g = (a.tracks.find((t) => t.genre) || {}).genre;
     if (g) genres.set(g, (genres.get(g) || 0) + 1);
     if (a.year) {
@@ -1242,7 +1238,7 @@ function browseFacets() {
 }
 
 function albumsMatching(kind, value) {
-  return (library.albums || []).filter((a) => {
+  return (state.library.albums || []).filter((a) => {
     if (kind === 'genre') return a.tracks.some((t) => t.genre === value);
     if (kind === 'decade') return a.year && Math.floor(a.year / 10) * 10 === +value;
     if (kind === 'year') return a.year === +value;
@@ -1320,10 +1316,10 @@ function renderBrowseView(kind, value) {
 
 function likedTracks() {
   const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
-  if (!library.tracks) return [];
+  if (!state.library.tracks) return [];
   // Keep the library's own order rather than the order things were liked in;
   // storage is an object and its key order is not meaningful.
-  return library.tracks.filter((t) => liked[t.path]);
+  return state.library.tracks.filter((t) => liked[t.path]);
 }
 
 function playTrackList(tracks, startIndex = 0, shuffle = false) {
@@ -1438,8 +1434,8 @@ function doSearch() {
     return;
   }
   
-  if (!library.tracks || library.tracks.length === 0) return;
-  enrichSearchIndex(library);
+  if (!state.library.tracks || state.library.tracks.length === 0) return;
+  enrichSearchIndex(state.library);
 
   // Match logic
   // Score: 2 for prefix match in title/album/artist, 1 for middle match, 0 for no match
@@ -1464,7 +1460,7 @@ function doSearch() {
   };
   
   const matchedTracks = [];
-  for (const t of library.tracks) {
+  for (const t of state.library.tracks) {
     const score = matchTrack(t);
     if (score > 0) {
       matchedTracks.push({ track: t, score });
@@ -1496,8 +1492,8 @@ function doSearch() {
     }
   }
   
-  const albums = library.albums.filter(a => matchedAlbumKeys.has(albumKey(a)));
-  const artists = library.artists.filter(a => matchedArtistKeys.has(a.name.toLowerCase()));
+  const albums = state.library.albums.filter(a => matchedAlbumKeys.has(albumKey(a)));
+  const artists = state.library.artists.filter(a => matchedArtistKeys.has(a.name.toLowerCase()));
   
   // Render Songs
   searchSongsList.innerHTML = '';
@@ -1515,10 +1511,10 @@ function doSearch() {
       <div class="search-row-duration">${formatTime(r.duration)}</div>
     `;
     row.addEventListener('click', () => {
-      // Find index in main library queue
-      const idx = library.tracks.indexOf(r);
+      // Find index in main state.library queue
+      const idx = state.library.tracks.indexOf(r);
       if (idx !== -1) {
-        playerState.originalQueue = library.tracks;
+        playerState.originalQueue = state.library.tracks;
         playerState.queue = playerState.shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
         const newIdx = playerState.queue.indexOf(r);
         playTrack(newIdx);
@@ -1529,7 +1525,7 @@ function doSearch() {
     // Async cover
     const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
     if (aKey) {
-      const album = library.albums.find(a => albumKey(a) === aKey);
+      const album = state.library.albums.find(a => albumKey(a) === aKey);
       if (album) {
         coverUrlForAlbum(album).then(url => {
           const coverEl = row.querySelector('.search-row-cover');
@@ -1848,7 +1844,7 @@ const SONGS_BATCH_SIZE = 100;
 
 function renderLibraryView() {
   currentLibView = localStorage.getItem('aubade_lib_view') || 'albums';
-  if (!library.tracks || library.tracks.length === 0) return;
+  if (!state.library.tracks || state.library.tracks.length === 0) return;
   
   // Update UI state
   Array.from(libFilterPill.children).forEach(btn => {
@@ -1865,14 +1861,14 @@ function renderLibraryView() {
   
   if (currentLibView === 'albums') {
     const hideSingles = localStorage.getItem('aubade_hide_singles') === 'true';
-    const albums = hideSingles ? library.albums.filter(a => a.tracks.length > 1) : [...library.albums];
+    const albums = hideSingles ? state.library.albums.filter(a => a.tracks.length > 1) : [...state.library.albums];
     
     // Sort
     albums.sort((a, b) => {
       if (currentLibSort === 'Name') return a.album.localeCompare(b.album);
       if (currentLibSort === 'Artist') return a.albumArtist.localeCompare(b.albumArtist) || a.album.localeCompare(b.album);
       if (currentLibSort === 'Year') return (b.year || 0) - (a.year || 0);
-      return 0; // Recently added might just be order in DB/library
+      return 0; // Recently added might just be order in DB/state.library
     });
     
     libCountLine.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
@@ -1885,7 +1881,7 @@ function renderLibraryView() {
     libContent.appendChild(grid);
     
   } else if (currentLibView === 'artists') {
-    const artists = [...library.artists];
+    const artists = [...state.library.artists];
     
     artists.sort((a, b) => {
       if (currentLibSort === 'Name' || currentLibSort === 'Artist') return a.name.localeCompare(b.name);
@@ -1923,7 +1919,7 @@ function renderLibraryView() {
     libContent.appendChild(grid);
     
   } else if (currentLibView === 'songs') {
-    songsToRender = [...library.tracks];
+    songsToRender = [...state.library.tracks];
     
     songsToRender.sort((a, b) => {
       if (currentLibSort === 'Name') return (a.title || a.name).localeCompare(b.title || b.name);
@@ -1961,7 +1957,7 @@ function renderLibraryView() {
           <div class="search-row-duration">${formatTime(r.duration)}</div>
         `;
         row.addEventListener('click', () => {
-          // Play from this library context
+          // Play from this state.library context
           playerState.originalQueue = songsToRender;
           playerState.queue = playerState.shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
           const newIdx = playerState.queue.indexOf(r);
@@ -1972,7 +1968,7 @@ function renderLibraryView() {
         // cover
         const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
         if (aKey) {
-          const album = library.albums.find(a => albumKey(a) === aKey);
+          const album = state.library.albums.find(a => albumKey(a) === aKey);
           if (album) {
             coverUrlForAlbum(album).then(url => {
               const coverEl = row.querySelector('.search-row-cover');
@@ -2007,12 +2003,12 @@ function renderLibraryView() {
   }
 }
 
-window.__DEBUG_LIBRARY = function() { return library; };
+window.__DEBUG_LIBRARY = function() { return state.library; };
 
 // ── Artist View ──────────────────────────────────────────────
 
 async function renderArtistView(name) {
-  const artist = library.artists.find(a => a.name.toLowerCase() === name.toLowerCase());
+  const artist = state.library.artists.find(a => a.name.toLowerCase() === name.toLowerCase());
   if (!artist) return;
 
   const bg = document.querySelector('.artist-header__bg');
@@ -2128,7 +2124,7 @@ async function renderArtistView(name) {
     songsList.appendChild(row);
 
     const rAKey = albumKey({ albumArtist: r.albumArtist, album: r.album });
-    const album = library.albums.find(a => albumKey(a) === rAKey);
+    const album = state.library.albums.find(a => albumKey(a) === rAKey);
     if (album) {
       coverUrlForAlbum(album).then(url => {
         const coverEl = row.querySelector('.search-row-cover');
@@ -2162,9 +2158,9 @@ function renderSettingsView() {
 
   // Library stats
   const statsEl = document.getElementById('settings-library-stats');
-  const numSongs = library.tracks ? library.tracks.length : 0;
-  const numAlbums = library.albums ? library.albums.length : 0;
-  const numArtists = library.artists ? library.artists.length : 0;
+  const numSongs = state.library.tracks ? state.library.tracks.length : 0;
+  const numAlbums = state.library.albums ? state.library.albums.length : 0;
+  const numArtists = state.library.artists ? state.library.artists.length : 0;
   statsEl.textContent = `${numSongs} song${numSongs !== 1 ? 's' : ''}, ${numAlbums} album${numAlbums !== 1 ? 's' : ''}, ${numArtists} artist${numArtists !== 1 ? 's' : ''}`;
 
   // Toggles
@@ -2243,7 +2239,7 @@ function renderSettingsView() {
         tx.objectStore('handles').clear();
         tx.objectStore('library').clear();
         tx.oncomplete = () => {
-          library = { tracks: [], albums: [], artists: [] };
+          state.library = { tracks: [], albums: [], artists: [] };
           window.location.hash = '#home';
           window.location.reload();
         };
@@ -2820,7 +2816,7 @@ npMenu.addEventListener('click', (e) => {
   }
 });
 
-// The indexer keeps only what the library views need, but the files carry
+// The indexer keeps only what the state.library views need, but the files carry
 // more — composer, lyricist, label, ISRC, copyright. Read those on demand for
 // the one track being asked about, and cache so reopening is free.
 const creditsCache = new Map();
