@@ -195,7 +195,12 @@ async function coverUrlForAlbum(album) {
     stage = 'import(music-metadata)';
     const { parseBlob } = await import('./vendor/music-metadata.mjs');
     stage = 'parseBlob (' + file.size + ' bytes, type "' + file.type + '")';
-    const metadata = await parseBlob(file, { duration: false });
+    // duration:true is load-bearing, not a typo. With it off, the parser takes
+    // an early-exit path that stops reading partway through a Vorbis comment
+    // spanning many Ogg pages, so a 2455172-char METADATA_BLOCK_PICTURE
+    // arrives truncated to 844741 and atob rejects it. Costs ~250ms a file
+    // instead of ~18ms, but the result is cached and loaded lazily.
+    const metadata = await parseBlob(file, { duration: true });
     const pics = metadata.common.picture;
     if (!pics || pics.length === 0) {
       console.warn('[cover-diag] parsed fine but no embedded picture:', album.album,
