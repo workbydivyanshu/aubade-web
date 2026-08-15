@@ -1,5 +1,22 @@
 # Polish worklist
 
+## Status
+
+Batches 1-6 are done and verified by re-measuring against the live site.
+Card typography was added as a seventh pass after the counts showed Octave
+running 14px/600 titles and 12px/400 secondary text where we had 500 and 13px.
+
+Two items were found to be measurement errors during the work itself and are
+recorded in the discarded table below: the album control row is centred on
+Octave, not left-aligned, and back/forward were never missing from our top bar.
+
+**Still open — the search field.** Octave's `/search` presents a collapsed
+34x38 pill in the sticky top bar (radius full, bg rgb(20,20,23), 1px border),
+not the 560x44 centred field we show. It does not expand under automation even
+when focused and typed into, so the expanded width cannot be measured. Matching
+it would mean guessing that number, so ours is unchanged pending a real look.
+
+
 Merged from the three parallel audits, de-duplicated, with false findings removed.
 Every item below was re-verified against the captured JSON before being listed.
 

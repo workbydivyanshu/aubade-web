@@ -490,7 +490,7 @@ a {
   padding-inline: 12px;
   color: var(--text);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 20px;
   white-space: nowrap;
   overflow: hidden;
@@ -690,7 +690,7 @@ a {
   flex: 0 0 auto;
   color: var(--text-muted);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 20px;
   white-space: nowrap;
   padding-block-start: 6px;
@@ -755,7 +755,7 @@ a {
 .shelf-card__title {
   color: var(--text);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 20px;
   white-space: nowrap;
   overflow: hidden;
@@ -764,7 +764,7 @@ a {
 
 .shelf-card__artist {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 20px;
   white-space: nowrap;
@@ -829,7 +829,7 @@ a {
 
 .player__artist {
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 20px;
   white-space: nowrap;
@@ -1219,8 +1219,8 @@ a {
 .track-row__duration {
   flex: 0 0 auto;
   color: var(--text-muted);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   margin-inline-start: 16px;
 }
 
@@ -1821,8 +1821,8 @@ a {
 }
 
 .search-row-artist {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1830,8 +1830,8 @@ a {
 }
 
 .search-row-duration {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
 }
@@ -1914,7 +1914,7 @@ a {
 .artist-card__name {
   font-size: 14px;
   line-height: 20px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
   margin-block-end: 4px;
   text-align: center;
@@ -1924,8 +1924,8 @@ a {
   text-overflow: ellipsis;
 }
 .artist-card__count {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   color: var(--text-muted);
   text-align: center;
 }
