@@ -809,6 +809,8 @@ function updatePlayerUI(record) {
     fmtEl.textContent = ext;
   }
 
+  if (!document.getElementById('np-queue').hidden) renderQueue();
+
   // Heart state
   const heartBtn = document.getElementById('np-heart-btn');
   if (heartBtn) {
@@ -2467,6 +2469,91 @@ document.getElementById('np-lyric-copy').addEventListener('click', async () => {
   } catch { /* clipboard blocked */ }
 });
 
+// ── Queue ────────────────────────────────────────────────────
+// The queue has existed in playerState from the start with no way to see it,
+// which left the queue buttons pointing at nothing. It shares the right-hand
+// pane with the lyrics, as Octave's does.
+
+const npQueue = document.getElementById('np-queue');
+const npQueueList = document.getElementById('np-queue-list');
+const npLyricsPane = document.querySelector('.now-playing__lyrics');
+const npSyncRow = document.getElementById('np-sync-row');
+
+function renderQueue() {
+  npQueueList.innerHTML = '';
+  const { queue, index } = playerState;
+  if (!queue.length) {
+    const empty = document.createElement('p');
+    empty.className = 'np-queue__empty';
+    empty.textContent = 'Nothing queued.';
+    npQueueList.appendChild(empty);
+    return;
+  }
+
+  queue.forEach((t, i) => {
+    if (i === index) {
+      const label = document.createElement('p');
+      label.className = 'np-queue__label';
+      label.textContent = 'Now playing';
+      npQueueList.appendChild(label);
+    } else if (i === index + 1) {
+      const label = document.createElement('p');
+      label.className = 'np-queue__label';
+      label.textContent = 'Next up';
+      npQueueList.appendChild(label);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'np-queue__row' + (i === index ? ' is-current' : '');
+    if (i === index) row.id = 'np-queue-current';
+
+    const info = document.createElement('div');
+    info.className = 'np-queue__info';
+    const title = document.createElement('span');
+    title.className = 'np-queue__track';
+    title.textContent = t.title || t.name;
+    const artist = document.createElement('span');
+    artist.className = 'np-queue__artist';
+    artist.textContent = t.artist || t.albumArtist || '';
+    info.append(title, artist);
+
+    const dur = document.createElement('span');
+    dur.className = 'np-queue__duration';
+    dur.textContent = t.duration ? formatTime(t.duration) : '';
+
+    row.append(info, dur);
+    row.onclick = () => { playTrack(i); renderQueue(); };
+    npQueueList.appendChild(row);
+  });
+
+  // Octave v2.0: opening the queue snaps to the current track rather than
+  // dumping you at the top of a long list.
+  const current = document.getElementById('np-queue-current');
+  if (current) current.scrollIntoView({ block: 'center' });
+}
+
+function setQueueOpen(open) {
+  npQueue.hidden = !open;
+  npLyricsPane.style.display = open ? 'none' : '';
+  npSyncRow.style.display = open ? 'none' : '';
+  document.getElementById('np-queue-btn').classList.toggle('np-icon-btn--active', open);
+  if (open) renderQueue();
+}
+
+document.getElementById('np-queue-btn').addEventListener('click', () => {
+  setQueueOpen(npQueue.hidden);
+});
+
+document.getElementById('np-queue-clear').addEventListener('click', () => {
+  const { queue, index } = playerState;
+  if (index < 0) return;
+  playerState.queue = queue.slice(0, index + 1);
+  playerState.originalQueue = playerState.originalQueue.filter(
+    (t) => playerState.queue.includes(t));
+  renderQueue();
+  showToast('Cleared what was coming next');
+});
+
 // Octave v2.4: "Scroll over the volume bar to change it on desktop."
 for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
   if (!bar) continue;
@@ -2485,6 +2572,14 @@ for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
 const npLyricsToggle = document.getElementById('np-lyrics-toggle');
 const npRight = document.querySelector('.now-playing__right');
 npLyricsToggle.addEventListener('click', () => {
+  // If the queue has the pane, hand it back to the lyrics rather than
+  // hiding a pane the user cannot see anyway.
+  if (!document.getElementById('np-queue').hidden) {
+    setQueueOpen(false);
+    npRight.style.display = '';
+    npLyricsToggle.classList.add('np-icon-btn--active');
+    return;
+  }
   const isHidden = npRight.style.display === 'none';
   npRight.style.display = isHidden ? '' : 'none';
   npLyricsToggle.classList.toggle('np-icon-btn--active', isHidden);

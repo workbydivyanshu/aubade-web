@@ -2645,3 +2645,144 @@ input:checked + .toggle-slider:before {
 #view-browse .lib-grid--albums {
   padding-inline: 32px;
 }
+
+/* ─ Queue ─────────────────────────────────────────────────────
+   Shares the right-hand pane with the lyrics. */
+
+/* Setting display here would otherwise defeat the hidden attribute, which is
+   how this pane is toggled — the element stayed on screen while reporting
+   itself hidden. */
+.np-queue[hidden] {
+  display: none;
+}
+
+.np-queue {
+  display: flex;
+  flex: 1;
+  min-block-size: 0;
+  flex-direction: column;
+  padding-inline: 60px 48px;
+  padding-block-start: 12px;
+}
+
+.np-queue__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 12px;
+}
+
+.np-queue__title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--np-text);
+}
+
+.np-queue__clear {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.np-queue__clear:hover {
+  color: var(--np-text);
+}
+
+.np-queue__list {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.np-queue__list::-webkit-scrollbar {
+  display: none;
+}
+
+.np-queue__label {
+  margin: 16px 0 6px;
+  font-size: 11px;
+  line-height: 16.5px;
+  font-weight: 600;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.np-queue__label:first-child {
+  margin-block-start: 0;
+}
+
+.np-queue__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  border-radius: var(--radius-row);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.np-queue__row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.np-queue__row.is-current {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.np-queue__info {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  flex: 1;
+}
+
+.np-queue__track,
+.np-queue__artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.np-queue__track {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--np-text);
+}
+
+.np-queue__row.is-current .np-queue__track {
+  color: var(--np-accent, var(--accent));
+}
+
+.np-queue__artist {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.np-queue__duration {
+  flex: 0 0 auto;
+  font-size: 11px;
+  line-height: 16.5px;
+  color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+.np-queue__empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
