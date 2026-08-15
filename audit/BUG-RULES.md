@@ -44,6 +44,32 @@ something absent from a tool's output?*
 - Some warnings are deliberate instrumentation, not faults — `[cover-diag]` is
   a diagnostic we added on purpose.
 
+## Before you scan: has anything changed?
+
+This project is being committed to every ten or twenty minutes, so a fixed
+interval will often re-scan code you already cleared, and report things that
+were fixed between your runs.
+
+So start every run with:
+
+```
+git rev-parse --short HEAD
+```
+
+Compare it to the hash at the top of your own last entry in `audit/watch/`. If
+it is the same, write one line and stop:
+
+```
+## <timestamp> — <tool>
+No new commits since <hash>. Skipped.
+```
+
+Scanning the committed state also avoids catching the repo mid-edit, which is
+the other way to get a finding that was never real.
+
+Put the hash in every entry you write, so the next run can compare against it
+and so a finding can be traced to the code it was found in.
+
 ## How to look
 
 Use the harness rather than inventing one:
