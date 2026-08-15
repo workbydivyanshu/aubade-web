@@ -705,6 +705,47 @@ const npOpenBtn = document.querySelector('.player__icon-btn[aria-label="Expand n
 const npBg = document.querySelector('.now-playing__bg');
 const npAmbient = [...document.querySelectorAll('.ambient-layer')];
 
+// Long titles were simply cut with an ellipsis. Octave scrolls them, holding
+// still at each end — its keyframe rests for the first 12% and the last 12%
+// and travels between, offset by the container's own width.
+//
+// The text has to move inside something that clips it, so it goes in an inner
+// span and the element keeps the overflow.
+
+function setScrollingText(el, text) {
+  let inner = el.firstElementChild;
+  if (!inner || !inner.classList.contains('marquee__inner')) {
+    el.textContent = '';
+    inner = document.createElement('span');
+    inner.className = 'marquee__inner';
+    el.appendChild(inner);
+  }
+  if (inner.textContent === text) return;
+  inner.textContent = text;
+  // Measure after layout, or scrollWidth reads the previous text.
+  requestAnimationFrame(() => measureMarquee(el));
+}
+
+/**
+ * Decide whether an element's text overflows enough to scroll.
+ *
+ * A hidden element measures zero, so this is worth re-running when something
+ * becomes visible — the now-playing overlay is usually closed at the moment a
+ * track loads, and its title would otherwise never be measured at all.
+ */
+function measureMarquee(el) {
+  const inner = el.firstElementChild;
+  if (!inner || !inner.classList.contains('marquee__inner')) return;
+  el.classList.remove('is-scrolling');
+  if (!el.clientWidth) return;               // not visible; nothing to measure
+  const overflow = inner.scrollWidth - el.clientWidth;
+  if (overflow <= 4) return;
+  el.style.setProperty('--marquee-w', el.clientWidth + 'px');
+  // Long titles should not travel faster than short ones.
+  el.style.setProperty('--marquee-time', Math.round(6 + overflow / 22) + 's');
+  el.classList.add('is-scrolling');
+}
+
 /** Paint the ambient circles, or clear them back to the gradient. */
 function setAmbient(value) {
   for (const layer of npAmbient) layer.style.backgroundImage = value;
@@ -733,11 +774,11 @@ npCloseBtn.addEventListener('click', () => npOverlay.classList.remove('is-open')
 function clearPlayerUI() {
   document.getElementById('app').classList.add('is-idle');
 
-  uiTitle.textContent = '';
-  uiArtist.textContent = '';
+  setScrollingText(uiTitle, '');
+  setScrollingText(uiArtist, '');
   uiCover.style.backgroundImage = 'none';
-  npTitle.textContent = '';
-  npSubtitle.textContent = '';
+  setScrollingText(npTitle, '');
+  setScrollingText(npSubtitle, '');
   npAlbum.textContent = '';
   npCover.style.backgroundImage = 'none';
   npBg.style.backgroundImage = 'none';
@@ -766,13 +807,13 @@ function clearPlayerUI() {
 function updatePlayerUI(record) {
   document.getElementById('app').classList.remove('is-idle');
   uiPlayBtn.disabled = false;
-  uiTitle.textContent = record.title || record.name;
-  uiArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
+  setScrollingText(uiTitle, record.title || record.name);
+  setScrollingText(uiArtist, record.artist || record.albumArtist || 'Unknown Artist');
   
-  npTitle.textContent = record.title || record.name;
+  setScrollingText(npTitle, record.title || record.name);
   const artist = record.artist || record.albumArtist || 'Unknown Artist';
   const albumName = record.album || 'Unknown Album';
-  npSubtitle.textContent = `${albumName} · ${artist}`;
+  setScrollingText(npSubtitle, `${albumName} · ${artist}`);
   npAlbum.textContent = albumName;
 
   // Format label from file extension
@@ -2402,7 +2443,24 @@ audio.addEventListener('pause', stopVisualiser);
 // catches all of them without threading a call through each.
 new MutationObserver(() => {
   if (eqShouldRun()) startVisualiser(); else stopVisualiser();
+  if (npOverlay.classList.contains('is-open')) {
+    // These measure zero while the overlay is closed, which is when a track
+    // usually loads, so they get another look once it is on screen.
+    requestAnimationFrame(() => {
+      measureMarquee(npTitle);
+      measureMarquee(npSubtitle);
+    });
+  }
 }).observe(npOverlay, { attributes: true, attributeFilter: ['class'] });
+
+// A resize changes what fits.
+let marqueeResize;
+window.addEventListener('resize', () => {
+  clearTimeout(marqueeResize);
+  marqueeResize = setTimeout(() => {
+    for (const el of [uiTitle, uiArtist, npTitle, npSubtitle]) measureMarquee(el);
+  }, 200);
+});
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !audio.paused) startVisualiser();
   else stopVisualiser();

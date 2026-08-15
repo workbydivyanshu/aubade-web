@@ -2927,3 +2927,33 @@ input:checked + .toggle-slider:before {
 @media (prefers-reduced-motion: reduce) {
   .np-eq { display: none; }
 }
+
+/* ─ Marquee ───────────────────────────────────────────────────
+   Their keyframe: still for the first 12% and the last 12%, travelling
+   between, offset by the container's own width. Only applied when the
+   text genuinely overflows. */
+
+@keyframes marquee {
+  0%, 12%   { transform: translateX(0); }
+  88%, 100% { transform: translateX(calc(-100% + var(--marquee-w, 0px))); }
+}
+
+.marquee__inner {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.is-scrolling .marquee__inner {
+  animation: marquee var(--marquee-time, 10s) var(--ease-in-out) infinite;
+}
+
+/* An ellipsis and a marquee cannot both be right; scrolling text shows all
+   of itself, so the truncation is dropped while it runs. */
+.is-scrolling {
+  text-overflow: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-scrolling .marquee__inner { animation: none; }
+  .is-scrolling { text-overflow: ellipsis; }
+}
