@@ -1862,16 +1862,47 @@ async function renderArtistView(name) {
   bg.style.background = `linear-gradient(135deg,${grad})`;
   viewArtist.style.setProperty('--album-accent', 'var(--accent)');
 
+  // Octave shows a circular artist photo. We have no artist images, so the
+  // newest album's cover stands in — the same source the backdrop uses.
+  const photo = document.getElementById('artist-photo');
+  photo.style.backgroundImage = 'none';
+  photo.style.background = `linear-gradient(135deg,${grad})`;
+
   if (artist.albums.length > 0) {
     const url = await coverUrlForAlbum(artist.albums[0]);
     if (url) {
       bg.style.backgroundImage = `url(${url})`;
+      photo.style.backgroundImage = `url(${url})`;
       const accent = await getCoverAccent(url);
       if (accent) {
         viewArtist.style.setProperty('--album-accent', accent);
       }
     }
   }
+
+  // Follow has no server to talk to, so it is a local pin that persists.
+  const followBtn = document.getElementById('artist-follow-btn');
+  const followed = () => JSON.parse(localStorage.getItem('aubade_followed_artists') || '{}');
+  const paintFollow = () => {
+    const on = !!followed()[artist.name];
+    followBtn.setAttribute('aria-pressed', String(on));
+    followBtn.textContent = on ? 'Following' : 'Follow';
+  };
+  paintFollow();
+  followBtn.onclick = () => {
+    const f = followed();
+    if (f[artist.name]) delete f[artist.name]; else f[artist.name] = true;
+    localStorage.setItem('aubade_followed_artists', JSON.stringify(f));
+    paintFollow();
+  };
+
+  const shareBtn = document.getElementById('artist-share-btn');
+  shareBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(artist.name);
+      flashButton(shareBtn);
+    } catch { /* clipboard blocked */ }
+  };
 
   // Play controls
   // Sort tracks by album year desc, then track index (since they are in albums)

@@ -1129,6 +1129,8 @@ a {
 .album-btn--share,
 .album-btn--more {
   background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   inline-size: 48px;
   block-size: 48px;
   border-radius: 50%;
@@ -1937,15 +1939,96 @@ a {
 
 .artist-header {
   position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
   align-items: flex-start;
-  block-size: 320px;
-  padding-block-start: 64px;
-  padding-block-end: 40px;
-  padding-inline: 48px;
-  overflow: hidden;
+  block-size: 459px;
+  padding-block-end: 0;
+  padding-inline: 0;
+}
+
+.artist-header__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 24px;
+  inline-size: 100%;
+}
+
+.artist-header__photo {
+  flex: 0 0 auto;
+  inline-size: 208px;
+  block-size: 208px;
+  border-radius: 50%;
+  background: rgb(20, 20, 23);
+  background-size: cover;
+  background-position: center;
+}
+
+.artist-header__text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-inline-size: 0;
+}
+
+.artist-header__eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin-block-end: 6px;
+}
+
+.artist-header__name {
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  line-height: 48px;
+  color: var(--text);
+  margin: 0;
+  margin-block-end: 4px;
+}
+
+.artist-header__meta {
+  font-size: 14px;
+  line-height: 20px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-block-end: 20px;
+}
+
+.artist-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Octave's is 87x46 with a hairline border rather than a filled pill. */
+.artist-follow-btn {
+  block-size: 46px;
+  padding-inline: 21px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.artist-follow-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.artist-follow-btn[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .artist-header__bg {
@@ -1963,47 +2046,6 @@ a {
   inset: 0;
   background: linear-gradient(to bottom, rgba(13,10,20,0.1) 0%, var(--page) 100%);
   z-index: 0;
-}
-
-.artist-header__content {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  inline-size: 100%;
-}
-
-.artist-header__eyebrow {
-  font-size: 11px;
-  line-height: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-  margin-block-end: 8px;
-}
-
-.artist-header__name {
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: -1.2px;
-  line-height: 48px;
-  color: var(--text);
-  margin: 0;
-  margin-block-end: 8px;
-}
-
-.artist-header__meta {
-  font-size: 14px;
-  line-height: 20px;
-  color: var(--text-muted);
-  margin-block-end: 24px;
-}
-
-.artist-header__controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
 }
 
 
@@ -2150,4 +2192,16 @@ input:checked + .toggle-slider:before {
 
 #app.is-idle .player {
   display: none;
+}
+
+/* Artist page sections. Octave puts its first section title at x=304, y=571
+   with 24px/700, -0.6px tracking and a 32px line box. */
+.artist-content {
+  padding-inline: 16px !important;
+  padding-block: 36px 32px !important;
+}
+
+.artist-section__title {
+  letter-spacing: -0.6px;
+  line-height: 32px;
 }
