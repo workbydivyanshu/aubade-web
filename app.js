@@ -207,6 +207,8 @@ function setupCoverObserver() {
           el.style.backgroundImage = `url(${url})`;
           el.style.backgroundSize = 'cover';
           el.style.backgroundPosition = 'center';
+        } else {
+          console.warn('[cover-diag] coverUrlForAlbum returned null for:', albumData.album, '| first track path:', albumData.tracks?.[0]?.path ?? '(no tracks)');
         }
       });
     }
@@ -667,7 +669,7 @@ const npOpenBtn = document.querySelector('.player__icon-btn[aria-label="Expand n
 const npBg = document.querySelector('.now-playing__bg');
 const npCover = document.getElementById('np-cover');
 const npTitle = document.getElementById('np-title');
-const npArtist = document.getElementById('np-artist');
+const npSubtitle = document.getElementById('np-subtitle');
 const npAlbum = document.getElementById('np-album');
 
 const npScrubber = document.querySelector('#np-scrubber .now-playing__track-bar');
@@ -687,16 +689,13 @@ npOpenBtn.addEventListener('click', () => npOverlay.classList.add('is-open'));
 npCloseBtn.addEventListener('click', () => npOverlay.classList.remove('is-open'));
 
 function clearPlayerUI() {
-  // The reference has no player bar at all until something plays, rather than
-  // an emptied one. Dropping --player-h to zero also returns the space the
-  // sidebar and content frame reserve for it.
   document.getElementById('app').classList.add('is-idle');
 
   uiTitle.textContent = '';
   uiArtist.textContent = '';
   uiCover.style.backgroundImage = 'none';
   npTitle.textContent = '';
-  npArtist.textContent = '';
+  npSubtitle.textContent = '';
   npAlbum.textContent = '';
   npCover.style.backgroundImage = 'none';
   npBg.style.backgroundImage = 'none';
@@ -708,6 +707,9 @@ function clearPlayerUI() {
   npTrackKnob.style.left = '0%';
   uiPlayBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   uiPlayBtn.disabled = true;
+  // Clear format
+  const fmtEl = document.getElementById('np-format');
+  if (fmtEl) fmtEl.textContent = '';
 }
 
 function updatePlayerUI(record) {
@@ -717,8 +719,27 @@ function updatePlayerUI(record) {
   uiArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
   
   npTitle.textContent = record.title || record.name;
-  npArtist.textContent = record.artist || record.albumArtist || 'Unknown Artist';
-  npAlbum.textContent = record.album || 'Unknown Album';
+  const artist = record.artist || record.albumArtist || 'Unknown Artist';
+  const albumName = record.album || 'Unknown Album';
+  npSubtitle.textContent = `${albumName} · ${artist}`;
+  npAlbum.textContent = albumName;
+
+  // Format label from file extension
+  const fmtEl = document.getElementById('np-format');
+  if (fmtEl && record.path) {
+    const ext = record.path.split('.').pop().toUpperCase();
+    fmtEl.textContent = ext;
+  }
+
+  // Heart state
+  const heartBtn = document.getElementById('np-heart-btn');
+  if (heartBtn) {
+    const likedPaths = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+    const isLiked = !!likedPaths[record.path];
+    heartBtn.classList.toggle('np-icon-btn--active', isLiked);
+    const svg = heartBtn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+  }
   
   const album = library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
   if (album) {
@@ -730,8 +751,6 @@ function updatePlayerUI(record) {
         
         npBg.style.backgroundImage = `url(${url})`;
         npCover.style.backgroundImage = `url(${url})`;
-        // Set alongside the image: the gradient is applied as a `background`
-        // shorthand, which resets background-size and beats the stylesheet.
         npCover.style.backgroundSize = 'cover';
         npCover.style.backgroundPosition = 'center';
       } else {
@@ -1373,6 +1392,13 @@ async function loadLyrics(record) {
   lyricsContainer.innerHTML = '<span class="np-lyric-placeholder">Loading...</span>';
   currentLyrics = null;
   currentLyricsActiveIndex = -1;
+  // Load per-track sync offset
+  if (typeof lyricsOffset !== 'undefined') {
+    const offsets = JSON.parse(localStorage.getItem('aubade_lyric_offsets') || '{}');
+    lyricsOffset = offsets[record.path] || 0;
+    const pill = document.getElementById('np-sync-pill');
+    if (pill) pill.textContent = lyricsOffset === 0 ? 'Sync' : `${lyricsOffset > 0 ? '+' : ''}${lyricsOffset}ms`;
+  }
   
   if (lyricsCache.has(record.path)) {
     applyLyrics(lyricsCache.get(record.path));
@@ -1495,7 +1521,7 @@ function applyLyrics(parsed) {
 audio.addEventListener('timeupdate', () => {
   if (!currentLyrics || !currentLyrics.synced) return;
   
-  const ct = audio.currentTime;
+  const ct = audio.currentTime + (typeof lyricsOffset !== 'undefined' ? lyricsOffset / 1000 : 0);
   let newIdx = -1;
   
   // Find the last line whose time is <= currentTime
@@ -1946,3 +1972,169 @@ function renderSettingsView() {
     });
   }
 }
+
+// ── Now-Playing extras (Step 16 fixes) ───────────────────────
+
+// 2. Heart (like) toggle
+document.getElementById('np-heart-btn').addEventListener('click', () => {
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+  if (liked[record.path]) {
+    delete liked[record.path];
+  } else {
+    liked[record.path] = true;
+  }
+  localStorage.setItem('aubade_liked', JSON.stringify(liked));
+  // Update icon
+  const isLiked = !!liked[record.path];
+  const btn = document.getElementById('np-heart-btn');
+  btn.classList.toggle('np-icon-btn--active', isLiked);
+  const svg = btn.querySelector('svg');
+  if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+});
+
+// 3. Playback speed control
+const speedSteps = [0.75, 1, 1.25, 1.5, 2];
+let speedIdx = 1; // default 1x
+document.getElementById('np-speed-btn').addEventListener('click', () => {
+  speedIdx = (speedIdx + 1) % speedSteps.length;
+  const rate = speedSteps[speedIdx];
+  audio.playbackRate = rate;
+  document.getElementById('np-speed-btn').textContent = rate + 'x';
+});
+
+// 4. Bottom utility row: NP volume slider
+const npVolSlider = document.querySelector('.np-vol-slider');
+const npVolFill = document.getElementById('np-vol-fill');
+const npVolKnob = document.getElementById('np-vol-knob');
+
+function updateNpVol() {
+  const pct = `${Math.round(audio.volume * 100)}%`;
+  npVolFill.style.width = pct;
+  npVolKnob.style.left = pct;
+}
+
+npVolSlider.addEventListener('click', (e) => {
+  const rect = npVolSlider.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  audio.volume = pct;
+  updateNpVol();
+  // Also sync main player vol bar
+  if (uiVolFill) uiVolFill.style.width = `${Math.round(pct * 100)}%`;
+  if (uiVolKnob) uiVolKnob.style.left = `${Math.round(pct * 100)}%`;
+});
+
+audio.addEventListener('volumechange', updateNpVol);
+updateNpVol();
+
+// Lyrics toggle
+const npLyricsToggle = document.getElementById('np-lyrics-toggle');
+const npRight = document.querySelector('.now-playing__right');
+npLyricsToggle.addEventListener('click', () => {
+  const isHidden = npRight.style.display === 'none';
+  npRight.style.display = isHidden ? '' : 'none';
+  npLyricsToggle.classList.toggle('np-icon-btn--active', isHidden);
+});
+
+// 5. Lyrics sync offset
+let lyricsOffset = 0;
+const npSyncPill = document.getElementById('np-sync-pill');
+
+function getLyricsOffset(trackPath) {
+  const offsets = JSON.parse(localStorage.getItem('aubade_lyric_offsets') || '{}');
+  return offsets[trackPath] || 0;
+}
+
+function setLyricsOffset(trackPath, ms) {
+  const offsets = JSON.parse(localStorage.getItem('aubade_lyric_offsets') || '{}');
+  offsets[trackPath] = ms;
+  localStorage.setItem('aubade_lyric_offsets', JSON.stringify(offsets));
+}
+
+function updateSyncLabel() {
+  if (lyricsOffset === 0) {
+    npSyncPill.textContent = 'Sync';
+  } else {
+    const sign = lyricsOffset > 0 ? '+' : '';
+    npSyncPill.textContent = `${sign}${lyricsOffset}ms`;
+  }
+}
+
+document.getElementById('np-sync-minus').addEventListener('click', () => {
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  lyricsOffset -= 250;
+  setLyricsOffset(record.path, lyricsOffset);
+  updateSyncLabel();
+});
+
+document.getElementById('np-sync-plus').addEventListener('click', () => {
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  lyricsOffset += 250;
+  setLyricsOffset(record.path, lyricsOffset);
+  updateSyncLabel();
+});
+
+
+
+
+// 6. Menu popover
+const npMenuBtn = document.getElementById('np-menu-btn');
+const npMenu = document.getElementById('np-menu');
+
+npMenuBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  npMenu.style.display = npMenu.style.display === 'none' ? 'block' : 'none';
+});
+
+function closeNpMenu() {
+  npMenu.style.display = 'none';
+}
+
+document.addEventListener('click', (e) => {
+  if (!npMenu.contains(e.target) && e.target !== npMenuBtn) {
+    closeNpMenu();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeNpMenu();
+});
+
+npMenu.addEventListener('click', (e) => {
+  const item = e.target.closest('.np-menu__item');
+  if (!item) return;
+  const action = item.dataset.action;
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  
+  switch (action) {
+    case 'go-album': {
+      const key = `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`;
+      npOverlay.classList.remove('is-open');
+      closeNpMenu();
+      window.location.hash = '#album/' + encodeURIComponent(key);
+      break;
+    }
+    case 'go-artist': {
+      npOverlay.classList.remove('is-open');
+      closeNpMenu();
+      window.location.hash = '#artist/' + encodeURIComponent(record.artist || record.albumArtist);
+      break;
+    }
+    case 'copy-title': {
+      const text = `${record.title || record.name} - ${record.artist || record.albumArtist}`;
+      navigator.clipboard.writeText(text).catch(() => {});
+      closeNpMenu();
+      break;
+    }
+    case 'show-library': {
+      npOverlay.classList.remove('is-open');
+      closeNpMenu();
+      window.location.hash = '#library';
+      break;
+    }
+  }
+});
