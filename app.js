@@ -711,6 +711,84 @@ function prevTrack() {
   }
 }
 
+// ── MediaSession ─────────────────────────────────────────────
+// Without this the media keys, the lock screen and the desktop's own
+// now-playing widget all do nothing, which is most of what separates a tab
+// that plays audio from a music player.
+
+const SEEK_STEP_SECONDS = 10;
+
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  const handlers = {
+    play: () => audio.play(),
+    pause: () => audio.pause(),
+    previoustrack: prevTrack,
+    nexttrack: nextTrack,
+    seekbackward: (d) => {
+      audio.currentTime = Math.max(0, audio.currentTime - (d.seekOffset || SEEK_STEP_SECONDS));
+    },
+    seekforward: (d) => {
+      audio.currentTime = Math.min(audio.duration || 0,
+        audio.currentTime + (d.seekOffset || SEEK_STEP_SECONDS));
+    },
+    seekto: (d) => {
+      if (d.fastSeek && 'fastSeek' in audio) audio.fastSeek(d.seekTime);
+      else audio.currentTime = d.seekTime;
+    },
+    stop: () => { audio.pause(); audio.currentTime = 0; },
+  };
+  for (const [action, handler] of Object.entries(handlers)) {
+    // Not every browser implements every action; an unsupported one throws.
+    try { navigator.mediaSession.setActionHandler(action, handler); }
+    catch { /* this browser does not offer it */ }
+  }
+}
+
+/** Artwork for the OS widget. Object URLs work; a missing cover is fine. */
+async function mediaSessionArtwork(record) {
+  const album = (library.albums || []).find((a) => albumKey(a) ===
+    `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
+  if (!album) return [];
+  const url = await coverUrlForAlbum(album);
+  return url ? [{ src: url, sizes: '512x512', type: 'image/jpeg' }] : [];
+}
+
+async function updateMediaSession(record) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: record.title || record.name || '',
+    artist: record.artist || record.albumArtist || '',
+    album: record.album || '',
+    artwork: await mediaSessionArtwork(record),
+  });
+}
+
+function updateMediaPositionState() {
+  if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+  if (!audio.duration || !isFinite(audio.duration)) return;
+  try {
+    navigator.mediaSession.setPositionState({
+      duration: audio.duration,
+      playbackRate: audio.playbackRate,
+      position: Math.min(audio.currentTime, audio.duration),
+    });
+  } catch { /* position state rejects odd values while loading */ }
+}
+
+setupMediaSession();
+
+audio.addEventListener('play', () => {
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+  updateMediaPositionState();
+});
+audio.addEventListener('pause', () => {
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+});
+audio.addEventListener('loadedmetadata', updateMediaPositionState);
+audio.addEventListener('ratechange', updateMediaPositionState);
+audio.addEventListener('seeked', updateMediaPositionState);
+
 function formatTime(secs) {
   if (isNaN(secs)) return '0:00';
   const m = Math.floor(secs / 60);
@@ -788,6 +866,11 @@ function clearPlayerUI() {
   // Clear format
   const fmtEl = document.getElementById('np-format');
   if (fmtEl) fmtEl.textContent = '';
+
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = null;
+    navigator.mediaSession.playbackState = 'none';
+  }
 }
 
 function updatePlayerUI(record) {
@@ -810,6 +893,7 @@ function updatePlayerUI(record) {
   }
 
   if (!document.getElementById('np-queue').hidden) renderQueue();
+  updateMediaSession(record);
 
   // Heart state
   const heartBtn = document.getElementById('np-heart-btn');
@@ -2469,6 +2553,99 @@ document.getElementById('np-lyric-copy').addEventListener('click', async () => {
   } catch { /* clipboard blocked */ }
 });
 
+// ── Keyboard ─────────────────────────────────────────────────
+// Only Escape was bound before. These are the bindings Octave lists, including
+// its ±10s seek. Typing in a field must never trigger any of them.
+
+function isTyping(target) {
+  if (!target) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+}
+
+const SHORTCUTS = [
+  ['Space', 'Play or pause'],
+  ['← / →', 'Seek 10 seconds'],
+  ['Shift + ← / →', 'Previous or next track'],
+  ['↑ / ↓', 'Volume'],
+  ['M', 'Mute'],
+  ['L', 'Like this track'],
+  ['Q', 'Queue'],
+  ['F', 'Open now playing'],
+  ['/', 'Search'],
+  ['?', 'This list'],
+];
+
+document.addEventListener('keydown', (e) => {
+  if (isTyping(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+
+  const step = (delta) => {
+    if (!audio.duration) return;
+    audio.currentTime = Math.max(0, Math.min(audio.duration, audio.currentTime + delta));
+  };
+  const nudgeVolume = (delta) => {
+    audio.volume = Math.max(0, Math.min(1, audio.volume + delta));
+    const pct = Math.round(audio.volume * 100);
+    if (uiVolFill) uiVolFill.style.width = pct + '%';
+    if (uiVolKnob) uiVolKnob.style.left = pct + '%';
+  };
+
+  switch (e.key) {
+    case ' ':
+      e.preventDefault();
+      togglePlay();
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      if (e.shiftKey) prevTrack(); else step(-SEEK_STEP_SECONDS);
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      if (e.shiftKey) nextTrack(); else step(SEEK_STEP_SECONDS);
+      break;
+    case 'ArrowUp': e.preventDefault(); nudgeVolume(0.05); break;
+    case 'ArrowDown': e.preventDefault(); nudgeVolume(-0.05); break;
+    case 'm': case 'M': audio.muted = !audio.muted; break;
+    case 'l': case 'L': document.getElementById('np-heart-btn').click(); break;
+    case 'q': case 'Q':
+      if (!npOverlay.classList.contains('is-open')) npOverlay.classList.add('is-open');
+      setQueueOpen(document.getElementById('np-queue').hidden);
+      break;
+    case 'f': case 'F': npOverlay.classList.toggle('is-open'); break;
+    case '/':
+      e.preventDefault();
+      window.location.hash = '#search';
+      break;
+    case '?': toggleShortcutHelp(); break;
+    default: break;
+  }
+});
+
+function toggleShortcutHelp() {
+  let panel = document.getElementById('shortcuts');
+  if (panel) { panel.remove(); return; }
+  panel = document.createElement('div');
+  panel.id = 'shortcuts';
+  panel.className = 'shortcuts glass-strong';
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'Keyboard shortcuts');
+  const h = document.createElement('h2');
+  h.className = 'shortcuts__title';
+  h.textContent = 'Keyboard shortcuts';
+  panel.appendChild(h);
+  for (const [keys, what] of SHORTCUTS) {
+    const row = document.createElement('div');
+    row.className = 'shortcuts__row';
+    const k = document.createElement('kbd');
+    k.textContent = keys;
+    const d = document.createElement('span');
+    d.textContent = what;
+    row.append(k, d);
+    panel.appendChild(row);
+  }
+  document.getElementById('app').appendChild(panel);
+}
+
 // ── Queue ────────────────────────────────────────────────────
 // The queue has existed in playerState from the start with no way to see it,
 // which left the queue buttons pointing at nothing. It shares the right-hand
@@ -2669,6 +2846,8 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   closeNpMenu();
   document.getElementById('np-credits').classList.remove('is-open');
+  const help = document.getElementById('shortcuts');
+  if (help) help.remove();
 });
 
 npMenu.addEventListener('click', (e) => {
