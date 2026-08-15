@@ -357,6 +357,16 @@ a {
   min-block-size: 0;
   overflow-y: auto;
   scrollbar-width: none;
+  /* Their .scroll-area: two accent washes bled in from the top corners at
+     7% and 4%, held in place while the content scrolls over them. This is
+     most of why the reference's black never reads as flat. */
+  background-image:
+    radial-gradient(900px 520px at 12% -6%,
+      color-mix(in oklab, var(--accent) 7%, transparent), transparent 60%),
+    radial-gradient(720px 540px at 105% 2%,
+      color-mix(in oklab, var(--accent) 4%, transparent), transparent 55%);
+  background-repeat: no-repeat;
+  background-attachment: local;
 }
 
 .content-frame::-webkit-scrollbar {

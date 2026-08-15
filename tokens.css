@@ -65,6 +65,18 @@
      regardless of size, and only small thumbnails step down to 14px.
      These had been hardcoded in app.css with no token, which is how they
      drifted to 8px and flattened the whole UI. */
+  /* Their surface ramp, and the easing curves behind every transition. */
+  --surface: #0a0a0c;
+  --surface-2: #141417;
+  --surface-3: #1c1c20;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Their radius scale is sm 10 / md 14 / lg 20 / xl 28 / 2xl 36 / 3xl 24.
+     The names below are what each is actually used for here; every value
+     matches theirs. */
   --radius-art: 36px;      /* artwork and content cards in grids and shelves */
   --radius-art-lg: 24px;   /* the one large feature cover on album and now-playing */
   --radius-art-sm: 14px;   /* thumbnails, roughly 40-56px */
@@ -99,34 +111,69 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The lit top edge and shadowed bottom one. Without them a translucent fill
-   reads as a grey box rather than as glass. */
+/* These four are the reference's own rules, read from the stylesheet it
+   serves rather than inferred. The part we had been missing is the gradient
+   laid over the fill: a bright top edge falling to nothing by 58%. Without it
+   a translucent panel reads as a tinted box. The outer shadow matters too —
+   it is what lifts a floating panel off the page. */
 .glass {
-  background: var(--glass-bg);
+  background: linear-gradient(180deg, #ffffff1a, #ffffff05 30%, #fff0 58%),
+    var(--glass-bg);
   backdrop-filter: var(--glass-frost);
   -webkit-backdrop-filter: var(--glass-frost);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px #ffffff29, inset 0 -1px #0000002e,
+    0 12px 40px -20px #0009;
 }
 
 .glass-bar {
-  background: var(--glass-bg-bar);
+  background: linear-gradient(180deg, #ffffff1c, #ffffff08 42%, #fff0 78%),
+    var(--glass-bg-bar);
   backdrop-filter: var(--glass-frost-bar);
   -webkit-backdrop-filter: var(--glass-frost-bar);
+  box-shadow: inset 0 1px #ffffff24, inset 0 -1px #00000038;
 }
 
 .glass-strong {
-  background: var(--glass-bg-strong);
+  background: linear-gradient(180deg, #ffffff1c, #ffffff05 28%, #fff0 56%),
+    var(--glass-bg-strong);
   backdrop-filter: var(--glass-frost-strong);
   -webkit-backdrop-filter: var(--glass-frost-strong);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px #ffffff2e, inset 0 -1px #0003, 0 18px 52px -24px #0000;
+}
+
+.glass-floating {
+  background: linear-gradient(180deg, #ffffff26, #ffffff0a 34%, #fff0 64%),
+    var(--glass-bg-floating);
+  backdrop-filter: var(--glass-frost-floating);
+  -webkit-backdrop-filter: var(--glass-frost-floating);
+  border: 1px solid color-mix(in oklab, var(--glass-border) 135%, transparent);
+  box-shadow: inset 0 1px #fff3, inset 0 -1px #0003, 0 18px 48px -16px #000000b3;
+}
+
+.glass-subtle {
+  background: var(--glass-bg-subtle);
+  backdrop-filter: var(--glass-frost-subtle);
+  -webkit-backdrop-filter: var(--glass-frost-subtle);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
-  .glass { background: var(--glass-flat); }
-  .glass-bar { background: var(--glass-flat-bar); }
-  .glass-strong { background: var(--glass-flat-strong); }
+  .glass {
+    background: linear-gradient(180deg, #ffffff1a, #ffffff05 30%, #fff0 58%),
+      var(--glass-flat);
+  }
+  .glass-bar {
+    background: linear-gradient(180deg, #ffffff1c, #ffffff08 42%, #fff0 78%),
+      var(--glass-flat-bar);
+  }
+  .glass-strong {
+    background: linear-gradient(180deg, #ffffff1c, #ffffff05 28%, #fff0 56%),
+      var(--glass-flat-strong);
+  }
+  .glass-floating {
+    background: linear-gradient(180deg, #ffffff26, #ffffff0a 34%, #fff0 64%),
+      var(--glass-flat-floating);
+  }
+  .glass-subtle { background: var(--glass-flat-subtle); }
 }
