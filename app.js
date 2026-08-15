@@ -825,7 +825,15 @@ function updatePlayerUI(record) {
         npCover.style.backgroundImage = `url(${url})`;
         npCover.style.backgroundSize = 'cover';
         npCover.style.backgroundPosition = 'center';
+
+        // Octave tints this view from the artwork — its output picker and
+        // active lyrics toggle went amber for a pink-and-yellow cover. Ours
+        // had no accent of its own and stayed the static pink.
+        getCoverAccent(url).then((accent) => {
+          if (accent) npOverlay.style.setProperty('--np-accent', accent);
+        });
       } else {
+        npOverlay.style.removeProperty('--np-accent');
         const grad = gradientFor(albumKey(album));
         uiCover.style.background = `linear-gradient(135deg,${grad})`;
         uiCover.style.backgroundImage = 'none';
