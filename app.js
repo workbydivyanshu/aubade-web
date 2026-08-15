@@ -1097,6 +1097,13 @@ function getCoverAccent(url) {
   });
 }
 
+// Queueing and copying produce no visible result on their own, so the button
+// acknowledges the press rather than leaving you wondering if it registered.
+function flashButton(btn) {
+  btn.classList.add('is-flashed');
+  setTimeout(() => btn.classList.remove('is-flashed'), 450);
+}
+
 async function renderAlbumView(key) {
   const album = library.albums.find(a => key === albumKey(a));
   if (!album) return;
@@ -1138,6 +1145,40 @@ async function renderAlbumView(key) {
     playerState.shuffle = true;
     document.querySelector('button[aria-label="Shuffle"]').style.color = 'var(--accent)';
     playAlbum(key);
+  };
+
+  // Octave shows seven controls here. Download and Save-to-library have no
+  // meaning for files already on disk, so this is the five that do.
+  const likeBtn = document.querySelector('.album-btn--like');
+  const queueBtn = document.querySelector('.album-btn--queue');
+  const shareBtn = document.querySelector('.album-btn--share');
+
+  const likedAlbums = () => JSON.parse(localStorage.getItem('aubade_liked_albums') || '{}');
+  const paintLike = () => {
+    const on = !!likedAlbums()[key];
+    likeBtn.classList.toggle('is-liked', on);
+    likeBtn.querySelector('svg').setAttribute('fill', on ? 'currentColor' : 'none');
+    likeBtn.setAttribute('aria-pressed', String(on));
+  };
+  paintLike();
+  likeBtn.onclick = () => {
+    const liked = likedAlbums();
+    if (liked[key]) delete liked[key]; else liked[key] = true;
+    localStorage.setItem('aubade_liked_albums', JSON.stringify(liked));
+    paintLike();
+  };
+
+  queueBtn.onclick = () => {
+    playerState.queue.push(...album.tracks);
+    playerState.originalQueue.push(...album.tracks);
+    flashButton(queueBtn);
+  };
+
+  shareBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(`${album.album} — ${album.albumArtist}`);
+      flashButton(shareBtn);
+    } catch { /* clipboard blocked; nothing useful to say */ }
   };
 
   const url = await coverUrlForAlbum(album);

@@ -65,7 +65,8 @@
      regardless of size, and only small thumbnails step down to 14px.
      These had been hardcoded in app.css with no token, which is how they
      drifted to 8px and flattened the whole UI. */
-  --radius-art: 36px;      /* artwork and content cards, 120px and up */
+  --radius-art: 36px;      /* artwork and content cards in grids and shelves */
+  --radius-art-lg: 24px;   /* the one large feature cover on album and now-playing */
   --radius-art-sm: 14px;   /* thumbnails, roughly 40-56px */
   --radius-tile: 20px;     /* wide quick-link tiles (273x60 on Octave) */
   --radius-row: 28px;      /* row hover surfaces */

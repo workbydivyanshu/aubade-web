@@ -1009,7 +1009,7 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-block-start: 64px;
+  padding-block-start: 72px;
   padding-block-end: 40px;
   overflow: hidden;
 }
@@ -1043,11 +1043,11 @@ a {
 .album-header__cover {
   inline-size: 304px;
   block-size: 304px;
-  border-radius: var(--radius-art);
+  border-radius: var(--radius-art-lg);
   background-size: cover;
   background-position: center;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-  margin-block-end: 32px;
+  margin-block-end: 91px;
 }
 
 .album-header__meta {
@@ -1055,7 +1055,7 @@ a {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-block-end: 24px;
+  margin-block-end: 54px;
 }
 
 .album-header__eyebrow {
@@ -1065,7 +1065,7 @@ a {
   font-weight: 600;
   letter-spacing: 1.2px;
   text-transform: uppercase;
-  margin-block-end: 8px;
+  margin-block-end: 6px;
 }
 
 .album-header__title {
@@ -1074,7 +1074,7 @@ a {
   font-weight: 700;
   letter-spacing: -1.2px;
   line-height: 48px;
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
 }
 
 .album-header__artist {
@@ -1082,7 +1082,7 @@ a {
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
-  margin-block-end: 8px;
+  margin-block-end: 2px;
 }
 
 .album-header__stats {
@@ -1094,8 +1094,8 @@ a {
 .album-header__controls {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-block-end: 32px;
+  gap: 12px;
+  margin-block-end: 8px;
 }
 
 .album-btn {
@@ -1110,7 +1110,7 @@ a {
 .album-btn--play {
   background: var(--album-accent, var(--accent));
   block-size: 48px;
-  padding-inline: 22px;
+  padding-inline: 32px;
   border-radius: 24px;
   gap: 8px;
   font-size: 14px;
@@ -1124,6 +1124,9 @@ a {
 }
 
 .album-btn--shuffle,
+.album-btn--like,
+.album-btn--queue,
+.album-btn--share,
 .album-btn--more {
   background: rgba(255, 255, 255, 0.1);
   inline-size: 48px;
@@ -1131,7 +1134,19 @@ a {
   border-radius: 50%;
 }
 
+.album-btn.is-flashed {
+  background: var(--album-accent, var(--accent));
+  color: #fff;
+}
+
+.album-btn--like.is-liked {
+  color: var(--album-accent, var(--accent));
+}
+
 .album-btn--shuffle svg,
+.album-btn--like svg,
+.album-btn--queue svg,
+.album-btn--share svg,
 .album-btn--more svg {
   inline-size: 20px;
   block-size: 20px;
@@ -1326,7 +1341,7 @@ a {
 .now-playing__cover {
   inline-size: 400px;
   block-size: 400px;
-  border-radius: var(--radius-art);
+  border-radius: var(--radius-art-lg);
   background-size: cover;
   background-position: center;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
