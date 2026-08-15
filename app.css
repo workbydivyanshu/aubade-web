@@ -1628,19 +1628,56 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 4px;
+  gap: 8px;
   padding: 12px 48px 0;
 }
 
+/* Measured: one 116x36 pill, rgba(255,255,255,0.1) over blur(12px), with
+   the label at 12px/600 and 0.85 white. The minus and plus live inside it. */
+.np-sync-group {
+  display: flex;
+  align-items: center;
+  block-size: 36px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
 .np-sync-pill {
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 600;
-  color: var(--text-muted);
-  background: rgba(255,255,255,0.08);
-  border-radius: 99px;
-  padding: 4px 14px;
+  color: rgba(255, 255, 255, 0.85);
+  padding-inline: 11px;
   user-select: none;
+}
+
+/* The four round buttons beside it, same fill and blur. */
+.np-lyric-action {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.np-lyric-action:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.np-lyric-action svg {
+  inline-size: 17px;
+  block-size: 17px;
 }
 
 .np-sync-btn {
@@ -1651,8 +1688,8 @@ a {
   font-size: 16px;
   line-height: 24px;
   font-weight: 700;
-  inline-size: 28px;
-  block-size: 28px;
+  inline-size: 32px;
+  block-size: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1691,7 +1728,7 @@ a {
   filter: blur(2.5px);
   transition: color 0.3s, filter 0.3s;
   padding-block: 12px;
-  color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.68);
   max-inline-size: 620px;
 }
 
@@ -2374,4 +2411,20 @@ input:checked + .toggle-slider:before {
 .is-scrubbing .player__track-knob,
 .is-scrubbing .now-playing__track-knob {
   opacity: 1;
+}
+
+/* Lyric selection mode, for the copy action. */
+.now-playing__lyrics.is-selecting .np-lyric-line {
+  cursor: pointer;
+  filter: none;
+}
+
+.np-lyric-line--picked {
+  color: var(--text) !important;
+  filter: none !important;
+}
+
+.np-lyric-action.is-active {
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--text);
 }

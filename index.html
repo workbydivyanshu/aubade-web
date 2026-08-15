@@ -992,10 +992,26 @@
             
             <div class="now-playing__right">
               <!-- Sync pill -->
+              <!-- Octave groups minus/Sync/plus into one 116x36 pill, then
+                   sets four 36x36 round buttons beside it. Of its four
+                   (try another source, select lines, download, share all),
+                   the two that mean anything for a local .lrc are kept. -->
               <div class="np-sync-row" id="np-sync-row">
-                <button class="np-sync-btn" id="np-sync-minus" type="button" aria-label="Offset minus">−</button>
-                <span class="np-sync-pill" id="np-sync-pill">Sync</span>
-                <button class="np-sync-btn" id="np-sync-plus" type="button" aria-label="Offset plus">+</button>
+                <div class="np-sync-group">
+                  <button class="np-sync-btn" id="np-sync-minus" type="button" aria-label="Lyrics earlier">−</button>
+                  <span class="np-sync-pill" id="np-sync-pill">Sync</span>
+                  <button class="np-sync-btn" id="np-sync-plus" type="button" aria-label="Lyrics later">+</button>
+                </div>
+                <button class="np-lyric-action" id="np-lyric-select" type="button" aria-label="Select multiple lines">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m3 7 1.5 1.5L7 6M3 13l1.5 1.5L7 12M3 19l1.5 1.5L7 17M11 7h10M11 13h10M11 19h10"/>
+                  </svg>
+                </button>
+                <button class="np-lyric-action" id="np-lyric-copy" type="button" aria-label="Copy all lyrics">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+                  </svg>
+                </button>
               </div>
               <div class="now-playing__lyrics">
                 <span class="np-lyric-placeholder">No lyrics found</span>

@@ -2180,6 +2180,43 @@ npVolSlider.addEventListener('click', (e) => {
 audio.addEventListener('volumechange', updateNpVol);
 updateNpVol();
 
+// Two of Octave's four lyric actions have a local meaning. Selecting lines
+// toggles a mode where clicking lines marks them; copying takes either the
+// selection or the whole lyric.
+let lyricSelectMode = false;
+
+document.getElementById('np-lyric-select').addEventListener('click', () => {
+  lyricSelectMode = !lyricSelectMode;
+  const pane = document.querySelector('.now-playing__lyrics');
+  pane.classList.toggle('is-selecting', lyricSelectMode);
+  document.getElementById('np-lyric-select').classList.toggle('is-active', lyricSelectMode);
+  if (!lyricSelectMode) {
+    for (const l of pane.querySelectorAll('.np-lyric-line--picked')) {
+      l.classList.remove('np-lyric-line--picked');
+    }
+  }
+});
+
+document.querySelector('.now-playing__lyrics').addEventListener('click', (e) => {
+  if (!lyricSelectMode) return;
+  const line = e.target.closest('.np-lyric-line');
+  if (line) line.classList.toggle('np-lyric-line--picked');
+});
+
+document.getElementById('np-lyric-copy').addEventListener('click', async () => {
+  const pane = document.querySelector('.now-playing__lyrics');
+  const picked = [...pane.querySelectorAll('.np-lyric-line--picked')];
+  const lines = (picked.length ? picked : [...pane.querySelectorAll('.np-lyric-line')])
+    .map((l) => l.textContent.trim()).filter(Boolean);
+  if (!lines.length) return;
+  try {
+    await navigator.clipboard.writeText(lines.join('\n'));
+    showToast(picked.length
+      ? `Copied ${picked.length} line${picked.length === 1 ? '' : 's'}`
+      : 'Copied lyrics');
+  } catch { /* clipboard blocked */ }
+});
+
 // Octave v2.4: "Scroll over the volume bar to change it on desktop."
 for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
   if (!bar) continue;
