@@ -2428,3 +2428,95 @@ input:checked + .toggle-slider:before {
   background: rgba(255, 255, 255, 0.24);
   color: var(--text);
 }
+
+/* ─ Liked Songs ───────────────────────────────────────────────
+   A playlist header rather than an album one: the art is a gradient
+   tile, not a cover, and it sits beside the text as Octave's does. */
+
+.liked-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 72px 32px 0;
+}
+
+.liked-header__art {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 232px;
+  block-size: 232px;
+  border-radius: var(--radius-art-lg);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 46%, var(--bg-glow-2) 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.liked-header__art svg {
+  inline-size: 84px;
+  block-size: 84px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.liked-header__meta {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.liked-header__title {
+  margin: 0 0 10px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 48px;
+  letter-spacing: -1.2px;
+  color: var(--text);
+}
+
+.liked-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block-start: 24px;
+}
+
+#view-liked .album-tracks {
+  padding-block-start: 40px;
+}
+
+.liked-empty {
+  margin: 48px 32px;
+  font-size: 15px;
+  line-height: 22.5px;
+  color: var(--text-muted);
+}
+
+/* Unlike sits in the row, visible on hover the way Octave's row actions do. */
+.track-row__unlike {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.track-row:hover .track-row__unlike,
+.track-row__unlike:focus-visible {
+  opacity: 1;
+}
+
+.track-row__unlike svg {
+  inline-size: 17px;
+  block-size: 17px;
+}
+
+.album-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

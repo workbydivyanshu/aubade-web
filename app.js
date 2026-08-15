@@ -981,25 +981,29 @@ document.addEventListener('click', (e) => {
 
 window.addEventListener('hashchange', handleRoute);
 
+// Every view id, so hiding them is one loop rather than a line per view that
+// has to be remembered each time one is added.
+const VIEW_IDS = ['home', 'album', 'search', 'library', 'artist', 'settings', 'liked'];
+
 function handleRoute() {
   const hash = window.location.hash || '#home';
-  const viewHome = document.getElementById('view-home');
+  for (const id of VIEW_IDS) {
+    const el = document.getElementById('view-' + id);
+    if (el) el.style.display = 'none';
+  }
   const viewAlbum = document.getElementById('view-album');
   const viewSearch = document.getElementById('view-search');
   const viewLibrary = document.getElementById('view-library');
   const viewArtist = document.getElementById('view-artist');
   const viewSettings = document.getElementById('view-settings');
-  
-  viewHome.style.display = 'none';
-  viewAlbum.style.display = 'none';
-  viewSearch.style.display = 'none';
-  viewLibrary.style.display = 'none';
-  viewArtist.style.display = 'none';
-  viewSettings.style.display = 'none';
-  
+  const viewHome = document.getElementById('view-home');
+
   document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
 
-  if (hash.startsWith('#album/')) {
+  if (hash === '#liked-songs') {
+    renderLikedView();
+    document.getElementById('view-liked').style.display = 'block';
+  } else if (hash.startsWith('#album/')) {
     const key = decodeURIComponent(hash.substring(7));
     if (library.albums && library.albums.length > 0) {
       renderAlbumView(key);
@@ -1269,6 +1273,89 @@ async function renderAlbumView(key) {
     row.onclick = () => playAlbum(key, i);
     
     trackList.appendChild(row);
+  });
+}
+
+// ── Liked Songs ──────────────────────────────────────────────
+// The heart has been writing to aubade_liked since the now-playing work, and
+// two links in the sidebar pointed at a route that did not exist. This is the
+// screen they meant.
+
+function likedTracks() {
+  const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+  if (!library.tracks) return [];
+  // Keep the library's own order rather than the order things were liked in;
+  // storage is an object and its key order is not meaningful.
+  return library.tracks.filter((t) => liked[t.path]);
+}
+
+function playTrackList(tracks, startIndex = 0, shuffle = false) {
+  if (!tracks.length) return;
+  playerState.originalQueue = [...tracks];
+  playerState.queue = shuffle ? seededShuffle([...tracks]) : [...tracks];
+  playerState.shuffle = shuffle;
+  const start = shuffle ? 0 : startIndex;
+  playTrack(start);
+}
+
+function renderLikedView() {
+  const tracks = likedTracks();
+  const list = document.getElementById('liked-tracks');
+  const empty = document.getElementById('liked-empty');
+  const stats = document.getElementById('liked-stats');
+  const playBtn = document.getElementById('liked-play');
+  const shuffleBtn = document.getElementById('liked-shuffle');
+
+  const total = tracks.reduce((n, t) => n + (t.duration || 0), 0);
+  stats.textContent = tracks.length
+    ? `${tracks.length} song${tracks.length === 1 ? '' : 's'} · ${Math.round(total / 60)} min`
+    : 'No songs yet';
+
+  empty.hidden = tracks.length > 0;
+  playBtn.disabled = shuffleBtn.disabled = tracks.length === 0;
+  playBtn.onclick = () => playTrackList(tracks, 0, false);
+  shuffleBtn.onclick = () => playTrackList(tracks, 0, true);
+
+  list.innerHTML = '';
+  tracks.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+
+    const num = document.createElement('div');
+    num.className = 'track-row__num';
+    num.textContent = i + 1;
+
+    const info = document.createElement('div');
+    info.className = 'track-row__info';
+    const tTitle = document.createElement('span');
+    tTitle.className = 'track-row__title';
+    tTitle.textContent = t.title || t.name;
+    const tArtist = document.createElement('span');
+    tArtist.className = 'track-row__artist';
+    tArtist.textContent = [t.artist || t.albumArtist, t.album].filter(Boolean).join(' · ');
+    info.append(tTitle, tArtist);
+
+    const unlike = document.createElement('button');
+    unlike.className = 'track-row__unlike';
+    unlike.type = 'button';
+    unlike.setAttribute('aria-label', 'Remove from Liked Songs');
+    unlike.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none">' +
+      '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>';
+    unlike.onclick = (e) => {
+      e.stopPropagation();
+      const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+      delete liked[t.path];
+      localStorage.setItem('aubade_liked', JSON.stringify(liked));
+      renderLikedView();
+    };
+
+    const dur = document.createElement('div');
+    dur.className = 'track-row__duration';
+    dur.textContent = t.duration ? formatTime(t.duration) : '';
+
+    row.append(num, info, unlike, dur);
+    row.onclick = () => playTrackList(tracks, i, false);
+    list.appendChild(row);
   });
 }
 
