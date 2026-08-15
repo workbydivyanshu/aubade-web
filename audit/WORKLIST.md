@@ -20,6 +20,21 @@ it would mean guessing that number, so ours is unchanged pending a real look.
 Merged from the three parallel audits, de-duplicated, with false findings removed.
 Every item below was re-verified against the captured JSON before being listed.
 
+## Now-playing: measured off the same-scale screenshot pair
+
+Two captures of Octave and Aubade playing the same album at 2880x1800 allow
+ratios without knowing device pixel ratio or window insets. Measured by
+thresholding the image, not by eye — the eye got one of these badly wrong.
+
+| Thing | Method | Result |
+| --- | --- | --- |
+| Cover | saturation extent of the pink band | ratio 0.713, so 285px against our 400px. Changed to 288. Correct. |
+| Title | height of the capital C in each | 72px vs 73px — **the same 48px**. It looked much larger in ours only because "Chasing Midnight" is a longer string than "Chuck's Mantra". Do not change it. |
+| Subtitle | glyph extent | ratio 0.914, suggesting ~16px against our 18px. Too noisy to act on; the two strings differ. |
+
+The lesson worth keeping: sharp rectangular edges survive eyeballing, text sizes
+do not.
+
 ## Discarded — measured wrong, no work needed
 
 | Reported | Why it is not real |
