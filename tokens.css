@@ -59,6 +59,18 @@
   --sidebar-w: 256px;
   --player-h: 90px;
 
+  /* Corner radius, measured off the live site rather than chosen.
+     Octave's artwork radius is a flat 36px, not a proportion — a 176px
+     cover and a 224px cover both use it — so large artwork gets one value
+     regardless of size, and only small thumbnails step down to 14px.
+     These had been hardcoded in app.css with no token, which is how they
+     drifted to 8px and flattened the whole UI. */
+  --radius-art: 36px;      /* artwork and content cards, 120px and up */
+  --radius-art-sm: 14px;   /* thumbnails, roughly 40-56px */
+  --radius-tile: 20px;     /* wide quick-link tiles (273x60 on Octave) */
+  --radius-row: 28px;      /* row hover surfaces */
+  --radius-pill: 9999px;
+
   --font: "Inter Variable", Inter, -apple-system, BlinkMacSystemFont,
     "SF Pro Display", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
