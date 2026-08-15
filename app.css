@@ -1354,6 +1354,7 @@ a {
 }
 
 .now-playing__cover {
+  position: relative;
   inline-size: 279px;
   block-size: 279px;
   border-radius: 25.6px;
@@ -2834,4 +2835,41 @@ input:checked + .toggle-slider:before {
   line-height: 16px;
   font-weight: 600;
   color: var(--text-muted);
+}
+
+/* ─ Visualiser ────────────────────────────────────────────────
+   Bars over the foot of the cover. Their keyframe scales between 0.35
+   and 1; here the height comes from real frequency data instead, so the
+   same range is driven per bar. */
+
+.np-eq {
+  position: absolute;
+  inset-block-end: 18px;
+  inset-inline: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  block-size: 26px;
+  opacity: 0;
+  transition: opacity 0.25s var(--ease-out);
+  pointer-events: none;
+}
+
+.np-eq.is-live {
+  opacity: 1;
+}
+
+.np-eq i {
+  inline-size: 3px;
+  block-size: 100%;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.92);
+  transform: scaleY(0.35);
+  transform-origin: bottom;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-eq { display: none; }
 }

@@ -913,7 +913,12 @@
           
           <div class="now-playing__body">
             <div class="now-playing__left">
-              <div class="now-playing__cover" id="np-cover"></div>
+              <div class="now-playing__cover" id="np-cover">
+                <!-- Bars sit over the foot of the cover, as Octave's do. -->
+                <div class="np-eq" id="np-eq" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+              </div>
 
               <!-- Title row with icons -->
               <div class="np-title-row">
