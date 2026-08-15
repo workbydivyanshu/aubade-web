@@ -2353,3 +2353,26 @@ input:checked + .toggle-slider:before {
   opacity: 1;
   translate: -50% 0;
 }
+
+/* ─ Bars carry no dot ─────────────────────────────────────────
+   Octave v1.7: "It's a clean bar with no dot on it, matching the
+   progress bar." Confirmed in a screenshot of it mid-playback — the
+   filled portion just ends. The knob stays for grabbing, so it fades
+   in on hover and while dragging rather than sitting there always. */
+
+.player__track-knob,
+.player__vol-knob,
+.now-playing__track-knob,
+.np-vol-slider__knob {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.player__track-bar:hover .player__track-knob,
+.player__vol-bar:hover .player__vol-knob,
+.now-playing__track-bar:hover .now-playing__track-knob,
+.np-vol-slider:hover .np-vol-slider__knob,
+.is-scrubbing .player__track-knob,
+.is-scrubbing .now-playing__track-knob {
+  opacity: 1;
+}

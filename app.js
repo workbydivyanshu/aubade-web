@@ -2180,6 +2180,20 @@ npVolSlider.addEventListener('click', (e) => {
 audio.addEventListener('volumechange', updateNpVol);
 updateNpVol();
 
+// Octave v2.4: "Scroll over the volume bar to change it on desktop."
+for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
+  if (!bar) continue;
+  bar.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const step = e.deltaY < 0 ? 0.05 : -0.05;
+    audio.volume = Math.max(0, Math.min(1, audio.volume + step));
+    updateNpVol();
+    const pct = Math.round(audio.volume * 100);
+    if (uiVolFill) uiVolFill.style.width = pct + '%';
+    if (uiVolKnob) uiVolKnob.style.left = pct + '%';
+  }, { passive: false });
+}
+
 // Lyrics toggle
 const npLyricsToggle = document.getElementById('np-lyrics-toggle');
 const npRight = document.querySelector('.now-playing__right');
@@ -2216,7 +2230,7 @@ function updateSyncLabel() {
 document.getElementById('np-sync-minus').addEventListener('click', () => {
   const record = playerState.queue[playerState.index];
   if (!record) return;
-  lyricsOffset -= 250;
+  lyricsOffset -= 100;
   setLyricsOffset(record.path, lyricsOffset);
   updateSyncLabel();
 });
@@ -2224,7 +2238,7 @@ document.getElementById('np-sync-minus').addEventListener('click', () => {
 document.getElementById('np-sync-plus').addEventListener('click', () => {
   const record = playerState.queue[playerState.index];
   if (!record) return;
-  lyricsOffset += 250;
+  lyricsOffset += 100;
   setLyricsOffset(record.path, lyricsOffset);
   updateSyncLabel();
 });
