@@ -703,6 +703,12 @@ const npOverlay = document.getElementById('now-playing');
 const npCloseBtn = document.getElementById('np-close');
 const npOpenBtn = document.querySelector('.player__icon-btn[aria-label="Expand now playing"]');
 const npBg = document.querySelector('.now-playing__bg');
+const npAmbient = [...document.querySelectorAll('.ambient-layer')];
+
+/** Paint the ambient circles, or clear them back to the gradient. */
+function setAmbient(value) {
+  for (const layer of npAmbient) layer.style.backgroundImage = value;
+}
 const npCover = document.getElementById('np-cover');
 const npTitle = document.getElementById('np-title');
 const npSubtitle = document.getElementById('np-subtitle');
@@ -735,6 +741,7 @@ function clearPlayerUI() {
   npAlbum.textContent = '';
   npCover.style.backgroundImage = 'none';
   npBg.style.backgroundImage = 'none';
+  setAmbient('none');
   document.querySelector('.player__time:first-of-type').textContent = '0:00';
   document.querySelector('.player__time:last-of-type').textContent = '0:00';
   // These four were written against names that were never declared, so this
@@ -796,7 +803,8 @@ function updatePlayerUI(record) {
         uiCover.style.backgroundSize = 'cover';
         uiCover.style.backgroundPosition = 'center';
         
-        npBg.style.backgroundImage = `url(${url})`;
+        npBg.style.backgroundImage = 'none';
+        setAmbient(`url(${url})`);
         npCover.style.backgroundImage = `url(${url})`;
         npCover.style.backgroundSize = 'cover';
         npCover.style.backgroundPosition = 'center';
@@ -815,6 +823,7 @@ function updatePlayerUI(record) {
         
         npBg.style.background = `linear-gradient(135deg,${grad})`;
         npBg.style.backgroundImage = 'none';
+        setAmbient('none');
         npCover.style.background = `linear-gradient(135deg,${grad})`;
         npCover.style.backgroundImage = 'none';
       }

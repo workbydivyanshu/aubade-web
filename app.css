@@ -1259,11 +1259,65 @@ a {
 .now-playing__bg {
   position: absolute;
   inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Their ambient technique: circular copies of the artwork, blurred, turning
+   slowly in opposite directions with one orbiting. A single blurred cover
+   sits flat; three that drift against each other do not. */
+.ambient-layer {
+  position: absolute;
+  border-radius: 50%;
   background-size: cover;
   background-position: center;
-  filter: blur(80px) saturate(1.9);
-  transform: scale(1.5);
-  z-index: 0;
+  will-change: transform;
+  backface-visibility: hidden;
+  filter: blur(72px) saturate(1.9);
+}
+
+.ambient-layer--1 {
+  inline-size: 78%;
+  aspect-ratio: 1;
+  inset-block-start: -18%;
+  inset-inline-start: -12%;
+  opacity: 0.85;
+  animation: ambient-spin 68s linear infinite;
+}
+
+.ambient-layer--2 {
+  inline-size: 62%;
+  aspect-ratio: 1;
+  inset-block-end: -22%;
+  inset-inline-end: -10%;
+  opacity: 0.7;
+  animation: ambient-spin-rev 84s linear infinite;
+}
+
+.ambient-layer--3 {
+  inline-size: 46%;
+  aspect-ratio: 1;
+  inset-block-start: 24%;
+  inset-inline-start: 34%;
+  opacity: 0.55;
+  animation: ambient-orbit 52s linear infinite;
+}
+
+@keyframes ambient-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ambient-spin-rev {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes ambient-orbit {
+  from { transform: rotate(0) translate(8%) rotate(0); }
+  to   { transform: rotate(360deg) translate(8%) rotate(-360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-layer { animation: none; }
 }
 
 .now-playing__scrim {
