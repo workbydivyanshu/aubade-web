@@ -161,3 +161,97 @@ export function clearCoverCache() {
   coverCache.clear();
   return revoked;
 }
+
+/**
+ * The four colours the reference themes now-playing from.
+ *
+ * Its stylesheet declares --np-c1 through --np-c4, plus --np-bg and two glows,
+ * where we were deriving a single hue. One colour makes every record's
+ * backdrop the same shape; four let a cover's own palette come through.
+ *
+ * Averaging the whole image gives mud, so this buckets pixels by hue and takes
+ * the strongest buckets, skipping near-black and near-white — those are
+ * backgrounds and text, not the record's colour.
+ */
+export function getCoverPalette(url) {
+  return new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const size = 48;
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, size, size);
+      try {
+        const data = ctx.getImageData(0, 0, size, size).data;
+        // 24 hue buckets, each keeping its weight and average lightness.
+        const buckets = Array.from({ length: 24 }, () => ({ w: 0, l: 0, s: 0 }));
+        let darkest = 1;
+        for (let i = 0; i < data.length; i += 4) {
+          const [h, s, l] = rgbToHsl(data[i], data[i + 1], data[i + 2]);
+          if (l < darkest) darkest = l;
+          // Ignore what carries no colour: near-black, near-white, and greys.
+          if (l < 0.12 || l > 0.92 || s < 0.16) continue;
+          const b = buckets[Math.floor(h / 15) % 24];
+          // Saturated mid-tones say more about a cover than pale edges do.
+          const weight = s * (1 - Math.abs(l - 0.5));
+          b.w += weight;
+          b.l += l * weight;
+          b.s += s * weight;
+        }
+        const ranked = buckets
+          .map((b, i) => ({ hue: i * 15 + 7.5, ...b }))
+          .filter((b) => b.w > 0)
+          .sort((x, y) => y.w - x.w);
+
+        if (!ranked.length) return resolve(null);
+
+        // Four colours, spread across hues rather than four shades of one.
+        const picked = [];
+        for (const cand of ranked) {
+          const clash = picked.some((p) => {
+            const d = Math.abs(p.hue - cand.hue);
+            return Math.min(d, 360 - d) < 25;
+          });
+          if (!clash) picked.push(cand);
+          if (picked.length === 4) break;
+        }
+        // A cover with one strong colour should not produce four identical
+        // washes; shift the hue a little for each repeat so the layers still
+        // read as separate.
+        let spin = 0;
+        while (picked.length < 4) {
+          const base = ranked[picked.length % ranked.length];
+          spin += 18;
+          picked.push({ ...base, hue: (base.hue + spin) % 360 });
+        }
+
+        const toColour = (b, satFloor) => {
+          const l = Math.min(0.68, Math.max(0.42, b.l / b.w));
+          const s = Math.min(0.9, Math.max(satFloor, b.s / b.w));
+          return `hsl(${Math.round(b.hue)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`;
+        };
+
+        const lead = picked[0];
+        resolve({
+          c1: toColour(picked[0], 0.55),
+          c2: toColour(picked[1], 0.5),
+          c3: toColour(picked[2], 0.45),
+          c4: toColour(picked[3], 0.45),
+          // A near-black tinted toward the cover, the way --np-bg reads.
+          // A near-black tinted toward the cover. Capped low deliberately: a
+          // bright cover has no dark pixels to sample, and following it would
+          // put light text on a light field.
+          bg: `hsl(${Math.round(lead.hue)} 42% ${Math.round(Math.min(9, Math.max(4, darkest * 60)))}%)`,
+          accent: `hsl(${Math.round(lead.hue)} 82% ${accentLightness(lead.hue)}%)`,
+        });
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}

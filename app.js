@@ -1,7 +1,7 @@
 import { state, SEEK_STEP_SECONDS } from './state.js';
 import { openDB, dbGet, dbSet } from './db.js';
 import { albumKey } from './library.js';
-import { gradientFor, coverUrlForAlbum, getCoverAccent, clearCoverCache } from './art.js';
+import { gradientFor, coverUrlForAlbum, getCoverAccent, getCoverPalette, clearCoverCache } from './art.js';
 import { makeShelfCard, makeQuickCard, renderHero } from './cards.js';
 import { renderBrowseView } from './browse.js';
 import { initVisualiser, eqShouldRun, startVisualiser, stopVisualiser } from './visualiser.js';
@@ -712,14 +712,23 @@ function updatePlayerUI(record) {
         npCover.style.backgroundSize = 'cover';
         npCover.style.backgroundPosition = 'center';
 
-        // Octave tints this view from the artwork — its output picker and
-        // active lyrics toggle went amber for a pink-and-yellow cover. Ours
-        // had no accent of its own and stayed the static pink.
-        getCoverAccent(url).then((accent) => {
-          if (accent) npOverlay.style.setProperty('--np-accent', accent);
+        // The reference themes this view from four colours out of the artwork,
+        // not one. Its own tokens are --np-c1 through --np-c4 plus a tinted
+        // near-black; with a single hue every record's backdrop came out the
+        // same shape.
+        getCoverPalette(url).then((pal) => {
+          if (!pal) return;
+          npOverlay.style.setProperty('--np-accent', pal.accent);
+          npOverlay.style.setProperty('--np-c1', pal.c1);
+          npOverlay.style.setProperty('--np-c2', pal.c2);
+          npOverlay.style.setProperty('--np-c3', pal.c3);
+          npOverlay.style.setProperty('--np-c4', pal.c4);
+          npOverlay.style.setProperty('--np-bg', pal.bg);
         });
       } else {
-        npOverlay.style.removeProperty('--np-accent');
+        for (const p of ['--np-accent', '--np-c1', '--np-c2', '--np-c3', '--np-c4', '--np-bg']) {
+          npOverlay.style.removeProperty(p);
+        }
         const grad = gradientFor(albumKey(album));
         uiCover.style.background = `linear-gradient(135deg,${grad})`;
         uiCover.style.backgroundImage = 'none';
