@@ -73,7 +73,7 @@ a {
   inline-size: 28px;
   block-size: 28px;
   padding: 0;
-  border-radius: 14px;
+  border-radius: var(--radius-art-sm);
   color: var(--text-muted);
   background: transparent;
   cursor: pointer;
@@ -128,7 +128,7 @@ a {
 }
 
 .sidebar__nav-item--selected {
-  background: #1c1c20;
+  background: var(--surface-3);
   color: var(--text);
 }
 
@@ -413,7 +413,7 @@ a {
 .reconnect-btn {
   padding: 6px 14px;
   border: 0;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
   font-size: 13px;
@@ -435,14 +435,14 @@ a {
   align-items: center;
   block-size: 34px;
   padding: 2px;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
 }
 
 .seg-pill__seg {
   block-size: 100%;
   padding-inline: 14px;
   border: 0;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   font-size: 12px;
   font-weight: 600;
   line-height: 16px;
@@ -576,7 +576,7 @@ a {
   block-size: 48px;
   padding-inline: 22px;
   border: 0;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
   color: #fff;
   font-size: 14px;
@@ -2704,13 +2704,6 @@ input:checked + .toggle-slider:before {
 /* ─ Queue ─────────────────────────────────────────────────────
    Shares the right-hand pane with the lyrics. */
 
-/* Setting display here would otherwise defeat the hidden attribute, which is
-   how this pane is toggled — the element stayed on screen while reporting
-   itself hidden. */
-.np-queue[hidden] {
-  display: none;
-}
-
 .np-queue {
   display: flex;
   flex: 1;
@@ -2956,4 +2949,76 @@ input:checked + .toggle-slider:before {
 @media (prefers-reduced-motion: reduce) {
   .is-scrolling .marquee__inner { animation: none; }
   .is-scrolling { text-overflow: ellipsis; }
+}
+
+/* The hidden attribute is only a default of display:none, so any rule setting
+   display outranks it and the element stays on screen while reporting itself
+   hidden. Three separate bugs here have been exactly that. This makes the
+   attribute mean what it says, everywhere. */
+[hidden] {
+  display: none !important;
+}
+
+/* ─ Empty home ────────────────────────────────────────────────
+   What a first run actually shows, in place of a page of albums that
+   do not exist. */
+
+.home-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 96px 32px 120px;
+  animation: rise 0.4s var(--ease-out) both;
+}
+
+.home-empty[hidden] {
+  display: none;
+}
+
+.home-empty__icon {
+  inline-size: 56px;
+  block-size: 56px;
+  color: var(--text-dim);
+  margin-block-end: 20px;
+}
+
+.home-empty__title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: var(--text);
+}
+
+.home-empty__body {
+  margin: 0 0 28px;
+  max-inline-size: 44ch;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+/* ─ Collapsed sidebar ─────────────────────────────────────── */
+
+#app.is-sidebar-collapsed {
+  --sidebar-w: 0px;
+}
+
+#app.is-sidebar-collapsed .sidebar {
+  transform: translateX(-100%);
+}
+
+.sidebar {
+  transition: transform 0.25s var(--ease-out);
+}
+
+/* The expand control only exists while the sidebar is away. */
+.top-bar__btn--expand {
+  display: none;
+}
+
+#app.is-sidebar-collapsed .top-bar__btn--expand {
+  display: grid;
 }

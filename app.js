@@ -135,9 +135,27 @@ function seededShuffle(arr) {
   return out;
 }
 
+// Everything on the home page is built from the library, so the page has two
+// states: a library, or an invitation to choose a folder. It used to have a
+// third — returning early and leaving the placeholder markup on screen, which
+// showed a first-time user a home page of albums that do not exist.
+function setHomeEmpty(isEmpty) {
+  const empty = document.getElementById('home-empty');
+  if (empty) empty.hidden = !isEmpty;
+  for (const sel of ['#quick-grid', '#hero-card', '#shelf-recent', '#shelf-played',
+                     '#shelf-rediscover']) {
+    const el = document.querySelector(sel);
+    if (el) el.hidden = isEmpty;
+  }
+}
+
 function renderHome(lib) {
   enrichSearchIndex(lib);
-  if (!lib || !lib.albums || lib.albums.length === 0) return;
+  if (!lib || !lib.albums || lib.albums.length === 0) {
+    setHomeEmpty(true);
+    return;
+  }
+  setHomeEmpty(false);
 
   const hideSingles = localStorage.getItem('aubade_hide_singles') === 'true';
   const albums = hideSingles ? lib.albums.filter(a => a.tracks.length > 1) : lib.albums;
@@ -331,6 +349,11 @@ async function init() {
   }
 
   foldersBtn.addEventListener('click', pickFolder);
+  document.getElementById('home-empty-pick').addEventListener('click', pickFolder);
+
+  // Paint the empty state up front. Everything below only runs when there is
+  // something cached, so without this a first run never renders home at all.
+  renderHome(state.library);
 
   // Check for a cached state.library index first — works even without
   // folder handle (e.g. if handle was cleared but index persists)
@@ -1068,6 +1091,28 @@ async function renderAlbumView(key) {
       await navigator.clipboard.writeText(`${album.album} — ${album.albumArtist}`);
       flashButton(shareBtn);
     } catch { /* clipboard blocked; nothing useful to say */ }
+  };
+
+  const moreBtn = document.querySelector('.album-btn--more');
+  moreBtn.onclick = (e) => {
+    e.stopPropagation();
+    openAlbumMenu(moreBtn, [
+      ['Play next', () => {
+        playerState.queue.splice(playerState.index + 1, 0, ...album.tracks);
+        playerState.originalQueue.splice(playerState.index + 1, 0, ...album.tracks);
+        showToast('Playing next');
+      }],
+      ['Go to artist', () => {
+        window.location.hash = '#artist/' + encodeURIComponent(album.albumArtist);
+      }],
+      ['Copy album name', async () => {
+        try {
+          await navigator.clipboard.writeText(`${album.album} — ${album.albumArtist}`);
+          showToast('Copied album name');
+        } catch { /* clipboard blocked */ }
+      }],
+      ['Show in library', () => { window.location.hash = '#library'; }],
+    ]);
   };
 
   const url = await coverUrlForAlbum(album);
@@ -2276,6 +2321,75 @@ document.addEventListener('visibilitychange', () => {
   else stopVisualiser();
 });
 
+// ── Chrome that was decorative ───────────────────────────────
+// Six controls were copied from the reference as markup and never given
+// behaviour. By the standard applied everywhere else here, a control that
+// does nothing is a bug, so each either works now or is gone.
+
+// Collapse the sidebar. The width is a token, so this is one class.
+function setSidebarCollapsed(collapsed) {
+  document.getElementById('app').classList.toggle('is-sidebar-collapsed', collapsed);
+  localStorage.setItem('aubade_sidebar_collapsed', String(collapsed));
+}
+
+document.querySelector('button[aria-label="Collapse sidebar"]')
+  ?.addEventListener('click', () => setSidebarCollapsed(true));
+document.getElementById('expand-sidebar')
+  ?.addEventListener('click', () => setSidebarCollapsed(false));
+
+if (localStorage.getItem('aubade_sidebar_collapsed') === 'true') {
+  document.getElementById('app').classList.add('is-sidebar-collapsed');
+}
+
+// The segmented pill: Library is the state we are already in, Folders picks a
+// new one. Only the second half was wired, so the first looked broken.
+document.getElementById('seg-library')?.addEventListener('click', () => {
+  document.getElementById('seg-library').classList.add('seg-pill__seg--active');
+  document.getElementById('seg-folders').classList.remove('seg-pill__seg--active');
+  window.location.hash = '#library';
+});
+
+// The hero card's share, which matches the album and now-playing ones.
+document.querySelector('.hero-card__share')?.addEventListener('click', async (e) => {
+  e.preventDefault();
+  const title = document.querySelector('.hero-card__title')?.textContent || '';
+  const artist = document.querySelector('.hero-card__artist')?.textContent || '';
+  if (!title) return;
+  try {
+    await navigator.clipboard.writeText(`${title} — ${artist}`);
+    showToast('Copied album name');
+  } catch { /* clipboard blocked */ }
+});
+
+// The album page's overflow. The same treatment now-playing got: a small
+// popover of the things that mean something for a local record.
+function openAlbumMenu(btn, items) {
+  document.getElementById('album-menu')?.remove();
+  const menu = document.createElement('div');
+  menu.className = 'np-menu glass-strong';
+  menu.id = 'album-menu';
+  menu.style.display = 'block';
+  for (const [label, run] of items) {
+    const b = document.createElement('button');
+    b.className = 'np-menu__item';
+    b.type = 'button';
+    b.textContent = label;
+    b.onclick = () => { menu.remove(); run(); };
+    menu.appendChild(b);
+  }
+  const wrap = btn.parentElement;
+  wrap.style.position = 'relative';
+  wrap.appendChild(menu);
+
+  const away = (e) => {
+    if (!menu.contains(e.target) && e.target !== btn) {
+      menu.remove();
+      document.removeEventListener('click', away);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', away), 0);
+}
+
 // ── Keyboard ─────────────────────────────────────────────────
 // Only Escape was bound before. These are the bindings Octave lists, including
 // its ±10s seek. Typing in a field must never trigger any of them.
@@ -2488,11 +2602,6 @@ npLyricsToggle.addEventListener('click', () => {
 // 5. Lyrics sync offset
 let lyricsOffset = 0;
 const npSyncPill = document.getElementById('np-sync-pill');
-
-function getLyricsOffset(trackPath) {
-  const offsets = JSON.parse(localStorage.getItem('aubade_lyric_offsets') || '{}');
-  return offsets[trackPath] || 0;
-}
 
 function setLyricsOffset(trackPath, ms) {
   const offsets = JSON.parse(localStorage.getItem('aubade_lyric_offsets') || '{}');

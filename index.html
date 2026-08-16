@@ -83,12 +83,6 @@
         <section class="sidebar__pinned" aria-labelledby="pinned-heading">
           <div class="sidebar__section-row">
             <h2 id="pinned-heading">Pinned</h2>
-            <button class="icon-button" type="button" aria-label="Add pinned item">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M10 4.5v11" />
-                <path d="M4.5 10h11" />
-              </svg>
-            </button>
           </div>
 
           <div class="sidebar__pinned-list">
@@ -112,6 +106,15 @@
       <main class="main">
         <header class="top-bar">
           <div class="top-bar__left">
+            <!-- Only shown while the sidebar is collapsed. The collapse control
+                 lives inside the sidebar, so without this there is no way back. -->
+            <button class="top-bar__btn top-bar__btn--expand" id="expand-sidebar" type="button" aria-label="Show sidebar">
+              <svg aria-hidden="true" viewBox="0 0 20 20">
+                <rect x="3.25" y="4" width="13.5" height="12" rx="2" />
+                <path d="M9 4v12" />
+                <path d="m11.75 8 2 2-2 2" />
+              </svg>
+            </button>
             <button class="top-bar__btn" type="button" aria-label="Go back">
               <svg aria-hidden="true" viewBox="0 0 20 20">
                 <path d="M12 4.5 6.5 10 12 15.5" />
@@ -124,12 +127,6 @@
             </button>
           </div>
           <div class="top-bar__right">
-            <button class="top-bar__btn" type="button" aria-label="Notifications">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M10 2.5a4.5 4.5 0 0 0-4.5 4.5c0 2.5-.75 4.25-1.75 5.25h12.5C15.25 11.25 14.5 9.5 14.5 7a4.5 4.5 0 0 0-4.5-4.5Z" />
-                <path d="M8.25 12.25v.5a1.75 1.75 0 0 0 3.5 0v-.5" />
-              </svg>
-            </button>
             <button class="top-bar__avatar" type="button" aria-label="Account">
               <svg aria-hidden="true" viewBox="0 0 20 20">
                 <circle cx="10" cy="7.5" r="2.75" />
@@ -154,49 +151,37 @@
               </div>
             </div>
 
-            <!-- ── Quick-links grid ─────────────────────────── -->
-            <div id="quick-grid" class="quick-grid">
-              <a class="quick-card" href="#liked-songs">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,var(--accent),var(--accent-soft))"></div>
-                <span class="quick-card__label">Liked Songs</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#5b21b6,#a78bfa)"></div>
-                <span class="quick-card__label">Recently Played</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#0d4f6b,#38bdf8)"></div>
-                <span class="quick-card__label">Discover Weekly</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#1e293b,#475569)"></div>
-                <span class="quick-card__label">Late Night</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#064e3b,#34d399)"></div>
-                <span class="quick-card__label">Focus</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#78350f,#f59e0b)"></div>
-                <span class="quick-card__label">Road Trip</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#4a044e,#d946ef)"></div>
-                <span class="quick-card__label">Throwbacks</span>
-              </a>
-              <a class="quick-card" href="#">
-                <div class="quick-card__cover" style="background:linear-gradient(135deg,#134e4a,#5eead4)"></div>
-                <span class="quick-card__label">Chill</span>
-              </a>
+            <!-- Shown until a folder is connected. Everything below it is
+                 built from the library, so with no library there is nothing
+                 truthful to show. -->
+            <div id="home-empty" class="home-empty" hidden>
+              <svg class="home-empty__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v7a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17Z"/>
+                <circle cx="14" cy="14" r="2"/><path d="M16 14V9.5l3 .75"/>
+              </svg>
+              <h2 class="home-empty__title">Nothing here yet</h2>
+              <p class="home-empty__body">
+                Choose the folder your music lives in. Aubade reads the tags and
+                artwork straight from your files — nothing is uploaded anywhere.
+              </p>
+              <button class="album-btn album-btn--play" id="home-empty-pick" type="button">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h3l1.5 2h7A1.5 1.5 0 0 1 17.5 7.5v7A1.5 1.5 0 0 1 16 16H4.5A1.5 1.5 0 0 1 3 14.5Z" fill="currentColor" stroke="none"/>
+                </svg>
+                <span class="album-btn__label">Choose folder</span>
+              </button>
             </div>
+
+            <!-- ── Quick-links grid ─────────────────────────── -->
+            <div id="quick-grid" class="quick-grid"></div>
 
             <!-- ── Hero card ────────────────────────────────── -->
             <div id="hero-card" class="hero-card">
               <div class="hero-card__cover" style="background:linear-gradient(135deg,#2d1b69,#b44593)"></div>
               <div class="hero-card__body">
                 <span class="hero-card__eyebrow">MOST PLAYED</span>
-                <h2 class="hero-card__title">Midnight Sun</h2>
-                <span class="hero-card__artist">Ayla Park</span>
+                <h2 class="hero-card__title"></h2>
+                <span class="hero-card__artist"></span>
                 <div class="hero-card__actions">
                   <button class="hero-card__play" type="button">
                     <svg aria-hidden="true" viewBox="0 0 20 20">
@@ -233,48 +218,7 @@
                 </div>
                 <a class="shelf__see-all" href="#">See all</a>
               </div>
-              <div class="shelf__row">
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#2d1b69,#b44593)"></div>
-                  <span class="shelf-card__title">Midnight Sun</span>
-                  <span class="shelf-card__artist">Ayla Park</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#1a3a2a,#4ecdc4)"></div>
-                  <span class="shelf-card__title">Coastlines</span>
-                  <span class="shelf-card__artist">Maren Voss</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#6b2d3e,#e8927c)"></div>
-                  <span class="shelf-card__title">Terracotta</span>
-                  <span class="shelf-card__artist">June Caldera</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#0d1b2a,#415a77)"></div>
-                  <span class="shelf-card__title">Deep Hours</span>
-                  <span class="shelf-card__artist">Kai Norden</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#3d1c02,#c97b2a)"></div>
-                  <span class="shelf-card__title">Amber</span>
-                  <span class="shelf-card__artist">Sol Rivera</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#1b1b3a,#6c63ff)"></div>
-                  <span class="shelf-card__title">Indigo Phase</span>
-                  <span class="shelf-card__artist">Nyx Odera</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#2a0a0a,#c0392b)"></div>
-                  <span class="shelf-card__title">Cardinal</span>
-                  <span class="shelf-card__artist">Ember Dahl</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#0a2a1a,#27ae60)"></div>
-                  <span class="shelf-card__title">Fern &amp; Moss</span>
-                  <span class="shelf-card__artist">Wren Liao</span>
-                </a>
-              </div>
+              <div class="shelf__row"></div>
             </section>
 
             <!-- ── Shelf 2: Most played ─────────────────────── -->
@@ -294,48 +238,7 @@
                 </div>
                 <a class="shelf__see-all" href="#">See all</a>
               </div>
-              <div class="shelf__row">
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#4a1942,#e84393)"></div>
-                  <span class="shelf-card__title">Petal</span>
-                  <span class="shelf-card__artist">Ariana Grande</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#2c3e50,#3498db)"></div>
-                  <span class="shelf-card__title">Tidal Drift</span>
-                  <span class="shelf-card__artist">Cleo Monroe</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#1a1a2e,#e94560)"></div>
-                  <span class="shelf-card__title">Velocity</span>
-                  <span class="shelf-card__artist">Dash Kato</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#0f3443,#34e89e)"></div>
-                  <span class="shelf-card__title">Glass Garden</span>
-                  <span class="shelf-card__artist">Iris Chen</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#3c1053,#ad5389)"></div>
-                  <span class="shelf-card__title">Ultraviolet</span>
-                  <span class="shelf-card__artist">Mika Soleil</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#141e30,#243b55)"></div>
-                  <span class="shelf-card__title">Low Light</span>
-                  <span class="shelf-card__artist">Finn Alder</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#611818,#d4a373)"></div>
-                  <span class="shelf-card__title">Rust &amp; Gold</span>
-                  <span class="shelf-card__artist">Sage Moreno</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#16222a,#3a6073)"></div>
-                  <span class="shelf-card__title">Still Water</span>
-                  <span class="shelf-card__artist">Lena Vidal</span>
-                </a>
-              </div>
+              <div class="shelf__row"></div>
             </section>
 
             <!-- ── Shelf 3: Rediscover ──────────────────────── -->
@@ -355,48 +258,7 @@
                 </div>
                 <a class="shelf__see-all" href="#">See all</a>
               </div>
-              <div class="shelf__row">
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#2b1055,#d53369)"></div>
-                  <span class="shelf-card__title">Nova Bloom</span>
-                  <span class="shelf-card__artist">Zara Quinn</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#0c0c1d,#4834d4)"></div>
-                  <span class="shelf-card__title">Nightwork</span>
-                  <span class="shelf-card__artist">Juno West</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#3a1c01,#e67e22)"></div>
-                  <span class="shelf-card__title">Honeycomb</span>
-                  <span class="shelf-card__artist">Oren Blake</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#1d3557,#a8dadc)"></div>
-                  <span class="shelf-card__title">Pale Blue</span>
-                  <span class="shelf-card__artist">Lumi Sato</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#2d132c,#ee6352)"></div>
-                  <span class="shelf-card__title">Scarlet Tape</span>
-                  <span class="shelf-card__artist">Max Oker</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#1a1a1a,#6d6d6d)"></div>
-                  <span class="shelf-card__title">Monochrome</span>
-                  <span class="shelf-card__artist">Vera Lin</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#134e5e,#71b280)"></div>
-                  <span class="shelf-card__title">Canopy</span>
-                  <span class="shelf-card__artist">Hana Oaks</span>
-                </a>
-                <a class="shelf-card" href="#">
-                  <div class="shelf-card__cover" style="background:linear-gradient(135deg,#4b134f,#c94b4b)"></div>
-                  <span class="shelf-card__title">Ember Waltz</span>
-                  <span class="shelf-card__artist">Roan Asher</span>
-                </a>
-              </div>
+              <div class="shelf__row"></div>
             </section>
 
             </div> <!-- End view-home -->
