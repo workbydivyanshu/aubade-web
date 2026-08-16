@@ -787,3 +787,242 @@ a {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+
+/* ── Idle: nothing playing ────────────────────────────────── */
+
+/* The reference shows no player bar until a track starts. Zeroing the height
+   here also releases the space the sidebar and content frame reserve for it,
+   since both size themselves against this property. */
+#app.is-idle {
+  --player-h: 0px;
+}
+
+#app.is-idle .player {
+  display: none;
+}
+
+/* Artist page sections. Octave puts its first section title at x=304, y=571
+   with 24px/700, -0.6px tracking and a 32px line box. */
+.artist-content {
+  padding-inline: 16px !important;
+  padding-block: 36px 32px !important;
+}
+
+.artist-section__title {
+  letter-spacing: -0.6px;
+  line-height: 32px;
+}
+
+
+/* ─ Toast ─────────────────────────────────────────────────── */
+
+.toast {
+  position: fixed;
+  inset-block-end: calc(var(--player-h) + 20px);
+  /* Centre on the content area, not the viewport; the sidebar shifts the
+     optical centre by half its width. */
+  inset-inline-start: calc(50% + var(--sidebar-w) / 2);
+  translate: -50% 8px;
+  max-inline-size: min(560px, calc(100vw - 64px));
+  padding: 13px 20px;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, translate 0.2s;
+  z-index: 300;
+}
+
+.toast.is-open {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+
+/* ─ Entrance ──────────────────────────────────────────────────
+   Their own keyframe and curve, read from the stylesheet they serve:
+   rise 0.4s cubic-bezier(.16, 1, .3, 1). Content lifts 14px into place
+   rather than appearing. */
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.shelf,
+.hero-card,
+.quick-grid,
+.album-header,
+.artist-header,
+.liked-header {
+  animation: rise 0.4s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shelf,
+  .hero-card,
+  .quick-grid,
+  .album-header,
+  .artist-header,
+  .liked-header {
+    animation: none;
+  }
+}
+
+
+/* ─ Marquee ───────────────────────────────────────────────────
+   Their keyframe: still for the first 12% and the last 12%, travelling
+   between, offset by the container's own width. Only applied when the
+   text genuinely overflows. */
+
+@keyframes marquee {
+  0%, 12%   { transform: translateX(0); }
+  88%, 100% { transform: translateX(calc(-100% + var(--marquee-w, 0px))); }
+}
+
+.marquee__inner {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.is-scrolling .marquee__inner {
+  animation: marquee var(--marquee-time, 10s) var(--ease-in-out) infinite;
+}
+
+/* An ellipsis and a marquee cannot both be right; scrolling text shows all
+   of itself, so the truncation is dropped while it runs. */
+.is-scrolling {
+  text-overflow: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-scrolling .marquee__inner { animation: none; }
+  .is-scrolling { text-overflow: ellipsis; }
+}
+
+/* The hidden attribute is only a default of display:none, so any rule setting
+   display outranks it and the element stays on screen while reporting itself
+   hidden. Three separate bugs here have been exactly that. This makes the
+   attribute mean what it says, everywhere. */
+[hidden] {
+  display: none !important;
+}
+
+
+/* ─ Empty home ────────────────────────────────────────────────
+   What a first run actually shows, in place of a page of albums that
+   do not exist. */
+
+.home-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 96px 32px 120px;
+  animation: rise 0.4s var(--ease-out) both;
+}
+
+.home-empty[hidden] {
+  display: none;
+}
+
+.home-empty__icon {
+  inline-size: 56px;
+  block-size: 56px;
+  color: var(--text-dim);
+  margin-block-end: 20px;
+}
+
+.home-empty__title {
+  margin: 0 0 10px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+  letter-spacing: -0.6px;
+  color: var(--text);
+}
+
+.home-empty__body {
+  margin: 0 0 28px;
+  max-inline-size: 44ch;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+
+/* ─ Collapsed sidebar ─────────────────────────────────────── */
+
+#app.is-sidebar-collapsed {
+  --sidebar-w: 0px;
+}
+
+#app.is-sidebar-collapsed .sidebar {
+  transform: translateX(-100%);
+}
+
+.sidebar {
+  transition: transform 0.25s var(--ease-out);
+}
+
+/* The expand control only exists while the sidebar is away. */
+.top-bar__btn--expand {
+  display: none;
+}
+
+#app.is-sidebar-collapsed .top-bar__btn--expand {
+  display: grid;
+}
+
+
+/* ─ Keyboard shortcut list ────────────────────────────────── */
+
+.shortcuts {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  translate: -50% -50%;
+  inline-size: min(420px, calc(100vw - 64px));
+  max-block-size: calc(100vh - 96px);
+  overflow-y: auto;
+  padding: 24px 26px;
+  border-radius: var(--radius-art-lg);
+  z-index: 400;
+  animation: rise 0.25s var(--ease-out) both;
+}
+
+.shortcuts__title {
+  margin: 0 0 16px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.shortcuts__row {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  padding-block: 7px;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text);
+}
+
+.shortcuts__row:first-of-type {
+  border-block-start: 0;
+}
+
+.shortcuts kbd {
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+}

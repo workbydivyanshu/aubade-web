@@ -484,3 +484,198 @@ input:checked + .toggle-slider {
 input:checked + .toggle-slider:before {
   transform: translateX(18px);
 }
+
+
+/* ─ Liked Songs ───────────────────────────────────────────────
+   A playlist header rather than an album one: the art is a gradient
+   tile, not a cover, and it sits beside the text as Octave's does. */
+
+.liked-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  padding: 72px 32px 0;
+}
+
+.liked-header__art {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 232px;
+  block-size: 232px;
+  border-radius: var(--radius-art-lg);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 46%, var(--bg-glow-2) 100%);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.liked-header__art svg {
+  inline-size: 84px;
+  block-size: 84px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.liked-header__meta {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.liked-header__title {
+  margin: 0 0 10px;
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 48px;
+  letter-spacing: -1.2px;
+  color: var(--text);
+}
+
+.liked-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block-start: 24px;
+}
+
+#view-liked .album-tracks {
+  padding-block-start: 40px;
+}
+
+.liked-empty {
+  margin: 48px 32px;
+  font-size: 15px;
+  line-height: 22.5px;
+  color: var(--text-muted);
+}
+
+/* Unlike sits in the row, visible on hover the way Octave's row actions do. */
+.track-row__unlike {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.track-row:hover .track-row__unlike,
+.track-row__unlike:focus-visible {
+  opacity: 1;
+}
+
+.track-row__unlike svg {
+  inline-size: 17px;
+  block-size: 17px;
+}
+
+.album-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+
+/* ─ Browse ────────────────────────────────────────────────────
+   Octave's tile grid, measured on its search page: 263x132 cells at a
+   2:1 ratio, 36px radius, label 18px/600 with -0.45px tracking. */
+
+.browse-section {
+  padding-inline: 32px;
+  margin-block-end: 40px;
+}
+
+.browse-section .shelf__title {
+  margin-block-end: 16px;
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.browse-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  aspect-ratio: 2 / 1;
+  padding: 16px 18px;
+  border-radius: var(--radius-art);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  transition: transform 0.15s var(--ease-out);
+}
+
+.browse-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 62%);
+}
+
+.browse-tile:hover {
+  transform: translateY(-2px);
+}
+
+.browse-tile:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.browse-tile__label,
+.browse-tile__count {
+  position: relative;
+  z-index: 1;
+}
+
+.browse-tile__label {
+  font-size: 18px;
+  line-height: 22.5px;
+  font-weight: 600;
+  letter-spacing: -0.45px;
+  color: #fff;
+}
+
+.browse-tile__count {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.browse-count {
+  margin: 0 0 20px;
+  padding-inline: 32px;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+#view-browse .lib-grid--albums {
+  padding-inline: 32px;
+}
+
+
+/* ─ Playlists ─────────────────────────────────────────────── */
+
+.pinned-item__art--playlist {
+  background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  color: var(--text-muted);
+}
+
+.pinned-item__art--playlist svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+}
+
+.liked-header__art--playlist {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-glow-2) 62%, var(--surface-3) 100%);
+}

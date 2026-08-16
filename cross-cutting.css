@@ -1,0 +1,45 @@
+/* Rules that cannot live with the component they affect.
+
+   The knob rule covers the player bar and the now-playing view in one
+   selector list, so it has to load after both. The hidden guard has to
+   outrank every display rule in the project. Everything else that used to
+   sit here has moved to the file for the thing it styles. */
+
+/* ─ Bars carry no dot ─────────────────────────────────────────
+   Octave v1.7: "It's a clean bar with no dot on it, matching the
+   progress bar." Confirmed in a screenshot of it mid-playback — the
+   filled portion just ends. The knob stays for grabbing, so it fades
+   in on hover and while dragging rather than sitting there always. */
+
+.player__track-knob,
+.player__vol-knob,
+.now-playing__track-knob,
+.np-vol-slider__knob {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.player__track-bar:hover .player__track-knob,
+.player__vol-bar:hover .player__vol-knob,
+.now-playing__track-bar:hover .now-playing__track-knob,
+.np-vol-slider:hover .np-vol-slider__knob,
+.is-scrubbing .player__track-knob,
+.is-scrubbing .now-playing__track-knob {
+  opacity: 1;
+}
+
+/* Lyric selection mode, for the copy action. */
+.now-playing__lyrics.is-selecting .np-lyric-line {
+  cursor: pointer;
+  filter: none;
+}
+
+.np-lyric-line--picked {
+  color: var(--text) !important;
+  filter: none !important;
+}
+
+.np-lyric-action.is-active {
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--text);
+}
