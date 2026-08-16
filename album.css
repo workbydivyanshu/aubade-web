@@ -1,0 +1,234 @@
+/* The album page: blurred header, centred cover and metadata, track list.
+
+   Split out of app.css; load order is the cascade, so this file expects to
+   come after the ones before it in index.html. */
+
+/* ── Album View ───────────────────────────────────────────── */
+
+#view-album {
+  padding-block-end: 100px;
+}
+
+.album-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block-start: 72px;
+  padding-block-end: 40px;
+  overflow: hidden;
+}
+
+.album-header__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(60px);
+  transform: scale(1.4);
+  z-index: 0;
+}
+
+.album-header__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(13,10,20,0.3) 0%, var(--page) 100%);
+  z-index: 0;
+}
+
+.album-header__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  inline-size: 100%;
+}
+
+.album-header__cover {
+  inline-size: 304px;
+  block-size: 304px;
+  border-radius: var(--radius-art-lg);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  margin-block-end: 91px;
+}
+
+.album-header__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-block-end: 54px;
+}
+
+.album-header__eyebrow {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-block-end: 6px;
+}
+
+.album-header__title {
+  color: var(--text);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  line-height: 48px;
+  margin: 0 0 10px 0;
+}
+
+.album-header__artist {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+  margin-block-end: 2px;
+}
+
+.album-header__stats {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.album-header__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block-end: 8px;
+}
+
+.album-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.album-btn--play {
+  background: var(--album-accent, var(--accent));
+  block-size: 48px;
+  padding-inline: 32px;
+  border-radius: var(--radius-art-lg);
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.album-btn--play svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.album-btn--shuffle,
+.album-btn--like,
+.album-btn--queue,
+.album-btn--share,
+.album-btn--more {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: 50%;
+}
+
+.np-icon-btn.is-flashed {
+  color: var(--accent);
+}
+
+.album-btn.is-flashed {
+  background: var(--album-accent, var(--accent));
+  color: #fff;
+}
+
+.album-btn--like.is-liked {
+  color: var(--album-accent, var(--accent));
+}
+
+.album-btn--shuffle svg,
+.album-btn--like svg,
+.album-btn--queue svg,
+.album-btn--share svg,
+.album-btn--more svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.album-btn:hover {
+  filter: brightness(1.1);
+}
+
+.album-tracks {
+  max-inline-size: 976px;
+  inline-size: 100%;
+  margin: 0 auto;
+  padding-inline: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.track-row {
+  display: flex;
+  align-items: center;
+  block-size: 52px;
+  border-radius: var(--radius-row);
+  padding-inline: 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.track-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.track-row__num {
+  flex: 0 0 32px;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.track-row__info {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-inline-size: 0;
+}
+
+.track-row__title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-row__artist {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-block-start: 2px;
+}
+
+.track-row__duration {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  margin-inline-start: 16px;
+}

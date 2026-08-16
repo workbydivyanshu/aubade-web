@@ -1,0 +1,230 @@
+/* The docked player bar: its three zones and the scrubber.
+
+   Split out of app.css; load order is the cascade, so this file expects to
+   come after the ones before it in index.html. */
+
+/* ── Player bar ───────────────────────────────────────────── */
+
+.player {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  block-size: var(--player-h);
+  display: grid;
+  /* The centre column has to be given width, not left to size to its content:
+     as `auto` the scrubber collapsed to a third of the reference's 410px. */
+  grid-template-columns: 1fr minmax(0, 560px) 1fr;
+  align-items: center;
+  padding-inline: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 100;
+}
+
+/* ── Player: LEFT zone ────────────────────────────────────── */
+
+.player__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-inline-size: 0;
+}
+
+.player__cover {
+  background-size: cover;
+  background-position: center;
+  flex: 0 0 auto;
+  inline-size: 56px;
+  block-size: 56px;
+  border-radius: var(--radius-tile);
+  background:
+    linear-gradient(135deg, #e8927c 0%, #c97b9a 40%, #9a6fb0 100%);
+}
+
+.player__track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-inline-size: 0;
+  margin-inline-end: 4px;
+}
+
+.player__title {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player__artist {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player__icon-btn {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.15s;
+  flex: 0 0 auto;
+}
+
+.player__icon-btn:hover {
+  color: var(--text);
+}
+
+.player__icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.player__icon-btn svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ── Player: CENTRE zone ──────────────────────────────────── */
+
+.player__centre {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  inline-size: 100%;
+  max-inline-size: 560px;
+}
+
+.player__transport {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.player__play-btn {
+  display: grid;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--page);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.player__play-btn:hover {
+  transform: scale(1.05);
+}
+
+.player__play-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.player__play-btn svg {
+  inline-size: 22px;
+  block-size: 22px;
+  margin-inline-start: 2px;
+}
+
+/* ── Scrubber ─────────────────────────────────────────────── */
+
+.player__scrubber {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+}
+
+.player__time {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.player__track-bar {
+  position: relative;
+  flex: 1 1 0;
+  block-size: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.player__track-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.player__track-knob {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 12px;
+  block-size: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Player: RIGHT zone ───────────────────────────────────── */
+
+.player__right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.player__vol-bar {
+  position: relative;
+  inline-size: 90px;
+  block-size: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.player__vol-fill {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.player__vol-knob {
+  position: absolute;
+  inset-block-start: 50%;
+  inline-size: 10px;
+  block-size: 10px;
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}

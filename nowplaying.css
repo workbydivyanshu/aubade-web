@@ -1,0 +1,635 @@
+/* The expanded now-playing overlay: cover, transport, lyrics, sync
+   controls, credits, queue, and the ambient backdrop.
+
+   Split out of app.css; load order is the cascade, so this file expects to
+   come after the ones before it in index.html. */
+
+/* ── Now Playing Overlay ──────────────────────────────────── */
+
+.now-playing {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+  transform: translateY(100%);
+  transition: transform 0.25s ease-out;
+  overflow: hidden;
+}
+
+.now-playing.is-open {
+  transform: translateY(0);
+}
+
+.now-playing__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* Their ambient technique: circular copies of the artwork, blurred, turning
+   slowly in opposite directions with one orbiting. A single blurred cover
+   sits flat; three that drift against each other do not. */
+.ambient-layer {
+  position: absolute;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  will-change: transform;
+  backface-visibility: hidden;
+  filter: blur(72px) saturate(1.9);
+}
+
+.ambient-layer--1 {
+  inline-size: 78%;
+  aspect-ratio: 1;
+  inset-block-start: -18%;
+  inset-inline-start: -12%;
+  opacity: 0.85;
+  animation: ambient-spin 68s linear infinite;
+}
+
+.ambient-layer--2 {
+  inline-size: 62%;
+  aspect-ratio: 1;
+  inset-block-end: -22%;
+  inset-inline-end: -10%;
+  opacity: 0.7;
+  animation: ambient-spin-rev 84s linear infinite;
+}
+
+.ambient-layer--3 {
+  inline-size: 46%;
+  aspect-ratio: 1;
+  inset-block-start: 24%;
+  inset-inline-start: 34%;
+  opacity: 0.55;
+  animation: ambient-orbit 52s linear infinite;
+}
+
+@keyframes ambient-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ambient-spin-rev {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes ambient-orbit {
+  from { transform: rotate(0) translate(8%) rotate(0); }
+  to   { transform: rotate(360deg) translate(8%) rotate(-360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-layer { animation: none; }
+}
+
+/* The scrim carries the artwork's own colours rather than one flat grey.
+   Four washes from the extracted palette over a near-black tinted toward the
+   cover — the reference's --np-c1..c4 and --np-bg, used the way it uses them.
+   The flat layer underneath is what keeps text readable regardless. */
+.now-playing__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 44% at 12% 8%,
+      color-mix(in oklab, var(--np-c1, transparent) 34%, transparent), transparent 70%),
+    radial-gradient(52% 40% at 88% 6%,
+      color-mix(in oklab, var(--np-c2, transparent) 26%, transparent), transparent 68%),
+    radial-gradient(60% 48% at 78% 92%,
+      color-mix(in oklab, var(--np-c3, transparent) 24%, transparent), transparent 72%),
+    radial-gradient(46% 38% at 22% 96%,
+      color-mix(in oklab, var(--np-c4, transparent) 20%, transparent), transparent 70%),
+    linear-gradient(to bottom,
+      color-mix(in oklab, var(--np-bg, #0d0a14) 74%, transparent),
+      color-mix(in oklab, var(--np-bg, #0d0a14) 88%, transparent));
+  z-index: 0;
+}
+
+.now-playing__content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+}
+
+.now-playing__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 48px;
+  inline-size: 100%;
+}
+
+.np-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  inline-size: 40px;
+  block-size: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.np-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.np-btn svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.now-playing__meta {
+  text-align: center;
+}
+
+.now-playing__eyebrow {
+  display: block;
+  font-size: 11px;
+  line-height: 16.5px;
+  font-weight: 500;
+  letter-spacing: 1.1px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  margin-block-end: 4px;
+}
+
+.now-playing__album {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text);
+}
+
+.now-playing__body {
+  display: flex;
+  flex: 1;
+  padding: 0 96px 48px;
+  min-block-size: 0;
+}
+
+.now-playing__left {
+  flex: 0 0 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.now-playing__cover {
+  position: relative;
+  inline-size: 279px;
+  block-size: 279px;
+  border-radius: 25.6px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  margin-block-end: 24px;
+  align-self: center;
+}
+
+/* Title row: title+subtitle left, icons right */
+.np-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-block-end: 8px;
+}
+
+.np-title-row__text {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.now-playing__title {
+  font-size: 25.6px;
+  font-weight: 700;
+  letter-spacing: -0.64px;
+  color: var(--text);
+  margin: 0 0 4px 0;
+  line-height: 32px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.now-playing__subtitle {
+  font-size: 16.8px;
+  line-height: 23.1px;
+  font-weight: 400;
+  letter-spacing: -0.176px;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0 0 16px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.np-title-row__icons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block-start: 12px;
+}
+
+.np-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  inline-size: 24px;
+  block-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.np-icon-btn:hover {
+  color: var(--text);
+}
+
+.np-icon-btn svg {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.np-icon-btn--active {
+  color: var(--accent);
+}
+
+.now-playing__scrubber {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-block-end: 8px;
+}
+
+.now-playing__time {
+  font-size: 11px;
+  line-height: 16.5px;
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+  min-inline-size: 40px;
+}
+
+.now-playing__time--right {
+  text-align: right;
+}
+
+.now-playing__track-bar {
+  flex: 1;
+  block-size: 24px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.now-playing__track-bg {
+  position: absolute;
+  inset-inline: 0;
+  block-size: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+.now-playing__track-fill {
+  position: absolute;
+  inset-inline-start: 0;
+  block-size: 4px;
+  background: var(--text);
+  border-radius: 2px;
+  inline-size: 0%;
+}
+
+.now-playing__track-knob {
+  position: absolute;
+  inset-inline-start: 0%;
+  block-size: 12px;
+  inline-size: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, 0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Quality & speed row */
+.np-quality-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-block-end: 24px;
+}
+
+.np-quality-row__format {
+  font-size: 11px;
+  line-height: 16.5px;
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.np-quality-row__speed {
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.np-quality-row__speed:hover {
+  color: var(--text);
+}
+
+.now-playing__transport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-block-end: 24px;
+}
+
+.np-btn--play {
+  inline-size: 72px;
+  block-size: 72px;
+  border-radius: 22px;
+  background: var(--text);
+  color: var(--page);
+}
+
+.np-btn--play:hover {
+  background: white;
+  transform: scale(1.04);
+}
+
+.np-btn--play svg {
+  inline-size: 32px;
+  block-size: 32px;
+  fill: currentColor;
+  stroke: none;
+}
+
+/* Bottom utility row */
+.np-utility-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Volume and the toggles sit together on the right; the output picker stays
+   hard left, as Octave has it. */
+.np-utility-row__group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.np-device {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--np-accent, var(--accent));
+}
+
+.np-device svg {
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+#np-queue-btn {
+  margin-inline-start: auto;
+}
+
+.np-vol-slider {
+  inline-size: 100px;
+  block-size: 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.np-vol-slider__track {
+  position: relative;
+  inline-size: 100%;
+  block-size: 4px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}
+
+.np-vol-slider__fill {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  block-size: 4px;
+  background: var(--text);
+  border-radius: 2px;
+}
+
+.np-vol-slider__knob {
+  position: absolute;
+  inset-block-start: 50%;
+  block-size: 10px;
+  inline-size: 10px;
+  border-radius: 50%;
+  background: var(--text);
+  transform: translate(-50%, -50%);
+}
+
+/* Now-playing right pane */
+.now-playing__right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Sync pill */
+.np-sync-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 48px 0;
+}
+
+/* Measured: one 116x36 pill, rgba(255,255,255,0.1) over blur(12px), with
+   the label at 12px/600 and 0.85 white. The minus and plus live inside it. */
+.np-sync-group {
+  display: flex;
+  align-items: center;
+  block-size: 36px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  overflow: hidden;
+}
+
+.np-sync-pill {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  padding-inline: 11px;
+  user-select: none;
+}
+
+/* The four round buttons beside it, same fill and blur. */
+.np-lyric-action {
+  display: grid;
+  place-items: center;
+  inline-size: 36px;
+  block-size: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.np-lyric-action:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.np-lyric-action svg {
+  inline-size: 17px;
+  block-size: 17px;
+}
+
+.np-sync-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  inline-size: 32px;
+  block-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+
+.np-sync-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.now-playing__lyrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-block: 40px;
+  padding-inline: 60px 48px;
+}
+.now-playing__lyrics::-webkit-scrollbar {
+  display: none;
+}
+
+.np-lyric-placeholder {
+  font-size: 20px;
+  line-height: 28px;
+  color: var(--text-dim);
+}
+
+.np-lyric-line {
+  font-size: 36px;
+  font-weight: 700;
+  filter: blur(2.5px);
+  transition: color 0.3s, filter 0.3s;
+  line-height: 45px;
+  padding-block: 12px;
+  color: rgba(255, 255, 255, 0.68);
+  max-inline-size: 620px;
+}
+
+.np-lyric-line--active {
+  color: var(--text);
+  filter: none;
+}
+
+/* ─ Popover menu ─ */
+.np-menu {
+  position: absolute;
+  inset-inline-end: 0;
+  inset-block-start: 100%;
+  inline-size: 248px;
+  border-radius: 16px;
+  padding: 8px 0;
+  z-index: 100;
+}
+
+.np-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  inline-size: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  padding: 9px 16px;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.np-menu__item svg {
+  flex: 0 0 auto;
+  inline-size: 18px;
+  block-size: 18px;
+  color: var(--text-muted);
+}
+
+.np-menu__item:hover svg {
+  color: var(--text);
+}
+
+.np-menu__divider {
+  block-size: 1px;
+  margin: 6px 0;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.np-menu__item:hover {
+  background: rgba(255,255,255,0.08);
+}

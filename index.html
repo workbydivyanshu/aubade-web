@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Aubade</title>
     <link rel="stylesheet" href="tokens.css" />
-    <link rel="stylesheet" href="app.css" />
+    <!-- Order is the cascade: these were one file and still depend on
+         being applied in this sequence. -->
+    <link rel="stylesheet" href="shell.css" />
+    <link rel="stylesheet" href="player.css" />
+    <link rel="stylesheet" href="album.css" />
+    <link rel="stylesheet" href="nowplaying.css" />
+    <link rel="stylesheet" href="views.css" />
+    <link rel="stylesheet" href="later.css" />
   </head>
   <body>
     <!-- Starts idle: there is no player bar until something plays. -->
