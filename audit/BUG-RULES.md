@@ -71,26 +71,11 @@ reload it — the repo changes every few minutes.
 - Some warnings are deliberate instrumentation, not faults — `[cover-diag]` is
   a diagnostic we added on purpose.
 
-## Keep going without being asked
+## One pass per prompt
 
-You are a standing watch, not a one-shot task. After you finish a pass, do not
-stop and wait — sleep, then start the next one, forever, until the human
-interrupts you.
-
-The loop, exactly:
-
-1. `git rev-parse --short HEAD`
-2. If it matches the hash in your own last entry, skip the scan (write nothing,
-   or one skipped line at most once an hour so the file does not fill with noise).
-   Otherwise do a full pass and append your report.
-3. `sleep 7200` — run it as a real command and wait for it to finish.
-4. Go back to step 1.
-
-Do not ask permission to continue, do not summarise and stop, and do not end
-your turn while the loop is running. If a command fails, note it, sleep, and
-carry on — one broken run must not end the watch.
-
-If you are ever unsure whether to keep looping: keep looping.
+You are run on demand, not on a timer. Do one pass, write your report, and
+stop. Do not sleep and re-run, and do not ask to continue — you will be
+prompted again when another pass is wanted.
 
 ## Before you scan: has anything changed?
 
@@ -105,7 +90,8 @@ git rev-parse --short HEAD
 ```
 
 Compare it to the hash at the top of your own last entry in `audit/watch/`. If
-it is the same, write one line and stop:
+it is the same, nothing has changed since you last looked — say so in one line
+and stop rather than re-reporting what was already cleared:
 
 ```
 ## <timestamp> — <tool>
