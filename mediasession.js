@@ -4,7 +4,7 @@
 // does not reach back into playback and playback does not have to know it
 // exists.
 
-import { state } from './state.js';
+import { state, SEEK_STEP_SECONDS } from './state.js';
 import { albumKey } from './library.js';
 import { coverUrlForAlbum } from './art.js';
 
@@ -15,7 +15,6 @@ let transport = {};
 // now-playing widget all do nothing, which is most of what separates a tab
 // that plays audio from a music player.
 
-const SEEK_STEP_SECONDS = 10;
 
 function setupMediaSession() {
   if (!('mediaSession' in navigator)) return;

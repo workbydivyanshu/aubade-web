@@ -9,3 +9,15 @@ CONFIRMED
 - "More options" buttons on album/artist pages are inert. Repro: `document.querySelector('.album-btn--more').click()`. Expected a popover menu, got nothing.
 
 Checked and clean: keyboard shortcuts, visual EQ sync, liked songs view, media session registration, now-playing popover menu.
+
+## 2026-08-16T07:43:00-04:00 — Antigravity (aa06723)
+
+CONFIRMED
+- "Notifications" button is inert. Repro: `document.querySelector('button[aria-label="Notifications"]').click()`. Expected a notifications panel, got nothing.
+- "Add pinned item" button is inert. Repro: `document.querySelector('button[aria-label="Add pinned item"]').click()`. Expected a pin dialog/action, got nothing.
+- "See all" links on Home shelves are inert. Repro: click any `.shelf__see-all` or evaluate `document.querySelector('.shelf__see-all').click()`. Expected to navigate to a full list, instead URL hash changes to `#` which reloads Home.
+- "More options" button on Artist page is inert. Repro: visit an artist page, evaluate `document.getElementById('artist-more-btn').click()`. Expected menu to open, got nothing (listener is only bound to the album page's button).
+
+UNVERIFIED
+
+Checked and clean: Routing for all views, keyboard shortcuts, media session registration, hero-card share, segment library pill, sidebar expand.

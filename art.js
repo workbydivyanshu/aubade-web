@@ -145,3 +145,19 @@ export function getCoverAccent(url) {
     img.src = url;
   });
 }
+
+/**
+ * Drop every cached cover and release its object URL.
+ *
+ * The cache is private to this module, so the settings screen cannot empty it
+ * by reaching in — it was trying to, and throwing a ReferenceError on every
+ * click without revoking anything.
+ */
+export function clearCoverCache() {
+  let revoked = 0;
+  for (const url of coverCache.values()) {
+    if (url) { URL.revokeObjectURL(url); revoked++; }
+  }
+  coverCache.clear();
+  return revoked;
+}

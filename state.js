@@ -17,3 +17,11 @@ export const state = {
     originalQueue: [],
   },
 };
+
+/**
+ * How far the seek controls move, in seconds.
+ *
+ * Shared: the keyboard's arrow keys and the OS media keys both use it, and
+ * they lived in different modules long enough for one copy to go missing.
+ */
+export const SEEK_STEP_SECONDS = 10;

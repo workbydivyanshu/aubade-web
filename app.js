@@ -1,7 +1,7 @@
-import { state } from './state.js';
+import { state, SEEK_STEP_SECONDS } from './state.js';
 import { openDB, dbGet, dbSet } from './db.js';
 import { albumKey } from './library.js';
-import { gradientFor, coverUrlForAlbum, getCoverAccent } from './art.js';
+import { gradientFor, coverUrlForAlbum, getCoverAccent, clearCoverCache } from './art.js';
 import { makeShelfCard, makeQuickCard, renderHero } from './cards.js';
 import { renderBrowseView } from './browse.js';
 import { initVisualiser, eqShouldRun, startVisualiser, stopVisualiser } from './visualiser.js';
@@ -1873,6 +1873,8 @@ async function renderArtistView(name) {
     } catch { /* clipboard blocked */ }
   };
 
+
+
   // Play controls
   // Sort tracks by album year desc, then track index (since they are in albums)
   const sortedAlbums = [...artist.albums].sort((a, b) => (b.year || 0) - (a.year || 0));
@@ -1881,6 +1883,24 @@ async function renderArtistView(name) {
     sortedTracks.push(...a.tracks);
   }
 
+  const artistMore = document.getElementById('artist-more-btn');
+  artistMore.onclick = (e) => {
+    e.stopPropagation();
+    openAlbumMenu(artistMore, [
+      ['Play all next', () => {
+        playerState.queue.splice(playerState.index + 1, 0, ...sortedTracks);
+        playerState.originalQueue.splice(playerState.index + 1, 0, ...sortedTracks);
+        showToast('Playing next');
+      }],
+      ['Copy artist name', async () => {
+        try {
+          await navigator.clipboard.writeText(artist.name);
+          showToast('Copied artist name');
+        } catch { /* clipboard blocked */ }
+      }],
+      ['Show in library', () => { window.location.hash = '#library?view=artists'; }],
+    ]);
+  };
   const doPlay = (shuffle) => {
     playerState.originalQueue = sortedTracks;
     playerState.queue = shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
@@ -2008,12 +2028,9 @@ function renderSettingsView() {
     });
 
     document.getElementById('settings-btn-clear-cache').addEventListener('click', () => {
-      // Clear memory cache and revoke URLs
-      for (const [key, url] of coverCache.entries()) {
-        if (url) URL.revokeObjectURL(url);
-      }
-      coverCache.clear();
-      // It will reload automatically when needed
+      const revoked = clearCoverCache();
+      showToast(revoked ? `Released ${revoked} cached cover${revoked === 1 ? '' : 's'}`
+                        : 'Cache was already empty');
     });
 
     document.getElementById('settings-btn-reset').addEventListener('click', (e) => {
