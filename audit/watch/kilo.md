@@ -27,3 +27,31 @@ reference; oklab/rgba(0,0,0,0) 1.00 readings were parser artifacts on tinted
 surfaces), responsive breakpoints 1100/1280/1440/1600px (quick-grid 4-col and
 scroll shelves stable, no breakage). Octave settings captured via extended
 navigation timeout (harness default 30s networkidle timed out on the live site).
+
+## 2026-08-16T08:02:46-04:00 — kilo  ·  commit 2c1ce5c
+
+CONFIRMED
+- 2 literals in app.css duplicate tokens.css at this commit (app.css is
+  committed-clean; WIP edits are to app.js/index.html/etc., not app.css). Repro:
+  `grep -nE 'border-radius: (20|24)px' app.css` then `grep -nE 'radius-tile|radius-art-lg' tokens.css`.
+  Expected var(--radius-tile)/var(--radius-art-lg); got literals:
+  app.css:817 `.player__cover` 20px (== --radius-tile, tokens.css:83) and
+  app.css:1124 `.album-btn--play` 24px (== --radius-art-lg, tokens.css:81). Both
+  currently match their token (no live divergence), but e2e7be7 left them as
+  literals; the other six reported duplicates were already converted to var().
+
+UNVERIFIED
+- Per-element contrast on translucent/gradient/ambient surfaces was not computable
+  (harness records only bodyBackground). The only flat-colour text below 4.5 on
+  black is --text-dim #6b6b76 @3.99, which Octave renders identically, so no
+  aubade-only contrast regression was established.
+- Working tree was dirty at capture time (uncommitted WIP in app.js, art.js,
+  index.html, mediasession.js, state.js over HEAD 2c1ce5c; app.css/tokens.css
+  clean). Captures reflect WIP that nonetheless renders without errors.
+- Octave /settings needed an extended navigation timeout (harness 30s networkidle
+  times out on the live settings page).
+- Near-miss investigated: six parallel aubade captures all reported identical
+  57 text/29 box counts plus a MutationObserver TypeError. A single sequential
+  capture is clean (navigation works, #settings -> viewSettings=flex, 0 errors),
+  so the symptom was overload of the single-threaded dev server, not a real
+  defect; 2c1ce5c's own message records the module-load observer bug it fixed.
