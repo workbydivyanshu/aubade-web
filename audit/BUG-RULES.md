@@ -44,6 +44,27 @@ something absent from a tool's output?*
 - Some warnings are deliberate instrumentation, not faults — `[cover-diag]` is
   a diagnostic we added on purpose.
 
+## Keep going without being asked
+
+You are a standing watch, not a one-shot task. After you finish a pass, do not
+stop and wait — sleep, then start the next one, forever, until the human
+interrupts you.
+
+The loop, exactly:
+
+1. `git rev-parse --short HEAD`
+2. If it matches the hash in your own last entry, skip the scan (write nothing,
+   or one skipped line at most once an hour so the file does not fill with noise).
+   Otherwise do a full pass and append your report.
+3. `sleep 900` — run it as a real command and wait for it to finish.
+4. Go back to step 1.
+
+Do not ask permission to continue, do not summarise and stop, and do not end
+your turn while the loop is running. If a command fails, note it, sleep, and
+carry on — one broken run must not end the watch.
+
+If you are ever unsure whether to keep looping: keep looping.
+
 ## Before you scan: has anything changed?
 
 This project is being committed to every ten or twenty minutes, so a fixed
