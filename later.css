@@ -692,3 +692,21 @@
 #app.is-sidebar-collapsed .top-bar__btn--expand {
   display: grid;
 }
+
+/* ─ Playlists ─────────────────────────────────────────────── */
+
+.pinned-item__art--playlist {
+  background: linear-gradient(135deg, var(--surface-3), var(--surface-2));
+  color: var(--text-muted);
+}
+
+.pinned-item__art--playlist svg {
+  inline-size: 20px;
+  block-size: 20px;
+  fill: none;
+  stroke: currentColor;
+}
+
+.liked-header__art--playlist {
+  background: linear-gradient(135deg, var(--accent-soft) 0%, var(--bg-glow-2) 62%, var(--surface-3) 100%);
+}

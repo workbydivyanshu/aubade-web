@@ -4,6 +4,10 @@ import { albumKey } from './library.js';
 import { gradientFor, coverUrlForAlbum, getCoverAccent, getCoverPalette, clearCoverCache } from './art.js';
 import { makeShelfCard, makeQuickCard, renderHero } from './cards.js';
 import { renderBrowseView } from './browse.js';
+import {
+  allPlaylists, getPlaylist, createPlaylist, renamePlaylist, deletePlaylist,
+  addToPlaylist, removeFromPlaylist, playlistTracks,
+} from './playlists.js';
 import { initVisualiser, eqShouldRun, startVisualiser, stopVisualiser } from './visualiser.js';
 import { initMediaSession, updateMediaSession, clearMediaSession } from './mediasession.js';
 import { parseLrc } from './lrc.js';
@@ -879,7 +883,7 @@ window.addEventListener('hashchange', handleRoute);
 
 // Every view id, so hiding them is one loop rather than a line per view that
 // has to be remembered each time one is added.
-const VIEW_IDS = ['home', 'album', 'search', 'library', 'artist', 'settings', 'liked', 'browse'];
+const VIEW_IDS = ['home', 'album', 'search', 'library', 'artist', 'settings', 'liked', 'browse', 'playlist'];
 
 function handleRoute() {
   const hash = window.location.hash || '#home';
@@ -896,7 +900,10 @@ function handleRoute() {
 
   document.querySelectorAll('.sidebar__nav-item').forEach(el => el.classList.remove('sidebar__nav-item--selected'));
 
-  if (hash === '#liked-songs') {
+  if (hash.startsWith('#playlist/')) {
+    renderPlaylistView(decodeURIComponent(hash.slice('#playlist/'.length)));
+    document.getElementById('view-playlist').style.display = 'block';
+  } else if (hash === '#liked-songs') {
     renderLikedView();
     document.getElementById('view-liked').style.display = 'block';
   } else if (hash.startsWith('#browse')) {
@@ -1061,6 +1068,7 @@ async function renderAlbumView(key) {
         } catch { /* clipboard blocked */ }
       }],
       ['Show in library', () => { window.location.hash = '#library'; }],
+      ...playlistMenuItems(album.tracks.map((t) => t.path), album.album),
     ]);
   };
 
@@ -1116,6 +1124,164 @@ async function renderAlbumView(key) {
 
 
 
+
+// ── Playlists ────────────────────────────────────────────────
+
+/** The sidebar's playlist rows, under Liked Songs. */
+function renderPlaylistSidebar() {
+  const host = document.getElementById('playlist-list');
+  if (!host) return;
+  host.innerHTML = '';
+  for (const p of allPlaylists()) {
+    const a = document.createElement('a');
+    a.className = 'pinned-item';
+    a.href = '#playlist/' + encodeURIComponent(p.id);
+
+    const art = document.createElement('span');
+    art.className = 'pinned-item__art pinned-item__art--playlist';
+    art.setAttribute('aria-hidden', 'true');
+    art.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.6" stroke-linecap="round"><path d="M3 6h9M3 10h9M3 14h6"/>' +
+      '<circle cx="14.5" cy="14" r="2.2"/><path d="M16.7 14V7l2.3.6"/></svg>';
+
+    const copy = document.createElement('span');
+    copy.className = 'pinned-item__copy';
+    const title = document.createElement('span');
+    title.className = 'pinned-item__title';
+    title.textContent = p.name;
+    const meta = document.createElement('span');
+    meta.className = 'pinned-item__meta';
+    const n = playlistTracks(p.id).length;
+    meta.textContent = `Playlist · ${n} song${n === 1 ? '' : 's'}`;
+    copy.append(title, meta);
+
+    a.append(art, copy);
+    host.appendChild(a);
+  }
+}
+
+function renderPlaylistView(id) {
+  const p = getPlaylist(id);
+  const titleEl = document.getElementById('playlist-title');
+  const statsEl = document.getElementById('playlist-stats');
+  const list = document.getElementById('playlist-tracks');
+  const empty = document.getElementById('playlist-empty');
+
+  if (!p) {
+    titleEl.textContent = 'Playlist not found';
+    statsEl.textContent = '';
+    list.innerHTML = '';
+    empty.hidden = true;
+    return;
+  }
+
+  const tracks = playlistTracks(id);
+  titleEl.textContent = p.name;
+  const total = tracks.reduce((n, t) => n + (t.duration || 0), 0);
+  statsEl.textContent = tracks.length
+    ? `${tracks.length} song${tracks.length === 1 ? '' : 's'} · ${Math.round(total / 60)} min`
+    : 'No songs yet';
+  empty.hidden = tracks.length > 0;
+
+  const playBtn = document.getElementById('playlist-play');
+  const shuffleBtn = document.getElementById('playlist-shuffle');
+  playBtn.disabled = shuffleBtn.disabled = tracks.length === 0;
+  playBtn.onclick = () => playTrackList(tracks, 0, false);
+  shuffleBtn.onclick = () => playTrackList(tracks, 0, true);
+
+  const moreBtn = document.getElementById('playlist-more');
+  moreBtn.onclick = (e) => {
+    e.stopPropagation();
+    openAlbumMenu(moreBtn, [
+      ['Rename', () => {
+        const name = window.prompt('Playlist name', p.name);
+        if (name === null) return;
+        renamePlaylist(id, name);
+        renderPlaylistSidebar();
+        renderPlaylistView(id);
+      }],
+      ['Delete playlist', () => {
+        if (!window.confirm(`Delete "${p.name}"? The files stay where they are.`)) return;
+        deletePlaylist(id);
+        renderPlaylistSidebar();
+        window.location.hash = '#home';
+        showToast('Playlist deleted');
+      }],
+    ]);
+  };
+
+  list.innerHTML = '';
+  tracks.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+
+    const num = document.createElement('div');
+    num.className = 'track-row__num';
+    num.textContent = i + 1;
+
+    const info = document.createElement('div');
+    info.className = 'track-row__info';
+    const tTitle = document.createElement('span');
+    tTitle.className = 'track-row__title';
+    tTitle.textContent = t.title || t.name;
+    const tArtist = document.createElement('span');
+    tArtist.className = 'track-row__artist';
+    tArtist.textContent = [t.artist || t.albumArtist, t.album].filter(Boolean).join(' · ');
+    info.append(tTitle, tArtist);
+
+    const remove = document.createElement('button');
+    remove.className = 'track-row__unlike';
+    remove.type = 'button';
+    remove.setAttribute('aria-label', 'Remove from playlist');
+    remove.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" ' +
+      'stroke-width="2" stroke-linecap="round"><path d="m6 6 8 8M14 6l-8 8"/></svg>';
+    remove.onclick = (e) => {
+      e.stopPropagation();
+      removeFromPlaylist(id, t.path);
+      renderPlaylistSidebar();
+      renderPlaylistView(id);
+    };
+
+    const dur = document.createElement('div');
+    dur.className = 'track-row__duration';
+    dur.textContent = t.duration ? formatTime(t.duration) : '';
+
+    row.append(num, info, remove, dur);
+    row.onclick = () => playTrackList(tracks, i, false);
+    list.appendChild(row);
+  });
+}
+
+/** Offer the playlists as a submenu, plus a way to make a new one. */
+function playlistMenuItems(paths, label) {
+  const items = allPlaylists().map((p) => [
+    p.name,
+    () => {
+      const n = addToPlaylist(p.id, paths);
+      renderPlaylistSidebar();
+      showToast(n ? `Added ${n} to ${p.name}` : `Already in ${p.name}`);
+    },
+  ]);
+  items.push(['+ New playlist…', () => {
+    const name = window.prompt('Playlist name', label || 'New Playlist');
+    if (name === null) return;
+    const p = createPlaylist(name);
+    addToPlaylist(p.id, paths);
+    renderPlaylistSidebar();
+    showToast(`Created ${p.name}`);
+  }]);
+  return items;
+}
+
+document.getElementById('new-playlist-btn')?.addEventListener('click', () => {
+  const name = window.prompt('Playlist name', 'New Playlist');
+  if (name === null) return;
+  const p = createPlaylist(name);
+  renderPlaylistSidebar();
+  window.location.hash = '#playlist/' + encodeURIComponent(p.id);
+});
+
+renderPlaylistSidebar();
 
 // ── Liked Songs ──────────────────────────────────────────────
 // The heart has been writing to aubade_liked since the now-playing work, and
@@ -2568,6 +2734,11 @@ npMenu.addEventListener('click', (e) => {
       playerState.queue.push(record);
       playerState.originalQueue.push(record);
       closeNpMenu();
+      break;
+    }
+    case 'add-playlist': {
+      closeNpMenu();
+      openAlbumMenu(npMenuBtn, playlistMenuItems([record.path], record.title || record.name));
       break;
     }
     case 'toggle-lyrics': {
