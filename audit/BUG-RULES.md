@@ -13,6 +13,22 @@ steps, you do not have a bug — you have a suspicion, and suspicions go in the
 Before reporting, ask: *have I actually seen this fail, or have I only seen
 something absent from a tool's output?*
 
+## Prove the thing exists before you say it is broken
+
+A report claiming a control does nothing has twice named a control that had
+already been deleted. Reporting a bug in something that is not there is worse
+than missing one, because it costs someone a full investigation to disprove.
+
+So before writing any finding about a specific element, run a command that
+shows it in the current tree, and put that line in the report:
+
+```
+grep -n 'aria-label="Notifications"' index.html
+```
+
+No output means no finding. If your evidence is a page you loaded earlier,
+reload it — the repo changes every few minutes.
+
 ## Known false positives — do not report these again
 
 | Reported | Why it was wrong |
