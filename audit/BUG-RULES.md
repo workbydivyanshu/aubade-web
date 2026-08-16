@@ -118,6 +118,17 @@ the other way to get a finding that was never real.
 Put the hash in every entry you write, so the next run can compare against it
 and so a finding can be traced to the code it was found in.
 
+## If you are aider
+
+You edit by default; here you must not. Run with `--message` for a single pass
+and treat the repo as read-only apart from your own file under `audit/watch/`.
+Turn auto-commit off for watch runs: `aider --no-auto-commits`.
+
+Your repo map sees across files, which the other watchers do not. That is what
+you are here for — exports nobody imports, a function defined in two modules,
+a constant that moved and left a caller behind (that one has shipped twice), an
+import cycle, a name that means two different things in two files.
+
 ## How to look
 
 Use the harness rather than inventing one:
