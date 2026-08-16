@@ -13,6 +13,17 @@ steps, you do not have a bug — you have a suspicion, and suspicions go in the
 Before reporting, ask: *have I actually seen this fail, or have I only seen
 something absent from a tool's output?*
 
+## One watcher was removed for making things up
+
+A previous watcher reported the same two controls as broken three times running,
+after both had been deleted — including once after this file already required
+proof they existed. It was dropped.
+
+That is the standard: a watcher that invents findings is worse than no watcher,
+because every false report costs someone a full investigation to disprove while
+the real ones wait. If you are not certain, UNVERIFIED is always available and
+costs nothing.
+
 ## Prove the thing exists before you say it is broken
 
 A report claiming a control does nothing has twice named a control that had
@@ -72,7 +83,7 @@ The loop, exactly:
 2. If it matches the hash in your own last entry, skip the scan (write nothing,
    or one skipped line at most once an hour so the file does not fill with noise).
    Otherwise do a full pass and append your report.
-3. `sleep 900` — run it as a real command and wait for it to finish.
+3. `sleep 7200` — run it as a real command and wait for it to finish.
 4. Go back to step 1.
 
 Do not ask permission to continue, do not summarise and stop, and do not end
