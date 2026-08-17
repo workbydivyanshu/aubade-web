@@ -1,0 +1,112 @@
+/* ── Narrow screens ───────────────────────────────────────────
+   Loaded last so these override the base rules without needing weight.
+
+   The breakpoint is not a guess. The reference was measured at nine widths
+   between 600 and 1024: it keeps its 256px rail down to 768px and swaps to a
+   docked 70px bar of four below that, with nothing in between. So there is one
+   breakpoint here, at 768px, and no tablet state — matching what it does
+   rather than what a framework's default scale suggests.
+
+   The shell is driven by --sidebar-w and --player-h, so most of the layout
+   follows from retargeting those two rather than from rewriting rules. */
+
+/* The docked bar exists only below the breakpoint. */
+.tab-bar {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --sidebar-w: 0px;
+    --tab-bar-h: 70px;
+    /* The player keeps its controls but loses the desktop breathing room. */
+    --player-h: 64px;
+  }
+
+  /* ── The rail goes away entirely ─────────────────────────── */
+  .sidebar {
+    display: none;
+  }
+
+  /* Collapsing is meaningless with no rail; the control would be a dead end. */
+  .top-bar__btn--expand,
+  .top-bar__btn--collapse,
+  .sidebar__collapse {
+    display: none !important;
+  }
+
+  .main {
+    inset-inline-start: 0;
+    inset-block-end: calc(var(--player-h) + var(--tab-bar-h));
+  }
+
+  /* ── The docked bar ──────────────────────────────────────── */
+  .tab-bar {
+    position: fixed;
+    inset-inline: 0;
+    inset-block-end: 0;
+    z-index: 40;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    block-size: var(--tab-bar-h);
+    padding-block-end: env(safe-area-inset-bottom, 0px);
+    background: rgba(20, 20, 23, 0.86);
+    backdrop-filter: blur(24px) saturate(140%);
+    border-block-start: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tab-bar__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-decoration: none;
+    color: var(--text-muted, rgba(255, 255, 255, 0.62));
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.18s var(--ease-out);
+  }
+
+  .tab-bar__item svg {
+    inline-size: 22px;
+    block-size: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Only the icon takes the accent, the way the rail's selected row does. */
+  .tab-bar__item--selected {
+    color: var(--text, #fff);
+  }
+
+  .tab-bar__item--selected svg {
+    color: var(--accent);
+  }
+
+  .tab-bar__item:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -3px;
+    border-radius: 8px;
+  }
+
+  /* The player docks above the bar rather than at the foot of the screen. */
+  .player {
+    inset-block-end: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ── Room ────────────────────────────────────────────────── */
+  .content-frame__inner {
+    padding-inline: 16px;
+  }
+
+  .greeting-row {
+    padding-block: 16px;
+  }
+}

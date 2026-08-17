@@ -964,6 +964,28 @@ function handleRoute() {
     const homeNav = document.querySelector('a[href="#home"]');
     if (homeNav) homeNav.classList.add('sidebar__nav-item--selected');
   }
+
+  syncTabBar(hash);
+}
+
+// The rail marks itself per route in five places above. The docked bar has
+// four destinations covering many more routes than that, so it reads the hash
+// once here rather than growing a sixth and seventh special case.
+function syncTabBar(hash) {
+  const tab =
+    hash.startsWith('#browse') ? '#browse' :
+    hash.startsWith('#search') ? '#search' :
+    (hash.startsWith('#library') || hash.startsWith('#album/') ||
+     hash.startsWith('#artist/') || hash.startsWith('#playlist/') ||
+     hash === '#liked-songs') ? '#library' :
+    hash.startsWith('#home') || hash === '' ? '#home' : null;
+
+  for (const el of document.querySelectorAll('.tab-bar__item')) {
+    const on = el.getAttribute('href') === tab;
+    el.classList.toggle('tab-bar__item--selected', on);
+    if (on) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
+  }
 }
 
 document.querySelector('.top-bar__btn[aria-label="Go back"]')?.addEventListener('click', () => history.back());
