@@ -15,11 +15,27 @@
   display: none;
 }
 
+/* ── Narrow desktop ───────────────────────────────────────────
+   Between the breakpoint and about 1100px the player's three columns —
+   1fr / up to 560px / 1fr — could not all be paid for: the centre took its
+   560 and the right zone its intrinsic 280, leaving the left column exactly
+   0px wide. The cover, title and artist were simply not drawn, so nothing on
+   screen said what was playing. Nothing was clipped, so no overflow check
+   could see it.
+
+   Giving the left column a floor and letting the scrubber give up width
+   instead resolves it in the direction that keeps information on screen. */
+@media (min-width: 768px) and (max-width: 1099.98px) {
+  .player {
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 400px) auto;
+  }
+}
+
 @media (max-width: 767.98px) {
   :root {
     --sidebar-w: 0px;
+    /* 5px of air plus a 65px pill, as measured. */
     --tab-bar-h: 70px;
-    /* The player keeps its controls but loses the desktop breathing room. */
     --player-h: 64px;
   }
 
@@ -35,25 +51,41 @@
     display: none !important;
   }
 
+  /* Both bars float clear of the edge, so the content has to clear the taller
+     stack: the player's own 98px offset plus its height, plus a little air. */
   .main {
     inset-inline-start: 0;
-    inset-block-end: calc(var(--player-h) + var(--tab-bar-h));
+    inset-block-end: calc(98px + var(--player-h) + 8px + env(safe-area-inset-bottom, 0px));
   }
 
-  /* ── The docked bar ──────────────────────────────────────── */
+  /* ── The docked bar ──────────────────────────────────────────
+     Measured off the reference at 390, not designed: it is not an edge-to-edge
+     bar but a floating pill — 12px inset, 65px tall, 28px radius, 6px padding,
+     sitting 5px off the bottom, over rgba(18,20,28,0.44) and a heavy blur.
+     The glass is the same recipe used elsewhere here: a bright inset top edge,
+     a dark inset bottom edge, and one deep outer shadow.
+
+     The reference keeps a fifth control to the right of its pill, which is why
+     its own pill stops 80px short. We have no counterpart, so ours spans the
+     full inset width rather than leaving a gap for something absent. */
   .tab-bar {
     position: fixed;
-    inset-inline: 0;
-    inset-block-end: 0;
+    inset-inline: 12px;
+    inset-block-end: calc(5px + env(safe-area-inset-bottom, 0px));
     z-index: 40;
     display: grid;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    block-size: var(--tab-bar-h);
-    padding-block-end: env(safe-area-inset-bottom, 0px);
-    background: rgba(20, 20, 23, 0.86);
-    backdrop-filter: blur(24px) saturate(140%);
-    border-block-start: 1px solid rgba(255, 255, 255, 0.08);
+    block-size: 65px;
+    padding: 6px;
+    border-radius: 28px;
+    background: rgba(18, 20, 28, 0.44);
+    backdrop-filter: blur(44px) saturate(2.2) brightness(1.12);
+    -webkit-backdrop-filter: blur(44px) saturate(2.2) brightness(1.12);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
+      0 18px 40px rgba(0, 0, 0, 0.7);
   }
 
   .tab-bar__item {
@@ -63,10 +95,11 @@
     justify-content: center;
     gap: 4px;
     text-decoration: none;
-    color: var(--text-muted, rgba(255, 255, 255, 0.62));
-    font-size: 10px;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 11px;
     font-weight: 600;
-    letter-spacing: 0.01em;
+    letter-spacing: -0.176px;
     -webkit-tap-highlight-color: transparent;
     transition: color 0.18s var(--ease-out);
   }
@@ -76,29 +109,81 @@
     block-size: 22px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.5;
+    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
   }
 
-  /* Only the icon takes the accent, the way the rail's selected row does. */
+  /* The rail tints only the icon; this bar tints the whole item and thickens
+     the icon stroke to 2.5. Both were read off the running site. */
   .tab-bar__item--selected {
-    color: var(--text, #fff);
+    color: var(--accent);
   }
 
   .tab-bar__item--selected svg {
-    color: var(--accent);
+    stroke-width: 2.5;
   }
 
   .tab-bar__item:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: -3px;
-    border-radius: 8px;
+    border-radius: 22px;
   }
 
-  /* The player docks above the bar rather than at the foot of the screen. */
+  /* ── The player bar ──────────────────────────────────────────
+     It docks above the tab bar rather than at the foot of the screen.
+
+     Its three columns are 1fr / up-to-560px / 1fr, which at 390 resolved to
+     0px / 78px / 280px: the track info vanished entirely and two transport
+     buttons sat at negative x, off the left edge. The scrubber is what wants
+     the 560, so it goes — it is in the now-playing view, one tap away through
+     the expand control, which lives in the left zone and stays.
+
+     Cast, Volume, Mini player and Fullscreen all describe a desktop or a
+     second screen. Queue does not, so it is the one that stays.
+
+     The reference floats this too: 12px inset, 64px tall, 36px radius, 12px
+     padding, 98px off the bottom — which is 28px of air above the tab pill. */
   .player {
-    inset-block-end: calc(var(--tab-bar-h) + env(safe-area-inset-bottom, 0px));
+    inset-inline: 12px;
+    inset-block-end: calc(98px + env(safe-area-inset-bottom, 0px));
+    block-size: 64px;
+    border-radius: 36px;
+    border-top: none;
+    padding: 12px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 8px;
+    background: rgba(18, 20, 28, 0.44);
+    backdrop-filter: blur(44px) saturate(2.2) brightness(1.12);
+    -webkit-backdrop-filter: blur(44px) saturate(2.2) brightness(1.12);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.2),
+      0 18px 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .player__scrubber,
+  .player__time,
+  .player__vol-bar,
+  .player__right .player__icon-btn[aria-label="Cast"],
+  .player__right .player__icon-btn[aria-label="Volume"],
+  .player__right .player__icon-btn[aria-label="Mini player"],
+  .player__right .player__icon-btn[aria-label="Fullscreen"] {
+    display: none;
+  }
+
+  .player__cover {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  .player__left {
+    gap: 8px;
+  }
+
+  .player__centre,
+  .player__transport {
+    gap: 4px;
   }
 
   /* ── Room ────────────────────────────────────────────────── */
@@ -179,5 +264,40 @@
     justify-content: center;
     gap: 10px;
     max-inline-size: 100%;
+  }
+
+  /* ── Liked and playlist headers ──────────────────────────────
+     A row whose 232px art will not shrink, beside a text column that will:
+     the column collapsed to 38px and the 48px title, having nothing to break
+     on, ran 56px past the screen. Stacking gives the title the full width,
+     and at that width 48px is too large for the line anyway. */
+  .liked-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 24px 16px 0;
+  }
+
+  .liked-header__art {
+    inline-size: min(52vw, 232px);
+    block-size: auto;
+    aspect-ratio: 1;
+  }
+
+  .liked-header__meta {
+    align-items: center;
+    inline-size: 100%;
+  }
+
+  .liked-header__title {
+    font-size: 32px;
+    line-height: 36px;
+    letter-spacing: -0.8px;
+  }
+
+  .liked-header__controls {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 }
