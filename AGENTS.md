@@ -16,7 +16,13 @@ and means nothing.
     node verify-chrome.js
     node verify-playlists.js /tmp/p.png
 
-They need the dev server: `python3 -m http.server 5199` from this directory.
+They need the dev server on port 5199. It is started detached, outside any
+agent's shell, and stays up on its own.
+
+**Never start or kill anything on that port.** A background job started from an
+agent shell dies as soon as the command returns, so an agent that kills the
+running server cannot replace it — one spent half an hour discovering that.
+If the port does not answer, say so and stop; do not try to fix it.
 
 ## Two traps that have cost real time
 
