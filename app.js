@@ -218,18 +218,26 @@ function renderHome(lib) {
 
 // ── Indexing ────────────────────────────────────────────────
 
-async function indexDir(dirHandle, statusEl) {
+// Takes either a directory handle to walk, or a ready-made list of entries.
+// Firefox and Safari have no directory handles at all, so their picker hands
+// us the files directly; everything downstream of the walk is identical.
+async function indexDir(source, statusEl) {
   // Phase 1: walk the directory to discover files (fast)
   const entries = [];
-  let walkCount = 0;
-  let lastWalkUpdate = 0;
-  for await (const entry of walkDir(dirHandle)) {
-    entries.push(entry);
-    walkCount++;
-    const now = Date.now();
-    if (now - lastWalkUpdate > 200) {
-      statusEl.textContent = `Scanning… ${walkCount} files`;
-      lastWalkUpdate = now;
+  if (Array.isArray(source)) {
+    entries.push(...source);
+    statusEl.textContent = `Scanning… ${entries.length} files`;
+  } else {
+    let walkCount = 0;
+    let lastWalkUpdate = 0;
+    for await (const entry of walkDir(source)) {
+      entries.push(entry);
+      walkCount++;
+      const now = Date.now();
+      if (now - lastWalkUpdate > 200) {
+        statusEl.textContent = `Scanning… ${walkCount} files`;
+        lastWalkUpdate = now;
+      }
     }
   }
 
@@ -310,7 +318,40 @@ async function indexDir(dirHandle, statusEl) {
 const statusEl  = document.getElementById('folder-status');
 const foldersBtn = document.getElementById('seg-folders');
 
+const HAS_FS_ACCESS = 'showDirectoryPicker' in window;
+
+// Where a track's bytes come from. On Chromium the stored directory handle is
+// walked per play, which survives reloads. Elsewhere the only copy is the one
+// the picker handed us this session — hence the distinct error, so the caller
+// can say "pick your folder again" rather than "this file is missing".
+async function resolveTrackFile(path) {
+  const fromSession = sessionFiles.get(path);
+  if (fromSession) return fromSession;
+
+  const dirHandle = await dbGet('musicDir');
+  if (!dirHandle) {
+    const err = new Error(HAS_FS_ACCESS ? 'No music directory handle' : 'Folder not connected');
+    err.needsFolder = !HAS_FS_ACCESS;
+    throw err;
+  }
+
+  const parts = path.split('/');
+  let current = dirHandle;
+  for (let i = 0; i < parts.length - 1; i++) {
+    current = await current.getDirectoryHandle(parts[i]);
+  }
+  return (await current.getFileHandle(parts[parts.length - 1])).getFile();
+}
+
+// Firefox and Safari give File objects with no handle behind them, so nothing
+// can be re-opened after a reload. The library metadata still persists, so the
+// app is fully browsable next session — only playback needs the folder picked
+// again, and this map is what serves it in the meantime.
+const sessionFiles = new Map();
+
 async function pickFolder() {
+  if (!HAS_FS_ACCESS) return pickFolderFallback();
+
   let dirHandle;
   try {
     dirHandle = await window.showDirectoryPicker({
@@ -323,6 +364,45 @@ async function pickFolder() {
   }
   await dbSet('musicDir', dirHandle);
   await indexDir(dirHandle, statusEl);
+}
+
+// webkitdirectory is the one directory picker Firefox and Safari both support.
+// It yields a flat FileList whose webkitRelativePath carries the folder
+// structure, which is the same thing walkDir builds by recursing.
+function pickFolderFallback() {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true;
+    input.multiple = true;
+    input.hidden = true;
+
+    input.addEventListener('change', async () => {
+      const picked = [...input.files].filter((f) => AUDIO_EXT.test(f.name));
+      input.remove();
+      if (!picked.length) {
+        statusEl.textContent = 'No audio files in that folder';
+        resolve();
+        return;
+      }
+
+      sessionFiles.clear();
+      const entries = picked.map((f) => {
+        // Drop the folder the user picked, so paths match what the handle
+        // walk produces: relative to the chosen directory, not including it.
+        const rel = (f.webkitRelativePath || f.name).split('/').slice(1).join('/') || f.name;
+        sessionFiles.set(rel, f);
+        // indexDir only ever calls handle.getFile(), so a File is enough.
+        return { name: f.name, path: rel, handle: { getFile: async () => f } };
+      });
+
+      await indexDir(entries, statusEl);
+      resolve();
+    }, { once: true });
+
+    document.body.appendChild(input);
+    input.click();
+  });
 }
 
 function showReconnect(handle) {
@@ -348,14 +428,41 @@ function showReconnect(handle) {
   statusEl.appendChild(btn);
 }
 
-async function init() {
-  if (!('showDirectoryPicker' in window)) {
-    statusEl.textContent = 'Browser does not support folder access';
-    return;
-  }
+// The handle-based sibling of showReconnect, for browsers that have no handle
+// to re-permission: the only way back is to pick the folder again.
+function showReconnectPrompt(message) {
+  const btn = document.createElement('button');
+  btn.className = 'reconnect-btn';
+  btn.textContent = message;
+  btn.addEventListener('click', async () => {
+    await pickFolder();
+    if (sessionFiles.size) btn.remove();
+  });
+  statusEl.textContent = '';
+  statusEl.appendChild(btn);
+}
 
+async function init() {
   foldersBtn.addEventListener('click', pickFolder);
   document.getElementById('home-empty-pick').addEventListener('click', pickFolder);
+
+  // Without File System Access there is no handle to store, so the folder has
+  // to be picked once per session. Everything else works: the library, its
+  // artwork and the playlists all come out of IndexedDB as usual. Returning
+  // early here used to skip routing entirely, which left the whole app dead on
+  // Firefox and Safari rather than merely limited.
+  if (!HAS_FS_ACCESS) {
+    renderHome(state.library);
+    const saved = await dbGet('index', 'library');
+    if (saved) {
+      state.library = saved;
+      statusEl.textContent = formatStatus(state.library, 0);
+      renderHome(state.library);
+      showReconnectPrompt('Reconnect your music folder to play');
+    }
+    handleRoute();
+    return;
+  }
 
   // Paint the empty state up front. Everything below only runs when there is
   // something cached, so without this a first run never renders home at all.
@@ -439,17 +546,8 @@ async function playTrack(index) {
   }
 
   try {
-    const dirHandle = await dbGet('musicDir');
-    if (!dirHandle) throw new Error('No music directory handle');
+    const file = await resolveTrackFile(record.path);
 
-    const parts = record.path.split('/');
-    let current = dirHandle;
-    for (let i = 0; i < parts.length - 1; i++) {
-      current = await current.getDirectoryHandle(parts[i]);
-    }
-    const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
-    const file = await fileHandle.getFile();
-    
     currentObjectUrl = URL.createObjectURL(file);
     audio.src = currentObjectUrl;
     audio.play().catch(e => console.warn('Play blocked or failed:', e));
