@@ -491,6 +491,11 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   overflow: hidden;
+  /* As a flex item this was free to shrink below the 116px its own children
+     need, and the overflow above then hid whatever no longer fit — which was
+     always the plus. Lyrics could be nudged earlier but not later, on any
+     window narrow enough to trigger it. */
+  flex-shrink: 0;
 }
 
 .np-sync-pill {

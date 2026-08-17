@@ -109,4 +109,75 @@
   .greeting-row {
     padding-block: 16px;
   }
+
+  /* ── Now playing ─────────────────────────────────────────────
+     The desktop view is two columns — art and transport at the left, lyrics
+     down the right — held apart by 96px of side padding. At 390 that padding
+     alone is half the screen, so the columns stack: art and controls first,
+     lyrics taking the rest of the height and scrolling within it.
+
+     The cover was a hard 279px square, which is wider than the content box
+     here; it now tracks the viewport and keeps its own aspect rather than
+     being squashed by the flex row. */
+  .now-playing__top {
+    padding: 16px 20px;
+  }
+
+  .now-playing__body {
+    flex-direction: column;
+    padding: 0 20px 20px;
+    gap: 16px;
+  }
+
+  .now-playing__left {
+    flex: 0 0 auto;
+  }
+
+  .now-playing__cover {
+    inline-size: min(70vw, 279px);
+    block-size: auto;
+    aspect-ratio: 1;
+    margin-block-end: 16px;
+  }
+
+  .now-playing__right {
+    flex: 1 1 0;
+    min-block-size: 0;
+  }
+
+  .now-playing__lyrics {
+    padding-block: 8px;
+    padding-inline: 0;
+  }
+
+  /* 48px of side padding is most of a phone; the sync pill needs the room. */
+  .np-sync-row {
+    padding-inline: 0;
+  }
+
+  /* ── Album header ────────────────────────────────────────────
+     Same shape of problem: a 304px cover with 91px beneath it, sized for a
+     page three times this wide. */
+  .album-header {
+    padding-block-start: 28px;
+    padding-block-end: 24px;
+  }
+
+  .album-header__cover {
+    inline-size: min(64vw, 304px);
+    block-size: auto;
+    aspect-ratio: 1;
+    margin-block-end: 24px;
+  }
+
+  /* The action row ran 419px wide inside a 390px screen and the header clips
+     its overflow, so the outer controls were cut off rather than pushed to a
+     scrollbar — invisible unless measured. Wrapping keeps every control
+     reachable, which matters more here than holding them to one line. */
+  .album-header__controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-inline-size: 100%;
+  }
 }
