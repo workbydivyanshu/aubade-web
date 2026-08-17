@@ -1,45 +1,69 @@
-## 2026-08-15T19:07:08-0400 — opencode
+# opencode — deepseek-v4-flash-free — bug-watch agent
+2026-08-17T07:53:44-04:00 — HEAD 584cd6b ("Tell agents to leave the dev server alone")
 
-CONFIRMED
-- `getLyricsOffset(trackPath)` is defined but never called (dead code, app.js:2682). Its sibling `setLyricsOffset` is called at app.js:2706 and app.js:2714, and `loadLyrics` re-implements the same lookup inline at app.js:1643 instead of calling it. Repro: `grep -a -n 'getLyricsOffset' app.js` returns only the definition line (must use `grep -a` — NUL bytes). Expected: at least one call site; got: zero.
+Delta since my last pass (77fa821): only AGENTS.md (+7/-1). No scope file changed —
+`git diff --stat 77fa821..584cd6b` lists AGENTS.md alone, and `app.js` is byte-identical
+(sha256 e94bb604... for both `git show 77fa821:app.js` and `git show 584cd6b:app.js`).
+The live server serves the committed code (same sha256). Per BUG-HUNT.md I still ran the
+checklist at this hash; everything previously reported stands, nothing new appeared.
 
-UNVERIFIED
-- index.html (outside the seven-file scope): home shelves/hero/quick-grid ship hardcoded seed albums ("Midnight Sun — Ayla Park", "Petal — Ariana Grande", …) with no `data-album` attribute, and `#view-settings` carries duplicate inline `display: none; … display: flex;` (flex wins). On a fresh profile with an empty library, `renderHome` returns early (app.js:234) without clearing the shelves, so the fake content stays visible and inert; could not establish the runtime effect headlessly because `handleRoute` masks both issues in the normal path.
+### Escape does not close the #album-menu popover (re-confirmed at this hash)
+severity:  wrong-behaviour
+proof:     `node /tmp/opencode/repro-escape-menu.js` (seeds library, opens album page,
+           clicks .album-btn--more, presses Escape), actual output:
+           after click, #album-menu: {"exists":true,"display":"block"}
+           after Escape, #album-menu: {"exists":true,"display":"block","visible":true}
+           Element existence in tree: `grep -an 'album-menu' app.js` → lines 2377, 2380
+           (both inside openAlbumMenu; no other reference).
+repro:     1. Load http://localhost:5199 with a seeded library.
+           2. Open any album page, click the "more" button (.album-btn--more).
+           3. Press Escape.
+           4. Expected: menu closes — Escape closes npMenu, np-credits and the shortcuts
+              panel in the same handler. Got: `#album-menu` still present, display:block,
+              offsetWidth/Height > 0.
+why:       The keydown handler at app.js:2687-2693 (`if (e.key !== 'Escape') return;
+           closeNpMenu(); np-credits close; shortcuts remove`) never references
+           #album-menu. The menu only closes on outside click (app.js:2681-2685) or
+           item click. Affects all four openAlbumMenu call sites (album page, playlist,
+           artist, np-menu add-playlist). Unchanged since my pass 8 report; app.js is
+           byte-identical to the hash that finding was verified against.
 
-Checked and clean: `walkDir` recursion is bounded by directory depth (app.js:17-30); the playTrack→nextTrack skip loop is bounded by `consecutiveFailures >= 3 || >= queue.length` (app.js:480, app.js:544) — the earlier unbounded-skip bug is fixed; `clearPlayerUI` is declared (app.js:774) and its fix is commented — no undeclared-variable use found anywhere in the seven files; no function sets `style.display` on an element toggled by the `hidden` attribute (liked-empty, shelf-played and np-queue are all toggled via `.hidden` only; `.np-queue[hidden]{display:none}` guards it at app.css:2710); art.js, colour.js, db.js, lrc.js, library.js, indexer.worker.js all read clean — every export exists and is consumed, and the worker always emits string `albumArtist`/`album`, so the unguarded `.trim()` at the go-album menu item is unreachable in practice.
+### playlistCount is exported but never called (dead export, carried from pass 7)
+severity:  cosmetic
+proof:     `grep -a -rn 'playlistCount' --include='*.js' --include='*.html' .` →
+           ./playlists.js:97:export function playlistCount(id) {   (only hit)
+repro:     The grep above; there is no call site in any file.
+why:       playlists.js:97 defines playlistCount with a doc comment claiming it exists
+           "for the sidebar's subtitle", but renderPlaylistSidebar (app.js:1140)
+           computes `playlistTracks(p.id).length` inline. Same class as the
+           getLyricsOffset dead code fixed in pass 1. Harmless at runtime (no caller),
+           but the function and its comment describe something that does not happen.
 
-Note: the working tree was being modified during this run (uncommitted marquee work; app.js grew 2846 → 2885 lines mid-audit). Line numbers are as of this timestamp.
+## Unverified
 
-## 2026-08-16T07:43:47-0400 — opencode
-Checked against 2c1ce5c ("Lift the visualiser and MediaSession out of the playback knot"); HEAD moved from aa06723 mid-pass, so both findings were re-verified against the new hash. Working tree clean at write time (only audit/watch/agy.md modified, by the other watcher).
+- Palette-stale when a cover has no detectable palette (carried from passes 4-8,
+  code unchanged): `if (!pal) return;` at app.js:724 leaves the previous track's
+  --np-accent/--np-c1..c4/--np-bg on the now-playing scrim when getCoverPalette
+  resolves null (greyscale / near-black / near-white covers, art.js:196,209, or
+  image-load failures, art.js:254). The removal loop at app.js:733-735 runs only when
+  `url` itself is null. Verified the code is exactly as reported at this hash; still
+  cannot be demonstrated headlessly (no covers load under File System Access denial).
 
-CONFIRMED
-- `coverCache` is used but never declared in app.js — the settings "Clear cache" button throws on every click. Repro: load the page, run `document.getElementById('settings-btn-clear-cache').click()` in the console. Expected: all cover object URLs revoked and the cache emptied; got: uncaught `ReferenceError: coverCache is not defined`. app.js:2012 (`for (const [key, url] of coverCache.entries())`) and app.js:2015 (`coverCache.clear()`) reference it bare; the only declaration is `const coverCache = new Map();` at art.js:8, which is module-private — art.js exports only `gradientFor`, `coverUrlForAlbum`, `getCoverAccent`. The handler dies before revoking any URL, so revoked URLs leak for the session. This is the exact "variable used but never declared" class the watch exists for, and it survived three fix commits (e2e7be7 and 2c1ce5c both touched these lines' neighbourhoods without touching it).
-- `SEEK_STEP_SECONDS` is used but never declared in app.js — the unmodified ←/→ seek shortcuts throw on every press. Repro: load the page, dispatch a bare ArrowLeft keydown: `document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}))`. Expected: seek back 10s; got: uncaught `ReferenceError: SEEK_STEP_SECONDS is not defined` inside the keydown handler, so the 10-second seek is dead. app.js:2255 and app.js:2259 use it inside `step(-SEEK_STEP_SECONDS)` / `step(SEEK_STEP_SECONDS)`; the only declaration is `const SEEK_STEP_SECONDS = 10;` at mediasession.js:18, which is private to that module (app.js imports only `initMediaSession`/`updateMediaSession`/`clearMediaSession` from it). Introduced by 2c1ce5c, which moved the constant out of app.js when lifting MediaSession into its own module but left the keyboard handler behind. (At the previous HEAD aa06723 the constant was still declared in app.js, so this is new since the last report.)
+- view-settings duplicate inline display at index.html:526:
+  `style="display: none; ...; display: flex; ..."` — the later declaration wins, so
+  the effective inline display is flex from page load. Introduced in 35b0c72 and
+  never removed (`git log -S 'display: flex; flex-direction: column; align-items:
+  center' -- index.html` shows only 35b0c72). Inert on Chromium in the normal path
+  because handleRoute always sets display:none first (app.js:890-893); live only on
+  the no-showDirectoryPicker early return (app.js:352-355) and as a pre-init paint
+  flash. Could not establish a visible failure headlessly.
 
-UNVERIFIED
-- None.
+## Checked and clean
 
-Checked and clean: `walkDir` recursion bounded by directory depth (app.js:25-38); `playTrack`→`nextTrack` skip loop bounded by `consecutiveFailures >= 3 || >= queue.length` (app.js:468); `clearPlayerUI` declared with all its referenced consts (app.js:623-651); the `hidden`-attribute contract is enforced globally by `[hidden] { display: none !important; }` at app.css:2957-2959, and no JS sets `display` on a hidden-toggled element in a way that can override it; `getLyricsOffset` dead code removed by e2e7be7 (grep -a across all 10 files: zero hits); all ids/classes queried by app.js, cards.js, browse.js, renderAlbumView (album-header__title/artist/cover/bg, album-btn--like, album-tracks), settings, search, library, artist, queue, np-menu and credits verified present and unique in index.html; worker always emits string `albumArtist`/`album` (indexer.worker.js:15-16,26) so the `.trim()` in the go-album menu item is unreachable in practice; year is emitted as a number so browse's `a.year === +value` holds; state.js/cards.js/browse.js/visualiser.js import graphs all resolve. All 8 np-menu data-actions present and handled.
-
-## 2026-08-16T07:59:22-0400 — opencode
-Checked against 8f19d61 ("Require proof that a thing exists before reporting it broken"), which sits on dbccb1c ("Fix two ReferenceErrors, one of them mine from the last commit"). Working tree clean except audit/watch/agy.md.
-
-CONFIRMED
-- None. Both ReferenceErrors from the previous pass are fixed and verified at this hash: `SEEK_STEP_SECONDS` now lives in state.js (`export const SEEK_STEP_SECONDS = 10;` at state.js:27) and is imported at app.js:1 and mediasession.js:7, so the bare ←/→ seek no longer throws; the settings clear-cache handler now calls art.js's new `clearCoverCache()` (exported at art.js:156, body at 156-164: revokes every non-null object URL, counts them, clears the map, returns the count) and shows a toast (`Released N cached covers` / `Cache was already empty`), with `coverCache` no longer referenced anywhere in app.js. Repro of the old failures now behaves as expected: `document.getElementById('settings-btn-clear-cache').click()` revokes and clears instead of throwing; `document.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowLeft'}))` seeks instead of throwing.
-
-UNVERIFIED
-- None.
-
-Checked and clean: the rest of dbccb1c's delta — `artist-more-btn` exists (index.html:354) and is wired in renderArtistView (app.js:1889-1903) to `openAlbumMenu` (app.js:2201-2226: removes any prior `#album-menu`, renders the items, closes on outside click, items remove themselves then run); all three menu items reference defined things (`playerState`, `showToast`, and `#library?view=artists`); `handleRoute` parses the `?view=` query (app.js:929-936) into `localStorage.aubade_lib_view`, which `renderLibraryView` reads at the top of every render, so "Show in library" actually lands on the artists view; the three `See all` links now point at `#library?view=albums` (index.html:219, 239, 259) instead of `#`; `openAlbumMenu` needs no index.html id (creates the menu dynamically). Also re-verified against the new hash: the global `[hidden] { display: none !important; }` guard (app.css:2957-2959), `walkDir` depth-bounded recursion (app.js:25-38), the `consecutiveFailures >= 3 || >= queue.length` skip guard (app.js:468), and the worker's string `albumArtist`/`album` fallbacks (indexer.worker.js:15-16, 26).
-
-## 2026-08-16T08:16:14-0400 — opencode
-Checked against 8c372c1 ("Theme now playing from four colours in the artwork, not one hue"); delta is app.js (import + updatePlayerUI), art.js (+getCoverPalette, 257 lines total), app.css (scrim). Working tree dirty only with watcher files (agy.md, kilo.md, my uncommitted pass-3 append).
-
-CONFIRMED
-- None.
-
-UNVERIFIED
-- Stale now-playing theme when a cover has no detectable palette. getCoverPalette returns null for greyscale / near-black / near-white covers (art.js:196 skips pixels with l < 0.12, l > 0.92 or s < 0.16; art.js:209 resolves null when no bucket has weight) and for image-load failures (art.js:254 onerror). updatePlayerUI's null path is just `if (!pal) return;` (app.js:720) — it does not remove the six --np-* custom properties, so the previous track's --np-c1..c4 / --np-bg / --np-accent keep colouring the scrim and the np-menu text (app.css:1649, 2829) over the new artwork. The removal loop at app.js:729-731 runs only when url itself is null. The commit message says "greyscale correctly returns null and falls through to the gradient"; the code falls through to nothing — the previous palette persists. Could not confirm at runtime: no covers load headlessly (File System Access), so no harness command can exhibit it; needs a real session with a colour cover followed by a greyscale cover (or by a revoked object URL after Clear cache). Pre-existing shape (old getCoverAccent early-return had the same leak), so not a regression — but the new commit's own claim contradicts its code.
-
-Checked and clean: getCoverPalette internals — hue buckets `Math.floor(h/15) % 24` never out of range, `b.w > 0` guaranteed before `b.l / b.w`, the repeat-spin loop terminates (bounded at 3 iterations, hues ≥18 apart), bg lightness clamped to 4-9%, accent uses the same accentLightness path as before; getCoverAccent is still live (app.js:1071 album view, app.js:1854 artist view), not dead code; all new imports resolve (getCoverPalette exported at art.js:176, imported at app.js:4); scrim CSS uses `var(--np-c1, transparent)` fallbacks so an unset overlay renders the old flat scrim; no new listeners/handlers in the delta beyond the existing updatePlayerUI promise chain.
+- All six views load with zero diagnostics via the harness:
+  `node ~/octave-capture/audit.js aubade <home|album|artist|library|search|settings>`
+  all exit 0 with no error/exception/failed/timeout lines.
+- No new identifiers/imports/export mismatches possible: no scope file changed since
+  my pass 8 scan, which cleared every module's import graph, the `[hidden]`
+  display guard (shell.css:911), walkDir recursion bounds, the consecutiveFailures
+  skip guard, and the worker's string albumArtist/album fallbacks.

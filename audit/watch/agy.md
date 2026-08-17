@@ -31,3 +31,23 @@ CONFIRMED
 UNVERIFIED
 
 Checked and clean: Routing for all views, keyboard shortcuts, media session registration, hero-card share, segment library pill, sidebar expand, "See all" shelf links, "More options" on Artist page.
+
+## 2026-08-16T08:21:11 — Antigravity (8c372c1)
+
+CONFIRMED
+- "Notifications" button is inert. Repro: `document.querySelector('button[aria-label="Notifications"]').click()`. Expected a notifications panel, got nothing.
+- "Add pinned item" button is inert. Repro: `document.querySelector('button[aria-label="Add pinned item"]').click()`. Expected a pin dialog/action, got nothing.
+
+UNVERIFIED
+
+Checked and clean: Routing for all views, keyboard shortcuts, media session registration, hero-card share, segment library pill, sidebar expand, "See all" shelf links, "More options" on Artist page.
+
+## 2026-08-16T08:38:17 — Antigravity (2c6db44)
+
+CONFIRMED
+- "Notifications" button is inert. Repro: `document.querySelector('button[aria-label="Notifications"]').click()`. Expected a notifications panel, got nothing.
+- "Add pinned item" button is inert. Repro: `document.querySelector('button[aria-label="Add pinned item"]').click()`. Expected a pin dialog/action, got nothing.
+
+UNVERIFIED
+
+Checked and clean: Routing for all views, keyboard shortcuts, media session registration, hero-card share, segment library pill, sidebar expand, "See all" shelf links, "More options" on Artist page.

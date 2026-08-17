@@ -92,8 +92,3 @@ export function playlistTracks(id) {
   const byPath = new Map((state.library.tracks || []).map((t) => [t.path, t]));
   return p.paths.map((path) => byPath.get(path)).filter(Boolean);
 }
-
-/** How many of a playlist's paths still resolve, for the sidebar's subtitle. */
-export function playlistCount(id) {
-  return playlistTracks(id).length;
-}

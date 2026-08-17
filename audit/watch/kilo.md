@@ -55,3 +55,49 @@ UNVERIFIED
   capture is clean (navigation works, #settings -> viewSettings=flex, 0 errors),
   so the symptom was overload of the single-threaded dev server, not a real
   defect; 2c1ce5c's own message records the module-load observer bug it fixed.
+
+## 2026-08-16T08:26:54-04:00 — kilo  ·  commit 2c6db44
+
+CONFIRMED
+- none new. The two duplicates reported under 2c1ce5c (.player__cover 20px -> --radius-tile; .album-btn--play 24px -> --radius-art-lg) are resolved: commit 2c6db44 "Last two hardcoded radii now reference their tokens" and both now use var(). Repro proving zero remain:
+  `grep -nE 'border-radius:' app.css | grep -vEv 'var\(|50%|2px'` -> only 25.6px / 16px / 17px;
+  `grep -nE 'radius-(art|tile|row|pill)' tokens.css` -> 36/24/14/20/28/9999.
+  25.6px/16px/17px match no token; `grep -n '#1c1c20' app.css | grep -v var(` -> no output.
+
+UNVERIFIED
+- Now-playing artwork-colour theming (8c372c1) is inert headless: no covers load (FSA permission), so the four-colour pipeline has no input to verify; not reported as a bug.
+- Octave /settings still exceeds the harness 30s networkidle limit; captured this run via an extended domcontentloaded capture (no divergence seen, but not via the stock harness line).
+
+Checked and clean:
+- contrast <4.5: 0 aubade-only — every low-contrast text node is --text-dim #6b6b76 @3.99, identical to Octave.
+- overflow @1440: only .shelf__row scroll cards and .album/.artist-header__bg (clipped by overflow:hidden); no other overflow on any route.
+- responsive 1100-1600px: same surfaces only (scroll shelves + ambient washes); no layout break.
+- text clipping/wrapping: text-overflow ellipsis + "scroll long titles" marquee (15f8ab9); no bad wrap.
+- routing/navigation: each route renders distinct content (home 88/60, album 74/22, artist 88/44, library 69/57, search 21/15, settings 43/22 @1440) with 0 page errors.
+
+## 2026-08-16T08:43:53-04:00 — kilo  ·  commit 2c6db44
+No new commits since 2c6db44. Skipped.
+
+## 2026-08-16T09:22:21-04:00 — kilo  ·  commit f22e507
+
+CONFIRMED
+- none. f22e507 "Split app.css six ways, without moving a single rule" is a pure
+  refactor: committed CSS has 0 hardcoded token-duplicate literals. Repro:
+  `git grep -nE 'border-radius:' -- '*.css' | grep -vEv 'var\(|50%|2px'` ->
+  only nowplaying.css:195 25.6px, nowplaying.css:595 16px, views.css:418 17px
+  (radius tokens are 36/24/14/20/28/9999 — no match); `git grep -nE '#1c1c20|#fb2c5a' -- '*.css' | grep -v var(`
+  -> only in tokens.css. The split is wired (committed index.html loads tokens/shell/player/album/nowplaying/views/later.css)
+  and renders cleanly: aubade home 86 text/60 boxes, 0 page errors.
+
+UNVERIFIED
+- A playlists feature is mid-edit in the working tree (app.js +175, untracked
+  playlists.js, later.css +18, index.html +49) over this commit; per the new
+  "avoid mid-edit" rule, full visual evaluation of those changes is deferred to a
+  clean tree. The committed CSS refactor itself is rule-preserving, so existing
+  layout is unchanged from 2c6db44.
+- Per-element contrast over tinted/gradient surfaces not computable (harness
+  records only bodyBackground).
+- Octave /settings needs extended-timeout capture (harness 30s networkidle limit).
+
+Checked and clean: hardcoded-token duplicates (0); CSS split renders (home 86/60, 0 errors).
+The pure-refactor split means contrast/overflow/responsive from 2c6db44 still hold.

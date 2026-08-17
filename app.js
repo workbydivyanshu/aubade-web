@@ -555,6 +555,11 @@ const npOpenBtn = document.querySelector('.player__icon-btn[aria-label="Expand n
 const npBg = document.querySelector('.now-playing__bg');
 const npAmbient = [...document.querySelectorAll('.ambient-layer')];
 
+// The scrim's palette tokens. Named once so setting them and clearing them can
+// never drift apart — a track whose cover yields no palette has to clear every
+// one of these, or it inherits the previous record's colours.
+const NP_PALETTE_PROPS = ['--np-accent', '--np-c1', '--np-c2', '--np-c3', '--np-c4', '--np-bg'];
+
 initVisualiser(audio, npOverlay, () => {
   // These measure zero while the overlay is closed, which is when a track
   // usually loads, so they get another look once it is on screen.
@@ -721,7 +726,12 @@ function updatePlayerUI(record) {
         // near-black; with a single hue every record's backdrop came out the
         // same shape.
         getCoverPalette(url).then((pal) => {
-          if (!pal) return;
+          // A cover that yields no palette — greyscale, near-black, or one that
+          // failed to load — must clear the tokens, not keep the last record's.
+          if (!pal) {
+            for (const p of NP_PALETTE_PROPS) npOverlay.style.removeProperty(p);
+            return;
+          }
           npOverlay.style.setProperty('--np-accent', pal.accent);
           npOverlay.style.setProperty('--np-c1', pal.c1);
           npOverlay.style.setProperty('--np-c2', pal.c2);
@@ -730,9 +740,7 @@ function updatePlayerUI(record) {
           npOverlay.style.setProperty('--np-bg', pal.bg);
         });
       } else {
-        for (const p of ['--np-accent', '--np-c1', '--np-c2', '--np-c3', '--np-c4', '--np-bg']) {
-          npOverlay.style.removeProperty(p);
-        }
+        for (const p of NP_PALETTE_PROPS) npOverlay.style.removeProperty(p);
         const grad = gradientFor(albumKey(album));
         uiCover.style.background = `linear-gradient(135deg,${grad})`;
         uiCover.style.backgroundImage = 'none';
@@ -2687,6 +2695,8 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   closeNpMenu();
+  // The album overflow is a sibling popover and dismisses the same way.
+  document.getElementById('album-menu')?.remove();
   document.getElementById('np-credits').classList.remove('is-open');
   const help = document.getElementById('shortcuts');
   if (help) help.remove();

@@ -1,5 +1,7 @@
-node_modules/
+.aider*
+.codegraph/
 .DS_Store
+node_modules/
 .omc/
 .omo/
-.codegraph/
+server.log
