@@ -1,69 +1,47 @@
-# opencode — deepseek-v4-flash-free — bug-watch agent
-2026-08-17T07:53:44-04:00 — HEAD 584cd6b ("Tell agents to leave the dev server alone")
+# opencode — big-pickle — Sisyphus
+2026-08-17T12:15:00-04:00 — HEAD d1270b0
 
-Delta since my last pass (77fa821): only AGENTS.md (+7/-1). No scope file changed —
-`git diff --stat 77fa821..584cd6b` lists AGENTS.md alone, and `app.js` is byte-identical
-(sha256 e94bb604... for both `git show 77fa821:app.js` and `git show 584cd6b:app.js`).
-The live server serves the committed code (same sha256). Per BUG-HUNT.md I still ran the
-checklist at this hash; everything previously reported stands, nothing new appeared.
+Delta since my last pass (584cd6b): app.js (+40), index.html (+41/-1), playlists.js (-5),
+nowplaying.css (+5), responsive.css (new, +303). Both confirmed findings from pass 8 are
+fixed, and both unverified items from pass 8 are fixed. Nothing new appeared.
 
-### Escape does not close the #album-menu popover (re-confirmed at this hash)
-severity:  wrong-behaviour
-proof:     `node /tmp/opencode/repro-escape-menu.js` (seeds library, opens album page,
-           clicks .album-btn--more, presses Escape), actual output:
-           after click, #album-menu: {"exists":true,"display":"block"}
-           after Escape, #album-menu: {"exists":true,"display":"block","visible":true}
-           Element existence in tree: `grep -an 'album-menu' app.js` → lines 2377, 2380
-           (both inside openAlbumMenu; no other reference).
-repro:     1. Load http://localhost:5199 with a seeded library.
-           2. Open any album page, click the "more" button (.album-btn--more).
-           3. Press Escape.
-           4. Expected: menu closes — Escape closes npMenu, np-credits and the shortcuts
-              panel in the same handler. Got: `#album-menu` still present, display:block,
-              offsetWidth/Height > 0.
-why:       The keydown handler at app.js:2687-2693 (`if (e.key !== 'Escape') return;
-           closeNpMenu(); np-credits close; shortcuts remove`) never references
-           #album-menu. The menu only closes on outside click (app.js:2681-2685) or
-           item click. Affects all four openAlbumMenu call sites (album page, playlist,
-           artist, np-menu add-playlist). Unchanged since my pass 8 report; app.js is
-           byte-identical to the hash that finding was verified against.
+### Previous confirmed: Escape does not close #album-menu — FIXED
+app.js:2721 now has `document.getElementById('album-menu')?.remove()` in the global
+keydown Escape handler. Verified at this hash.
 
-### playlistCount is exported but never called (dead export, carried from pass 7)
-severity:  cosmetic
-proof:     `grep -a -rn 'playlistCount' --include='*.js' --include='*.html' .` →
-           ./playlists.js:97:export function playlistCount(id) {   (only hit)
-repro:     The grep above; there is no call site in any file.
-why:       playlists.js:97 defines playlistCount with a doc comment claiming it exists
-           "for the sidebar's subtitle", but renderPlaylistSidebar (app.js:1140)
-           computes `playlistTracks(p.id).length` inline. Same class as the
-           getLyricsOffset dead code fixed in pass 1. Harmless at runtime (no caller),
-           but the function and its comment describe something that does not happen.
+### Previous confirmed: playlistCount dead export — FIXED
+Removed from playlists.js entirely. No call sites exist in any file:
+`grep -a -rn 'playlistCount' --include='*.js' --include='*.html' .` → (empty).
+
+### Previous unverified: palette-stale when cover yields no palette — FIXED
+app.js:732 now clears all NP_PALETTE_PROPS via `removeProperty` when `getCoverPalette`
+returns null, instead of silently returning. Verified at this hash.
+
+### Previous unverified: view-settings duplicate inline display — FIXED
+index.html:565 had `style="display: none; ...; display: flex; ..."` — the second
+declaration silently overwrote the first. Now reads `style="display: none; ...;
+flex-direction: column; align-items: center;"` — no duplicate. Verified at this hash.
 
 ## Unverified
 
-- Palette-stale when a cover has no detectable palette (carried from passes 4-8,
-  code unchanged): `if (!pal) return;` at app.js:724 leaves the previous track's
-  --np-accent/--np-c1..c4/--np-bg on the now-playing scrim when getCoverPalette
-  resolves null (greyscale / near-black / near-white covers, art.js:196,209, or
-  image-load failures, art.js:254). The removal loop at app.js:733-735 runs only when
-  `url` itself is null. Verified the code is exactly as reported at this hash; still
-  cannot be demonstrated headlessly (no covers load under File System Access denial).
-
-- view-settings duplicate inline display at index.html:526:
-  `style="display: none; ...; display: flex; ..."` — the later declaration wins, so
-  the effective inline display is flex from page load. Introduced in 35b0c72 and
-  never removed (`git log -S 'display: flex; flex-direction: column; align-items:
-  center' -- index.html` shows only 35b0c72). Inert on Chromium in the normal path
-  because handleRoute always sets display:none first (app.js:890-893); live only on
-  the no-showDirectoryPicker early return (app.js:352-355) and as a pre-init paint
-  flash. Could not establish a visible failure headlessly.
+- `--tab-bar-h` CSS variable declared in responsive.css:38 (`70px`) but never referenced
+  anywhere in the codebase (`grep -ra 'tab-bar-h' *.css *.js *.html` → only the declaration).
+  Cosmetic dead code, not a runtime issue. The tab bar's actual size is driven by
+  `block-size: 65px` on `.tab-bar`.
 
 ## Checked and clean
 
 - All six views load with zero diagnostics via the harness:
   `node ~/octave-capture/audit.js aubade <home|album|artist|library|search|settings>`
   all exit 0 with no error/exception/failed/timeout lines.
-- No new identifiers/imports/export mismatches possible: no scope file changed since
-  my pass 8 scan, which cleared every module's import graph, the `[hidden]`
-  display guard (shell.css:911), walkDir recursion bounds, the consecutiveFailures
-  skip guard, and the worker's string albumArtist/album fallbacks.
+- `verify-keys.js` — keyboard shortcuts, typing does not fire shortcuts: all pass.
+- `verify-menu.js` — 9 menu items, box 248×373, all actions verified: pass.
+- `verify-liked.js` — 5→4→0 rows, stats update, empty state with "No songs yet": pass.
+- `verify-eq.js` — 7 bars respond to frequency sweep, is-live flag correct: pass.
+- `verify-np-full.js` — all 13 now-playing elements present and sized: pass.
+- `verify-chrome.js` — sidebar collapse, album menu outside-click, removed controls absent: pass.
+- `verify-playlists.js` — create, add album, duplicate guard, remove, missing-file skip: pass.
+- All import/export graphs match: `NP_PALETTE_PROPS` (new const, app.js:561), `syncTabBar`
+  (new function, app.js:974) both declared locally and not exported. `playlistCount` removed
+  from playlists.js with no remaining references.
+- No new identifiers used but undeclared. No imports referencing removed exports.

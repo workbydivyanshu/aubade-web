@@ -34,8 +34,12 @@
 @media (max-width: 767.98px) {
   :root {
     --sidebar-w: 0px;
-    /* 5px of air plus a 65px pill, as measured. */
+    /* The tab band is 5px of air plus a 65px pill, and the player floats a
+       further 28px above it — which is where its measured 98px offset comes
+       from. Naming both keeps that arithmetic visible instead of leaving 98
+       as a number nobody can derive. */
     --tab-bar-h: 70px;
+    --tab-bar-gap: 28px;
     --player-h: 64px;
   }
 
@@ -55,7 +59,8 @@
      stack: the player's own 98px offset plus its height, plus a little air. */
   .main {
     inset-inline-start: 0;
-    inset-block-end: calc(98px + var(--player-h) + 8px + env(safe-area-inset-bottom, 0px));
+    inset-block-end: calc(var(--tab-bar-h) + var(--tab-bar-gap) + var(--player-h) + 8px
+                          + env(safe-area-inset-bottom, 0px));
   }
 
   /* ── The docked bar ──────────────────────────────────────────
@@ -146,7 +151,7 @@
      padding, 98px off the bottom — which is 28px of air above the tab pill. */
   .player {
     inset-inline: 12px;
-    inset-block-end: calc(98px + env(safe-area-inset-bottom, 0px));
+    inset-block-end: calc(var(--tab-bar-h) + var(--tab-bar-gap) + env(safe-area-inset-bottom, 0px));
     block-size: 64px;
     border-radius: 36px;
     border-top: none;
