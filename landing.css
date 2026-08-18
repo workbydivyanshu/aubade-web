@@ -1,0 +1,528 @@
+/* ── The opening page ──────────────────────────────────────────
+   The app's own stylesheets are not loaded here; only tokens.css, so the
+   accent, the greys and the type stack stay in one place. Everything in this
+   file is scoped under .lp for the same reason.
+
+   The values are read off octavestreaming.com with getComputedStyle rather
+   than eyeballed from a screenshot: a 65px fixed header over a 1280px column
+   with 32px gutters, sections on a 96px vertical rhythm, and one hairline —
+   rgba(255,255,255,0.08) — doing all of the dividing. The copy is ours; what
+   is borrowed is the measure. */
+
+.lp {
+  --lp-max: 1280px;
+  --lp-gutter: 32px;
+  --lp-hairline: rgba(255, 255, 255, 0.08);
+  --lp-card: rgba(10, 10, 12, 0.6);
+  --lp-fill: rgba(20, 20, 23, 0.5);
+  background: var(--page);
+  height: auto;
+}
+
+.lp *,
+.lp *::before,
+.lp *::after {
+  box-sizing: border-box;
+}
+
+/* ── Header ────────────────────────────────────────────────────
+   Fixed, transparent, and separated from the page by the hairline alone —
+   no fill and no blur, which is why the hero's glow reads through it. */
+.lp-header {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 50;
+  block-size: 65px;
+  border-block-end: 1px solid var(--lp-hairline);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.lp-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-inline-size: var(--lp-max);
+  block-size: 64px;
+  margin-inline: auto;
+  padding-inline: var(--lp-gutter);
+}
+
+.lp-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.176px;
+  text-decoration: none;
+}
+
+.lp-brand__mark {
+  inline-size: 24px;
+  block-size: 24px;
+  fill: var(--accent);
+}
+
+.lp-nav {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.lp-nav a {
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: -0.176px;
+  text-decoration: none;
+  opacity: 0.72;
+  transition: opacity 0.16s var(--ease-out, ease);
+}
+
+.lp-nav a:hover {
+  opacity: 1;
+}
+
+/* .lp-nav a is the more specific selector, so without this the button in the
+   header inherited the nav's colour: white text on a white pill, a control
+   with no visible label. */
+.lp-nav .lp-btn {
+  color: #000;
+  opacity: 1;
+}
+
+/* ── Buttons ───────────────────────────────────────────────────
+   The primary is the page's only solid white surface, which is what makes it
+   read as the one thing to press. */
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--text);
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.176px;
+  text-decoration: none;
+  transition: transform 0.16s var(--ease-out, ease), opacity 0.16s;
+}
+
+.lp-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.92;
+}
+
+.lp-btn--small {
+  padding: 8px 20px;
+  font-size: 14px;
+  opacity: 1;
+}
+
+.lp-btn--quiet {
+  padding: 14px 28px;
+  border: 1px solid var(--lp-hairline);
+  background: var(--lp-fill);
+  color: var(--text);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block-start: 36px;
+}
+
+.lp-actions--centre {
+  justify-content: center;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────
+   160px of top padding is what clears the fixed header and still leaves the
+   heading sitting high in the fold. */
+.lp-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 160px var(--lp-gutter) 96px;
+}
+
+/* Two washes on a black page, the same trick the app uses: without them the
+   background reads as flat rather than dark. */
+.lp-hero__glow {
+  position: absolute;
+  inset-block-start: -280px;
+  inset-inline-start: 50%;
+  inline-size: 1100px;
+  block-size: 720px;
+  translate: -50% 0;
+  background:
+    radial-gradient(closest-side, var(--bg-glow-1), transparent 70%) 30% 40% / 60% 70% no-repeat,
+    radial-gradient(closest-side, var(--bg-glow-2), transparent 70%) 72% 30% / 55% 65% no-repeat;
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* The reference sets its hero flush left because a collage of album art
+   occupies the right half. We have no such art, and left-aligned text beside
+   600px of nothing reads as a layout that failed to load — so ours is
+   centred, which is the same page with the missing half removed. */
+.lp-hero__inner {
+  position: relative;
+  max-inline-size: 900px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.lp-hero__inner .lp-lead {
+  margin-inline: auto;
+}
+
+.lp-hero__inner .lp-actions {
+  justify-content: center;
+}
+
+.lp-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border: 1px solid var(--lp-hairline);
+  border-radius: var(--radius-pill);
+  background: var(--lp-fill);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.176px;
+}
+
+.lp-h1 {
+  margin: 24px 0 0;
+  font-size: 72px;
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.lp-lead {
+  max-inline-size: 576px;
+  margin: 24px 0 0;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1.625;
+  letter-spacing: -0.176px;
+}
+
+/* ── Sections ──────────────────────────────────────────────── */
+.lp-section {
+  max-inline-size: var(--lp-max);
+  margin-inline: auto;
+  padding: 96px var(--lp-gutter);
+  scroll-margin-block-start: 80px;
+}
+
+.lp-section__head {
+  text-align: center;
+  margin-block-end: 48px;
+}
+
+.lp-eyebrow {
+  display: block;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.lp-h2 {
+  max-inline-size: 720px;
+  margin: 16px auto 0;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.lp-h2--large {
+  font-size: 60px;
+  max-inline-size: 800px;
+}
+
+.lp-section__lead {
+  max-inline-size: 620px;
+  margin: 20px auto 0;
+  color: var(--text-muted);
+  font-size: 18px;
+  line-height: 1.625;
+}
+
+/* ── Feature cards ─────────────────────────────────────────── */
+.lp-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.lp-card {
+  padding: 28px;
+  border: 1px solid var(--lp-hairline);
+  border-radius: 24px;
+  background: var(--lp-card);
+}
+
+.lp-card__icon {
+  inline-size: 22px;
+  block-size: 22px;
+  color: var(--accent);
+}
+
+.lp-card__title {
+  margin: 16px 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 28px;
+  letter-spacing: -0.176px;
+  color: var(--text);
+}
+
+.lp-card__body {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.625;
+}
+
+.lp-card__body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--text);
+}
+
+/* ── Screens ─────────────────────────────────────────────────
+   The phone overlaps the desktop shot's lower-left corner, so the two read as
+   one picture of one app rather than as two unrelated images. */
+.lp-shots {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 32px;
+}
+
+.lp-shot {
+  margin: 0;
+  line-height: 0;
+}
+
+.lp-shot img {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+
+.lp-shot--desktop {
+  flex: 0 1 820px;
+  border: 1px solid var(--lp-hairline);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
+}
+
+.lp-shot--phone {
+  flex: 0 0 200px;
+  border: 1px solid var(--lp-hairline);
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Numbers ─────────────────────────────────────────────────
+   Four claims that are all zero, which is the point of them. */
+.lp-stats {
+  padding: 40px var(--lp-gutter);
+}
+
+.lp-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-inline-size: 960px;
+  margin-inline: auto;
+}
+
+.lp-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 8px;
+  border: 1px solid var(--lp-hairline);
+  border-radius: 20px;
+  background: var(--lp-card);
+  text-align: center;
+}
+
+.lp-stat__value {
+  color: var(--accent);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -1.2px;
+}
+
+.lp-stat__unit {
+  font-size: 24px;
+  letter-spacing: -0.6px;
+}
+
+.lp-stat__label {
+  color: var(--text-muted);
+  font-size: 14px;
+  letter-spacing: -0.176px;
+}
+
+/* ── Close ─────────────────────────────────────────────────── */
+.lp-cta {
+  padding: 112px var(--lp-gutter);
+  text-align: center;
+}
+
+.lp-note {
+  margin: 20px 0 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  letter-spacing: -0.176px;
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.lp-footer {
+  border-block-start: 1px solid var(--lp-hairline);
+  padding: 56px var(--lp-gutter);
+}
+
+.lp-footer__inner {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 32px;
+  max-inline-size: var(--lp-max);
+  margin-inline: auto;
+}
+
+.lp-footer__blurb {
+  max-inline-size: 380px;
+  margin: 16px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.lp-footer__links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lp-footer__links h4 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.176px;
+  color: var(--text);
+}
+
+.lp-footer__links a {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.lp-footer__links a:hover {
+  color: var(--text);
+}
+
+/* ── Narrow screens ────────────────────────────────────────────
+   The same 768px breakpoint the app uses, so the two never disagree about
+   what counts as a phone. The type comes down because 72px over a 390px
+   screen is five characters a line. */
+@media (max-width: 767.98px) {
+  .lp {
+    --lp-gutter: 20px;
+  }
+
+  .lp-nav a:not(.lp-btn) {
+    display: none;
+  }
+
+  .lp-hero {
+    padding-block: 120px 64px;
+  }
+
+  .lp-h1 {
+    font-size: 40px;
+    letter-spacing: -0.02em;
+  }
+
+  .lp-lead {
+    font-size: 16px;
+  }
+
+  .lp-section {
+    padding-block: 64px;
+  }
+
+  .lp-h2 {
+    font-size: 32px;
+  }
+
+  .lp-h2--large {
+    font-size: 36px;
+  }
+
+  .lp-section__lead {
+    font-size: 16px;
+  }
+
+  .lp-cards {
+    grid-template-columns: 1fr;
+  }
+
+  /* Side by side, each shot would be under 180px wide. Stacked, the phone
+     sits under the desktop at a size where the layout is still legible. */
+  .lp-shots {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .lp-shot--phone {
+    flex: 0 0 auto;
+    inline-size: 170px;
+  }
+
+  .lp-stats__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lp-cta {
+    padding-block: 80px;
+  }
+
+  .lp-footer__inner {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .lp-footer__about {
+    grid-column: 1 / -1;
+  }
+}

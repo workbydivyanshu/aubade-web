@@ -2,6 +2,10 @@
 // fixture library they all start from.
 'use strict';
 
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
+
 // run.js serves the repo on an ephemeral port and passes it in. Set it by
 // hand to point a single suite at a server you already have running.
 const BASE_URL = process.env.AUBADE_URL || 'http://localhost:5199';
@@ -61,4 +65,54 @@ function seed(page, library) {
   }), library || seedLibrary());
 }
 
-module.exports = { BASE_URL, seedLibrary, seed };
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.woff2': 'font/woff2',
+  '.wasm': 'application/wasm',
+};
+
+// Serve the repository on an ephemeral port. Nothing needs to be running
+// first, and a run cannot collide with a dev server already on 5199.
+const ROOT = path.join(__dirname, '..', '..');
+
+function serveRepo() {
+  const server = http.createServer((req, res) => {
+    const rel = decodeURIComponent(req.url.split('?')[0]);
+    let file = path.join(ROOT, rel === '/' ? 'index.html' : rel);
+    // Anything resolving outside the repo is a bad request, not a 404 —
+    // saying "not found" would be a lie about a file that exists.
+    if (!path.resolve(file).startsWith(ROOT + path.sep)) {
+      res.writeHead(403).end('outside the repo');
+      return;
+    }
+    fs.stat(file, (err, st) => {
+      if (!err && st.isDirectory()) file = path.join(file, 'index.html');
+      fs.readFile(file, (err2, body) => {
+        if (err2) { res.writeHead(404).end('not found'); return; }
+        res.writeHead(200, {
+          'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
+          'Cache-Control': 'no-store',
+        });
+        res.end(body);
+      });
+    });
+  });
+  return new Promise((resolve) => {
+    server.listen(0, '127.0.0.1', () => {
+      resolve({
+        url: `http://127.0.0.1:${server.address().port}`,
+        close: () => server.close(),
+      });
+    });
+  });
+}
+
+module.exports = { BASE_URL, ROOT, seedLibrary, seed, serveRepo };

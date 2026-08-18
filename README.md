@@ -19,7 +19,8 @@ From this directory:
 python3 -m http.server 5199
 ```
 
-Then open <http://localhost:5199>.
+Then open <http://localhost:5199> for the player, or
+<http://localhost:5199/landing.html> for the page that introduces it.
 
 Any static file server works — `npx serve`, `caddy file-server`, whatever you
 have. There is nothing to compile.
@@ -55,7 +56,10 @@ Debian-family machine or the official Playwright container.
 ## Hosting it
 
 Every path in the app is relative, so it can be served from a domain root or
-from a subpath — a GitHub Pages project page works unmodified. Copy the `.html`,
+from a subpath — a GitHub Pages project page works unmodified. `index.html`
+is the player and `landing.html` introduces it; to make the opening page what
+visitors land on, swap the two filenames and the handful of links between
+them. Copy the `.html`,
 `.js`, `.css` files and `vendor/` and serve them.
 
 One requirement: **the page must be a secure context**. File System Access is
@@ -67,6 +71,7 @@ HTTPS. Every static host worth using provides it.
 | | |
 | --- | --- |
 | `index.html` | all markup for every view |
+| `landing.html` `landing.css` | the opening page, and its own styles |
 | `app.js` | routing, playback, queue, views |
 | `state.js` `db.js` `library.js` | state, IndexedDB, album keys |
 | `art.js` `colour.js` | cover art, palette extraction |
@@ -76,6 +81,7 @@ HTTPS. Every static host worth using provides it.
 | `indexer.worker.js` | tag reading, off the main thread |
 | `tokens.css` | design values, read from the reference |
 | `responsive.css` | the phone layout, loaded last |
+| `shots/` | screenshots of the app, used by the opening page |
 
 Stylesheets load in the order listed in `index.html`; `responsive.css` is last
 so its media queries win without needing extra specificity.
@@ -91,7 +97,7 @@ cd test && npm install   # once — Playwright, the only dependency anywhere her
 Then from the repository root:
 
 ```sh
-node test/run.js                    # all twelve suites, about 90 seconds
+node test/run.js                    # all thirteen suites, about 90 seconds
 node test/run.js responsive phone   # only suites whose name matches
 node test/run.js --verbose chrome   # with the suite's own output
 ```
@@ -111,6 +117,7 @@ stops them running at all.
 
 | | |
 | --- | --- |
+| `verify-landing` | the opening page |
 | `verify-chrome` | sidebar, navigation, menus |
 | `verify-keys` | keyboard shortcuts |
 | `verify-menu` | track and album overflow menus |
@@ -127,6 +134,11 @@ stops them running at all.
 They seed a fixture library straight into IndexedDB rather than indexing a
 folder, because the folder picker cannot be driven headlessly — and the tag
 reader is not what these are testing.
+
+`node test/shots.js` regenerates the two screenshots on the opening page. They
+are the real app photographed at 1440 and 390 against that same fixture
+library, so they go stale when the app changes. It needs ImageMagick for the
+WebP conversion; nothing else here does.
 
 Design values are taken from the reference's own stylesheet and from
 `getComputedStyle` on the running site — never estimated from screenshots.

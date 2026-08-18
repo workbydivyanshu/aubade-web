@@ -11,15 +11,13 @@
 //   node test/run.js --verbose       show each suite's own output as it goes
 'use strict';
 
-const http = require('http');
-const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-
-const ROOT = path.join(__dirname, '..');
+const { ROOT, serveRepo } = require('./lib/harness');
 
 // Ordered cheapest-first, so a broken shell fails before the slow visual work.
 const SUITES = [
+  ['verify-landing.js', 'the opening page'],
   ['verify-chrome.js', 'sidebar, navigation, menus'],
   ['verify-keys.js', 'keyboard shortcuts'],
   ['verify-menu.js', 'track and album overflow menus'],
@@ -33,49 +31,6 @@ const SUITES = [
   ['phone-views.js', 'every route at 390px'],
   ['verify-nofsapi.js', 'the no-File-System-Access path'],
 ];
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.webp': 'image/webp',
-  '.woff2': 'font/woff2',
-  '.wasm': 'application/wasm',
-};
-
-function serveRepo() {
-  const server = http.createServer((req, res) => {
-    const rel = decodeURIComponent(req.url.split('?')[0]);
-    let file = path.join(ROOT, rel === '/' ? 'index.html' : rel);
-    // Anything resolving outside the repo is a bad request, not a 404 —
-    // saying "not found" would be a lie about a file that exists.
-    if (!path.resolve(file).startsWith(ROOT + path.sep)) {
-      res.writeHead(403).end('outside the repo');
-      return;
-    }
-    fs.stat(file, (err, st) => {
-      if (!err && st.isDirectory()) file = path.join(file, 'index.html');
-      fs.readFile(file, (err2, body) => {
-        if (err2) { res.writeHead(404).end('not found'); return; }
-        res.writeHead(200, {
-          'Content-Type': MIME[path.extname(file)] || 'application/octet-stream',
-          'Cache-Control': 'no-store',
-        });
-        res.end(body);
-      });
-    });
-  });
-  return new Promise((resolve) => {
-    server.listen(0, '127.0.0.1', () => {
-      resolve({ url: `http://127.0.0.1:${server.address().port}`, close: () => server.close() });
-    });
-  });
-}
 
 function runSuite(file, url, verbose) {
   return new Promise((resolve) => {
