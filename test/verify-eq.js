@@ -1,7 +1,7 @@
 // Prove the visualiser reacts to real sound: play a sweep from low to high
 // through the app's own audio element and watch which bars move.
 const { chromium } = require('playwright');
-const { BASE_URL } = require('./lib/harness');
+const { PLAYER_URL } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
@@ -10,7 +10,7 @@ const { BASE_URL } = require('./lib/harness');
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 120)); });
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await p.waitForTimeout(900);
 
   console.log('bars in DOM: ' + await p.evaluate(() => document.querySelectorAll('#np-eq i').length));

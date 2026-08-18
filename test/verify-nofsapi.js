@@ -8,7 +8,7 @@
 const ENGINE = process.argv[2] || 'chromium';
 const pw = require('playwright');
 const browserType = pw[ENGINE];
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 (async () => {
   const br = await browserType.launch();
@@ -21,7 +21,7 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
   // Real Firefox and WebKit have no such API; only Chromium needs it removed.
   if (ENGINE === 'chromium') await p.addInitScript(() => { delete window.showDirectoryPicker; });
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p);
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);

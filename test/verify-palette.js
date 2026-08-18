@@ -2,7 +2,7 @@
 // returns. Averaging pixels produces mud; the question is whether bucketing by
 // hue actually recovers the colours that are in the image.
 const { chromium } = require('playwright');
-const { BASE_URL } = require('./lib/harness');
+const { PLAYER_URL } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
@@ -10,7 +10,7 @@ const { BASE_URL } = require('./lib/harness');
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 140)));
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await p.waitForTimeout(900);
 
   const out = await p.evaluate(async () => {

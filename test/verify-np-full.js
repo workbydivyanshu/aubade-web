@@ -3,7 +3,7 @@
 // taken at 839px and 1394px wide — they were identical at both, so these are
 // viewport-independent and can be compared at any width.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 // selector -> what the reference measures
 const TYPE = [
@@ -31,7 +31,7 @@ const SIZE = [
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p);
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1400);

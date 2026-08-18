@@ -54,7 +54,7 @@ const CONTRAST = () => {
   p.on('requestfailed', (r) => failedReqs.push(r.url().slice(-50)));
   p.on('response', (r) => { if (r.status() >= 400) failedReqs.push(r.status() + ' ' + r.url().slice(-50)); });
 
-  await p.goto(BASE_URL + '/landing.html', { waitUntil: 'networkidle' });
+  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
   await p.waitForTimeout(500);
 
   check('every request served', failedReqs.length === 0, failedReqs.slice(0, 3).join(', '));

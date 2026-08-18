@@ -1,7 +1,7 @@
 // The six controls that were markup-only. Each should now either do something
 // observable or not exist.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
@@ -14,7 +14,7 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 120)); });
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p);
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);

@@ -24,8 +24,8 @@ From this directory:
 python3 -m http.server 5199
 ```
 
-Then open <http://localhost:5199> for the player, or
-<http://localhost:5199/landing.html> for the page that introduces it.
+Then open <http://localhost:5199> for the page that introduces it, or
+<http://localhost:5199/player.html> to go straight to the player.
 
 Any static file server works — `npx serve`, `caddy file-server`, whatever you
 have. There is nothing to compile.
@@ -60,11 +60,13 @@ Debian-family machine or the official Playwright container.
 
 ## Hosting it
 
-Every path in the app is relative, so it can be served from a domain root or
-from a subpath — a GitHub Pages project page works unmodified. `index.html`
-is the player and `landing.html` introduces it; to make the opening page what
-visitors land on, swap the two filenames and the handful of links between
-them. Copy the `.html`,
+It is live at
+<https://workbydivyanshu.github.io/aubade-web/>, served from this repository
+by GitHub Pages.
+
+Every path is relative, so it works from a domain root or a subpath alike.
+`index.html` is the opening page and `player.html` is the app, so a visitor
+lands on the introduction rather than an empty library. Copy the `.html`,
 `.js`, `.css` files and `vendor/` and serve them.
 
 One requirement: **the page must be a secure context**. File System Access is
@@ -75,8 +77,8 @@ HTTPS. Every static host worth using provides it.
 
 | | |
 | --- | --- |
-| `index.html` | all markup for every view |
-| `landing.html` `landing.css` | the opening page, and its own styles |
+| `index.html` `landing.css` | the opening page, and its own styles |
+| `player.html` | all markup for every view of the app |
 | `app.js` | routing, playback, queue, views |
 | `state.js` `db.js` `library.js` | state, IndexedDB, album keys |
 | `art.js` `colour.js` | cover art, palette extraction |

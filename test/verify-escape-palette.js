@@ -7,7 +7,7 @@
 //   3. Settings stays hidden on a browser with no File System Access API,
 //      where init() returns early and the router never runs.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
@@ -20,7 +20,7 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
     if (m.type() === 'error' && !m.text().includes('[cover-diag]')) errs.push(m.text().slice(0, 110));
   });
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p);
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1500);
@@ -72,7 +72,7 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
   // ── 3. Settings hidden with no File System Access API ───────────────
   const q = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   await q.addInitScript(() => { delete window.showDirectoryPicker; });
-  await q.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await q.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await q.waitForTimeout(600);
   const st = await q.evaluate(() => {
     const el = document.getElementById('view-settings');

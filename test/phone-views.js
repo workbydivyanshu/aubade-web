@@ -3,7 +3,7 @@
 // playing and the album header both looked fine by the shell check and were
 // badly broken when measured.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 const audit = () => {
   const vis = (el) => {
@@ -103,7 +103,7 @@ const report = (d) => {
     if (m.type() === 'error' && !m.text().includes('[cover-diag]')) errs.push(m.text().slice(0, 100));
   });
 
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p);
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1200);

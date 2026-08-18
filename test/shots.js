@@ -37,7 +37,7 @@ const SHOTS = [
   const br = await chromium.launch();
   for (const [name, width, height] of SHOTS) {
     const p = await br.newPage({ viewport: { width, height }, colorScheme: 'dark' });
-    await p.goto(server.url, { waitUntil: 'networkidle' });
+    await p.goto(server.url + '/player.html', { waitUntil: 'networkidle' });
     await seed(p);
     await p.reload({ waitUntil: 'networkidle' });
     // The shelves animate in; shooting early catches them mid-rise.

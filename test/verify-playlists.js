@@ -1,7 +1,7 @@
 // Playlists end to end: create, add, view, play, remove, rename, delete —
 // plus the case that matters for local files, a path that no longer resolves.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
@@ -12,7 +12,7 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
   p.on('dialog', (d) => d.accept('Road Trip'));
 
   const lib = seedLibrary();
-  await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
   await seed(p, lib);
   await p.evaluate(() => localStorage.removeItem('aubade_playlists'));
   await p.reload({ waitUntil: 'networkidle' });

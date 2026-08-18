@@ -3,1043 +3,208 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Aubade</title>
+    <title>Aubade — your own music, played properly</title>
+    <meta name="description" content="Aubade turns a folder of music into a
+      proper player: albums, artists, artwork, synced lyrics. It reads your
+      files where they are. Nothing is uploaded and no account is needed." />
     <link rel="stylesheet" href="tokens.css" />
-    <!-- Order is the cascade: these were one file and still depend on
-         being applied in this sequence. -->
-    <link rel="stylesheet" href="shell.css" />
-    <link rel="stylesheet" href="player.css" />
-    <link rel="stylesheet" href="album.css" />
-    <link rel="stylesheet" href="nowplaying.css" />
-    <link rel="stylesheet" href="views.css" />
-    <link rel="stylesheet" href="cross-cutting.css" />
-    <link rel="stylesheet" href="responsive.css" />
+    <link rel="stylesheet" href="landing.css" />
   </head>
-  <body>
-    <!-- Starts idle: there is no player bar until something plays. -->
-    <div id="app" class="is-idle">
-      <aside class="sidebar" aria-label="Primary">
-        <div class="sidebar__brand-row">
-          <div class="sidebar__wordmark" aria-label="Aubade">
-            <svg class="sidebar__mark" aria-hidden="true" viewBox="0 0 28 28">
+  <body class="lp">
+    <header class="lp-header">
+      <div class="lp-header__inner">
+        <a class="lp-brand" href="index.html">
+          <svg class="lp-brand__mark" aria-hidden="true" viewBox="0 0 28 28">
+            <path d="M13.25 2.5c-4.85 1.2-8.5 5.55-8.5 10.75 0 5.3 3.75 9.7 8.75 10.8-1.9-2.55-2.9-6.15-2.9-10.8 0-4.55.95-8.15 2.65-10.75Z" />
+            <path d="M17.15 4.25c3.65 1.35 6.1 4.8 6.1 9 0 4.05-2.3 7.55-5.75 9.05-1.85-1.8-2.8-4.85-2.8-9.05 0-4.15.82-7.15 2.45-9Z" />
+          </svg>
+          <span>Aubade</span>
+        </a>
+        <nav class="lp-nav" aria-label="Sections">
+          <a href="#features">Features</a>
+          <a href="#screens">Screens</a>
+          <a href="#private">Privacy</a>
+          <a class="lp-btn lp-btn--small" href="player.html">Open Aubade</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- ── Hero ──────────────────────────────────────────────── -->
+      <section class="lp-hero">
+        <div class="lp-hero__glow" aria-hidden="true"></div>
+        <div class="lp-hero__inner">
+          <span class="lp-pill">No server · No account · Nothing uploaded</span>
+          <h1 class="lp-h1">Your own music.<br />Played properly.</h1>
+          <p class="lp-lead">
+            Point Aubade at the folder your music already lives in. It reads the
+            tags and the artwork straight from your files and gives you albums,
+            artists, playlists, synced lyrics and a now-playing screen that
+            takes its colour from the cover.
+          </p>
+          <div class="lp-actions">
+            <a class="lp-btn" href="player.html">Open Aubade</a>
+            <a class="lp-btn lp-btn--quiet" href="#features">See what it does</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Features ──────────────────────────────────────────── -->
+      <section id="features" class="lp-section">
+        <div class="lp-section__head">
+          <span class="lp-eyebrow">What it does</span>
+          <h2 class="lp-h2">A player for the music you already own</h2>
+        </div>
+        <div class="lp-cards">
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h5L12 7h6.5A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5Z" />
+              <path d="M9 15V10l5 1.2" /><circle cx="8" cy="15" r="1.6" />
+            </svg>
+            <h3 class="lp-card__title">It reads your tags</h3>
+            <p class="lp-card__body">
+              Titles, artists, albums, years and embedded artwork come out of the
+              files themselves. The reading happens on a worker, so a folder with
+              thousands of tracks does not freeze the page while it indexes.
+            </p>
+          </article>
+
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 6h10M4 11h7M4 16h9" /><path d="M17 15.5V8l4 1" /><circle cx="15.5" cy="16" r="1.8" />
+            </svg>
+            <h3 class="lp-card__title">Lyrics that keep time</h3>
+            <p class="lp-card__body">
+              An <code>.lrc</code> file beside a track scrolls line by line as it
+              plays. When a file's timing is a little out, nudge it forward or
+              back without leaving the song.
+            </p>
+          </article>
+
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="2.4" />
+              <path d="M12 4v3M12 17v3M4 12h3M17 12h3" />
+            </svg>
+            <h3 class="lp-card__title">Colour from the cover</h3>
+            <p class="lp-card__body">
+              Now playing takes its palette from the artwork, bucketing the cover
+              by hue rather than averaging it — averaging pixels gives you mud,
+              and this gives you the colours that are actually in the sleeve.
+            </p>
+          </article>
+
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 7h11M4 12h11M4 17h7" /><circle cx="17" cy="17" r="3" /><path d="M20 17V8l3 .8" />
+            </svg>
+            <h3 class="lp-card__title">Playlists that stay</h3>
+            <p class="lp-card__body">
+              Playlists, liked songs, the queue and the whole index live in the
+              browser's own storage. Close the tab, come back tomorrow, and the
+              library is still there.
+            </p>
+          </article>
+
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="7" y="3" width="10" height="18" rx="3" /><path d="M11 18h2" />
+            </svg>
+            <h3 class="lp-card__title">Made for a phone too</h3>
+            <p class="lp-card__body">
+              A floating tab bar and a floating player, both measured off a real
+              phone layout rather than guessed at, and every screen checked at
+              390 pixels wide before it shipped.
+            </p>
+          </article>
+
+          <article class="lp-card">
+            <svg class="lp-card__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="10" width="16" height="10" rx="2.5" /><path d="M8 10V7a4 4 0 0 1 8 0v3" />
+            </svg>
+            <h3 class="lp-card__title">Nothing leaves the machine</h3>
+            <p class="lp-card__body">
+              There is no server to talk to and no account to make. Your files
+              are read from disk by the browser, and that is as far as they go.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ── Screens ───────────────────────────────────────────── -->
+      <section id="screens" class="lp-section lp-screens">
+        <div class="lp-section__head">
+          <span class="lp-eyebrow">Every screen</span>
+          <h2 class="lp-h2">The same app on a desk and in a hand</h2>
+          <p class="lp-section__lead">
+            One layout with one breakpoint. The rail becomes a floating tab bar,
+            the player becomes a card above it, and nothing is dropped on the way
+            down.
+          </p>
+        </div>
+        <!-- Both shots are the real app, produced by test/shots.js against the
+             same fixture library the suites use. Nothing here is a mock-up. -->
+        <div class="lp-shots">
+          <figure class="lp-shot lp-shot--desktop">
+            <img src="shots/desktop.webp" width="1440" height="900" alt="Aubade on a desktop: a sidebar of albums and artists beside a home page of shelves." />
+          </figure>
+          <figure class="lp-shot lp-shot--phone">
+            <img src="shots/phone.webp" width="390" height="844" alt="Aubade on a phone: the same home page with a floating tab bar along the bottom." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ── Numbers ───────────────────────────────────────────── -->
+      <section id="private" class="lp-stats">
+        <div class="lp-stats__grid">
+          <div class="lp-stat"><span class="lp-stat__value">0</span><span class="lp-stat__label">Servers</span></div>
+          <div class="lp-stat"><span class="lp-stat__value">0</span><span class="lp-stat__label">Accounts</span></div>
+          <div class="lp-stat"><span class="lp-stat__value">0<span class="lp-stat__unit">KB</span></span><span class="lp-stat__label">Uploaded</span></div>
+          <div class="lp-stat"><span class="lp-stat__value">∞</span><span class="lp-stat__label">Your library</span></div>
+        </div>
+      </section>
+
+      <!-- ── Close ─────────────────────────────────────────────── -->
+      <section class="lp-cta">
+        <h2 class="lp-h2 lp-h2--large">Point it at a folder.<br />Press play.</h2>
+        <div class="lp-actions lp-actions--centre">
+          <a class="lp-btn" href="player.html">Open Aubade</a>
+        </div>
+        <p class="lp-note">
+          Runs in Chrome, Edge, Brave and Firefox. Nothing to install.
+        </p>
+      </section>
+    </main>
+
+    <footer class="lp-footer">
+      <div class="lp-footer__inner">
+        <div class="lp-footer__about">
+          <a class="lp-brand" href="index.html">
+            <svg class="lp-brand__mark" aria-hidden="true" viewBox="0 0 28 28">
               <path d="M13.25 2.5c-4.85 1.2-8.5 5.55-8.5 10.75 0 5.3 3.75 9.7 8.75 10.8-1.9-2.55-2.9-6.15-2.9-10.8 0-4.55.95-8.15 2.65-10.75Z" />
               <path d="M17.15 4.25c3.65 1.35 6.1 4.8 6.1 9 0 4.05-2.3 7.55-5.75 9.05-1.85-1.8-2.8-4.85-2.8-9.05 0-4.15.82-7.15 2.45-9Z" />
             </svg>
-            <div class="sidebar__brand">Aubade</div>
-          </div>
-          <button class="icon-button" type="button" aria-label="Collapse sidebar">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <rect x="3.25" y="4" width="13.5" height="12" rx="2" />
-              <path d="M11 4v12" />
-              <path d="m8.25 8-2 2 2 2" />
-            </svg>
-          </button>
-        </div>
-
-        <nav class="sidebar__nav" aria-label="Main navigation">
-          <a class="sidebar__nav-item sidebar__nav-item--selected" href="#home" aria-current="page">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M3.25 9.25 10 3.5l6.75 5.75" />
-              <path d="M5.25 8.25v7.5h3.5v-4.5h2.5v4.5h3.5v-7.5" />
-            </svg>
-            <span>Home</span>
+            <span>Aubade</span>
           </a>
-          <a class="sidebar__nav-item" href="#search">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <circle cx="8.75" cy="8.75" r="5.25" />
-              <path d="m12.75 12.75 3.5 3.5" />
-            </svg>
-            <span>Search</span>
-          </a>
-          <a class="sidebar__nav-item" href="#browse">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <rect x="3.5" y="3.5" width="5" height="5" rx="1" />
-              <rect x="11.5" y="3.5" width="5" height="5" rx="1" />
-              <rect x="3.5" y="11.5" width="5" height="5" rx="1" />
-              <rect x="11.5" y="11.5" width="5" height="5" rx="1" />
-            </svg>
-            <span>Browse</span>
-          </a>
-          <a class="sidebar__nav-item" href="#library?view=albums">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <circle cx="10" cy="10" r="6.5" />
-              <circle cx="10" cy="10" r="1.75" />
-              <path d="M10 3.5v2" />
-            </svg>
-            <span>Albums</span>
-          </a>
-          <a class="sidebar__nav-item" href="#library?view=artists">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <circle cx="10" cy="6.75" r="3" />
-              <path d="M4.75 16.25c.75-3 2.5-4.5 5.25-4.5s4.5 1.5 5.25 4.5" />
-            </svg>
-            <span>Artists</span>
-          </a>
-          <a class="sidebar__nav-item" href="#library">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M4.25 4.5v11" />
-              <path d="M8 4.5v11" />
-              <path d="M11.75 4.5v11" />
-              <path d="m15.25 5 1.25 10" />
-            </svg>
-            <span>Your Library</span>
-          </a>
-        </nav>
-
-        <div class="sidebar__rule" aria-hidden="true"></div>
-
-        <section class="sidebar__pinned" aria-labelledby="pinned-heading">
-          <div class="sidebar__section-row">
-            <h2 id="pinned-heading">Pinned</h2>
-            <button class="icon-button" id="new-playlist-btn" type="button" aria-label="New playlist">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M10 4.5v11" />
-                <path d="M4.5 10h11" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="sidebar__pinned-list">
-            <a class="pinned-item" href="#liked-songs">
-              <span class="pinned-item__art" aria-hidden="true">
-                <svg aria-hidden="true" viewBox="0 0 20 20">
-                  <path d="M10 16s-5.25-3.2-5.25-7.1A3.05 3.05 0 0 1 10 6.75a3.05 3.05 0 0 1 5.25 2.15C15.25 12.8 10 16 10 16Z" />
-                </svg>
-              </span>
-              <span class="pinned-item__copy">
-                <span class="pinned-item__title">Liked Songs</span>
-                <span class="pinned-item__meta">Pinned - Playlist</span>
-              </span>
-            </a>
-            <div id="playlist-list"></div>
-          </div>
-        </section>
-
-        <footer class="sidebar__footer">Aubade</footer>
-      </aside>
-
-      <!-- Below 768px the reference drops the rail for a docked bar of four.
-           Radio is one of its four and has no local meaning, so Search — which
-           lives in the rail on both — takes that slot. -->
-      <nav class="tab-bar" aria-label="Main navigation">
-        <a class="tab-bar__item tab-bar__item--selected" href="#home" aria-current="page">
-          <svg aria-hidden="true" viewBox="0 0 20 20">
-            <path d="M3.25 9.25 10 3.5l6.75 5.75" />
-            <path d="M5.25 8.25v7.5h3.5v-4.5h2.5v4.5h3.5v-7.5" />
-          </svg>
-          <span>Home</span>
-        </a>
-        <a class="tab-bar__item" href="#browse">
-          <svg aria-hidden="true" viewBox="0 0 20 20">
-            <rect x="3.5" y="3.5" width="5" height="5" rx="1" />
-            <rect x="11.5" y="3.5" width="5" height="5" rx="1" />
-            <rect x="3.5" y="11.5" width="5" height="5" rx="1" />
-            <rect x="11.5" y="11.5" width="5" height="5" rx="1" />
-          </svg>
-          <span>Browse</span>
-        </a>
-        <a class="tab-bar__item" href="#search">
-          <svg aria-hidden="true" viewBox="0 0 20 20">
-            <circle cx="8.75" cy="8.75" r="5.25" />
-            <path d="m12.75 12.75 3.5 3.5" />
-          </svg>
-          <span>Search</span>
-        </a>
-        <a class="tab-bar__item" href="#library">
-          <svg aria-hidden="true" viewBox="0 0 20 20">
-            <path d="M4.25 4.5v11" />
-            <path d="M8 4.5v11" />
-            <path d="M11.75 4.5v11" />
-            <path d="m15.25 5 1.25 10" />
-          </svg>
-          <span>Library</span>
-        </a>
-      </nav>
-
-      <main class="main">
-        <header class="top-bar">
-          <div class="top-bar__left">
-            <!-- Only shown while the sidebar is collapsed. The collapse control
-                 lives inside the sidebar, so without this there is no way back. -->
-            <button class="top-bar__btn top-bar__btn--expand" id="expand-sidebar" type="button" aria-label="Show sidebar">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <rect x="3.25" y="4" width="13.5" height="12" rx="2" />
-                <path d="M9 4v12" />
-                <path d="m11.75 8 2 2-2 2" />
-              </svg>
-            </button>
-            <button class="top-bar__btn" type="button" aria-label="Go back">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M12 4.5 6.5 10 12 15.5" />
-              </svg>
-            </button>
-            <button class="top-bar__btn" type="button" aria-label="Go forward">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="m8 4.5 5.5 5.5L8 15.5" />
-              </svg>
-            </button>
-          </div>
-          <div class="top-bar__right">
-            <button class="top-bar__avatar" type="button" aria-label="Account">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <circle cx="10" cy="7.5" r="2.75" />
-                <path d="M5.25 16c.5-2.5 2.25-3.75 4.75-3.75s4.25 1.25 4.75 3.75" />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        <div class="content-frame">
-          <div class="content-frame__inner">
-
-            <!-- ── Home View ──────────────────────────────────── -->
-            <div id="view-home">
-              <!-- ── Greeting row ─────────────────────────────── -->
-            <div class="greeting-row">
-              <h1 class="greeting-row__text">Good evening</h1>
-              <span id="folder-status" class="greeting-row__status"></span>
-              <div class="seg-pill glass-strong">
-                <button id="seg-library" class="seg-pill__seg seg-pill__seg--active" type="button">Library</button>
-                <button id="seg-folders" class="seg-pill__seg" type="button">Folders</button>
-              </div>
-            </div>
-
-            <!-- Shown until a folder is connected. Everything below it is
-                 built from the library, so with no library there is nothing
-                 truthful to show. -->
-            <div id="home-empty" class="home-empty" hidden>
-              <svg class="home-empty__icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 7.5A1.5 1.5 0 0 1 4.5 6h4l2 2.5h7A1.5 1.5 0 0 1 19 10v7a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 3 17Z"/>
-                <circle cx="14" cy="14" r="2"/><path d="M16 14V9.5l3 .75"/>
-              </svg>
-              <h2 class="home-empty__title">Nothing here yet</h2>
-              <p class="home-empty__body">
-                Choose the folder your music lives in. Aubade reads the tags and
-                artwork straight from your files — nothing is uploaded anywhere.
-              </p>
-              <button class="album-btn album-btn--play" id="home-empty-pick" type="button">
-                <svg viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h3l1.5 2h7A1.5 1.5 0 0 1 17.5 7.5v7A1.5 1.5 0 0 1 16 16H4.5A1.5 1.5 0 0 1 3 14.5Z" fill="currentColor" stroke="none"/>
-                </svg>
-                <span class="album-btn__label">Choose folder</span>
-              </button>
-            </div>
-
-            <!-- ── Quick-links grid ─────────────────────────── -->
-            <div id="quick-grid" class="quick-grid"></div>
-
-            <!-- ── Hero card ────────────────────────────────── -->
-            <div id="hero-card" class="hero-card">
-              <div class="hero-card__cover" style="background:linear-gradient(135deg,#2d1b69,#b44593)"></div>
-              <div class="hero-card__body">
-                <span class="hero-card__eyebrow">MOST PLAYED</span>
-                <h2 class="hero-card__title"></h2>
-                <span class="hero-card__artist"></span>
-                <div class="hero-card__actions">
-                  <button class="hero-card__play" type="button">
-                    <svg aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="M7 4v12l10-6Z" fill="currentColor" stroke="none" />
-                    </svg>
-                    Play
-                  </button>
-                  <button class="hero-card__share" type="button" aria-label="Share">
-                    <svg aria-hidden="true" viewBox="0 0 20 20">
-                      <circle cx="14.5" cy="5" r="2.25" />
-                      <circle cx="5.5" cy="10" r="2.25" />
-                      <circle cx="14.5" cy="15" r="2.25" />
-                      <path d="m7.5 8.75 5-2.5M7.5 11.25l5 2.5" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- ── Shelf 1: Recently added ──────────────────── -->
-            <section id="shelf-recent" class="shelf">
-              <div class="shelf__head">
-                <div class="shelf__head-left">
-                  <div class="shelf__title-row">
-                    <svg class="shelf__icon" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="M10 4.5v11" /><path d="M4.5 10h11" />
-                    </svg>
-                    <h2 class="shelf__title">Recently added</h2>
-                    <svg class="shelf__chevron" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="m8 4.5 5.5 5.5L8 15.5" />
-                    </svg>
-                  </div>
-                  <p class="shelf__subtitle">Fresh additions to your library</p>
-                </div>
-                <a class="shelf__see-all" href="#library?view=albums">See all</a>
-              </div>
-              <div class="shelf__row"></div>
-            </section>
-
-            <!-- ── Shelf 2: Most played ─────────────────────── -->
-            <section id="shelf-played" class="shelf">
-              <div class="shelf__head">
-                <div class="shelf__head-left">
-                  <div class="shelf__title-row">
-                    <svg class="shelf__icon" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="M3.5 16.5 7 10l3.5 4 3-5.5 3 8" />
-                    </svg>
-                    <h2 class="shelf__title">Most played</h2>
-                    <svg class="shelf__chevron" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="m8 4.5 5.5 5.5L8 15.5" />
-                    </svg>
-                  </div>
-                  <p class="shelf__subtitle">Your heaviest rotation this month</p>
-                </div>
-                <a class="shelf__see-all" href="#library?view=albums">See all</a>
-              </div>
-              <div class="shelf__row"></div>
-            </section>
-
-            <!-- ── Shelf 3: Rediscover ──────────────────────── -->
-            <section id="shelf-rediscover" class="shelf">
-              <div class="shelf__head">
-                <div class="shelf__head-left">
-                  <div class="shelf__title-row">
-                    <svg class="shelf__icon" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="M4 7.5h12l-2.25-2.25" /><path d="M16 12.5H4l2.25 2.25" />
-                    </svg>
-                    <h2 class="shelf__title">Rediscover</h2>
-                    <svg class="shelf__chevron" aria-hidden="true" viewBox="0 0 20 20">
-                      <path d="m8 4.5 5.5 5.5L8 15.5" />
-                    </svg>
-                  </div>
-                  <p class="shelf__subtitle">Albums you haven't played in a while</p>
-                </div>
-                <a class="shelf__see-all" href="#library?view=albums">See all</a>
-              </div>
-              <div class="shelf__row"></div>
-            </section>
-
-            </div> <!-- End view-home -->
-
-            <!-- ── Album View ─────────────────────────────────── -->
-            <div id="view-album" style="display: none;">
-              <div class="album-header">
-                <div class="album-header__bg"></div>
-                <div class="album-header__scrim"></div>
-                
-                <div class="album-header__content">
-                  <div class="album-header__cover"></div>
-                  <div class="album-header__meta">
-                    <span class="album-header__eyebrow">ALBUM</span>
-                    <h1 class="album-header__title"></h1>
-                    <a class="album-header__artist" href="#"></a>
-                    <span class="album-header__stats"></span>
-                  </div>
-                  
-                  <div class="album-header__controls">
-                    <button class="album-btn album-btn--shuffle" type="button" aria-label="Shuffle album">
-                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <button class="album-btn album-btn--play" type="button" aria-label="Play album">
-                      <svg viewBox="0 0 20 20">
-                        <path d="M7 4v12l10-6Z" fill="currentColor" stroke="none" />
-                      </svg>
-                      <span class="album-btn__label">Play</span>
-                    </button>
-                    <button class="album-btn album-btn--like" type="button" aria-label="Like album">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z"/>
-                      </svg>
-                    </button>
-                    <button class="album-btn album-btn--queue" type="button" aria-label="Add album to queue">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h13M3 12h13M3 18h9M18 12v7M21.5 15.5h-7"/>
-                      </svg>
-                    </button>
-                    <button class="album-btn album-btn--share" type="button" aria-label="Copy album name">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                      </svg>
-                    </button>
-                    <button class="album-btn album-btn--more" type="button" aria-label="More options">
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="album-tracks">
-                <!-- Track rows injected by JS -->
-              </div>
-            </div>
-
-            <!-- ── Artist View ────────────────────────────────── -->
-            <div id="view-artist" style="display: none;">
-              <div class="artist-header">
-                <div class="artist-header__bg"></div>
-                <div class="artist-header__scrim"></div>
-                <div class="artist-header__content">
-                  <div class="artist-header__photo" id="artist-photo"></div>
-                  <div class="artist-header__text">
-                    <span class="artist-header__eyebrow">Artist</span>
-                    <h1 class="artist-header__name"></h1>
-                    <span class="artist-header__meta"></span>
-
-                    <div class="artist-header__controls">
-                      <button class="album-btn album-btn--shuffle" id="artist-shuffle-btn" type="button" aria-label="Shuffle all">
-                        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
-                          <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                      </button>
-                      <button class="album-btn album-btn--play" id="artist-play-btn" type="button" aria-label="Play all">
-                        <svg viewBox="0 0 20 20">
-                          <path d="M7 4v12l10-6Z" fill="currentColor" stroke="none" />
-                        </svg>
-                        <span class="album-btn__label">Play</span>
-                      </button>
-                      <button class="artist-follow-btn" id="artist-follow-btn" type="button" aria-pressed="false">Follow</button>
-                      <button class="album-btn album-btn--share" id="artist-share-btn" type="button" aria-label="Copy artist name">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                        </svg>
-                      </button>
-                      <button class="album-btn album-btn--more" id="artist-more-btn" type="button" aria-label="More options">
-                        <svg viewBox="0 0 20 20" fill="currentColor">
-                          <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="artist-content" style="padding-inline: 48px; padding-block: 32px;">
-                <section class="artist-section" id="artist-albums-section">
-                  <h2 class="artist-section__title" style="font-size: 24px; font-weight: 700; margin-block-end: 24px;">Albums</h2>
-                  <div class="quick-grid artist-grid--albums"></div>
-                </section>
-                
-                <section class="artist-section" id="artist-songs-section" style="margin-block-start: 48px;">
-                  <h2 class="artist-section__title" style="font-size: 24px; font-weight: 700; margin-block-end: 16px;">Songs</h2>
-                  <div class="search-list search-list--songs artist-list--songs"></div>
-                </section>
-              </div>
-            </div>
-
-            <!-- ── Search View ────────────────────────────────── -->
-            <div id="view-search" style="display: none;">
-              <div class="search-header">
-                <div class="search-input-wrapper">
-                  <svg aria-hidden="true" viewBox="0 0 20 20">
-                    <circle cx="8.75" cy="8.75" r="5.25" fill="none" stroke="currentColor" stroke-width="1.75"/>
-                    <path d="m12.75 12.75 3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
-                  </svg>
-                  <input type="text" id="search-input" placeholder="Songs, albums, artists" autocomplete="off" spellcheck="false" />
-                </div>
-              </div>
-
-              <div id="search-empty" style="display: none;">
-                <p>No results for "<span id="search-query-display"></span>"</p>
-              </div>
-
-              <div id="search-results" style="display: none;">
-                <!-- Songs Section -->
-                <section id="search-songs" class="search-section" style="display: none;">
-                  <h2 class="search-section__title">Songs</h2>
-                  <div class="search-list search-list--songs"></div>
-                  <div class="search-cap-msg" id="search-songs-cap" style="display: none;">Showing first 20</div>
-                </section>
-
-                <!-- Albums Section -->
-                <section id="search-albums" class="search-section" style="display: none;">
-                  <h2 class="search-section__title">Albums</h2>
-                  <div class="quick-grid search-grid--albums"></div>
-                  <div class="search-cap-msg" id="search-albums-cap" style="display: none;">Showing first 20</div>
-                </section>
-
-                <!-- Artists Section -->
-                <section id="search-artists" class="search-section" style="display: none;">
-                  <h2 class="search-section__title">Artists</h2>
-                  <div class="search-list search-list--artists"></div>
-                  <div class="search-cap-msg" id="search-artists-cap" style="display: none;">Showing first 20</div>
-                </section>
-              </div>
-            </div>
-
-            <!-- ── Library View ───────────────────────────────── -->
-            <!-- ── Browse ─────────────────────────────────────── -->
-            <div id="view-browse" style="display: none; padding-block-end: 48px;">
-              <div class="greeting-row">
-                <h1 class="greeting-row__text" id="browse-title">Browse</h1>
-              </div>
-              <div id="browse-body"></div>
-            </div>
-
-            <!-- ── Playlist ───────────────────────────────────── -->
-            <div id="view-playlist" style="display: none;">
-              <div class="liked-header">
-                <div class="liked-header__art liked-header__art--playlist" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 7h11M4 12h11M4 17h7"/><circle cx="17" cy="17" r="3"/><path d="M20 17V8l3 .8"/>
-                  </svg>
-                </div>
-                <div class="liked-header__meta">
-                  <span class="album-header__eyebrow">Playlist</span>
-                  <h1 class="liked-header__title" id="playlist-title"></h1>
-                  <span class="album-header__stats" id="playlist-stats"></span>
-                  <div class="liked-header__controls">
-                    <button class="album-btn album-btn--play" id="playlist-play" type="button" aria-label="Play playlist">
-                      <svg viewBox="0 0 20 20"><path d="M7 4v12l10-6Z" fill="currentColor" stroke="none"/></svg>
-                      <span class="album-btn__label">Play</span>
-                    </button>
-                    <button class="album-btn album-btn--shuffle" id="playlist-shuffle" type="button" aria-label="Shuffle playlist">
-                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                    <button class="album-btn album-btn--more" id="playlist-more" type="button" aria-label="Playlist options">
-                      <svg viewBox="0 0 20 20" fill="currentColor">
-                        <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="album-tracks" id="playlist-tracks"></div>
-              <p class="liked-empty" id="playlist-empty" hidden>
-                Nothing in here yet. Use the ... menu on any album or track to add to a playlist.
-              </p>
-            </div>
-
-            <!-- ── Liked Songs ────────────────────────────────── -->
-            <div id="view-liked" style="display: none;">
-              <div class="liked-header">
-                <div class="liked-header__art" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z"/>
-                  </svg>
-                </div>
-                <div class="liked-header__meta">
-                  <span class="album-header__eyebrow">Playlist</span>
-                  <h1 class="liked-header__title" id="liked-title">Liked Songs</h1>
-                  <span class="album-header__stats" id="liked-stats"></span>
-                  <div class="liked-header__controls">
-                    <button class="album-btn album-btn--play" id="liked-play" type="button" aria-label="Play liked songs">
-                      <svg viewBox="0 0 20 20"><path d="M7 4v12l10-6Z" fill="currentColor" stroke="none"/></svg>
-                      <span class="album-btn__label">Play</span>
-                    </button>
-                    <button class="album-btn album-btn--shuffle" id="liked-shuffle" type="button" aria-label="Shuffle liked songs">
-                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75">
-                        <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75M14 12.5l2.25 2-2.25 2M12 5.5h4.25M14 3.5l2.25 2-2.25 2" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div class="album-tracks" id="liked-tracks"></div>
-              <p class="liked-empty" id="liked-empty" hidden>
-                Songs you like will collect here. Tap the heart on any track.
-              </p>
-            </div>
-
-            <div id="view-library" style="display: none; padding-block-end: 48px;">
-              <div class="greeting-row" style="margin-block-end: 8px;">
-                <h1 class="greeting-row__text">Your Library</h1>
-                <div style="flex: 1;"></div>
-                <div class="seg-pill glass-strong" id="lib-filter-pill">
-                  <button class="seg-pill__seg" data-view="albums" type="button">Albums</button>
-                  <button class="seg-pill__seg" data-view="artists" type="button">Artists</button>
-                  <button class="seg-pill__seg seg-pill__seg--active" data-view="songs" type="button">Songs</button>
-                </div>
-                <button class="seg-pill__seg glass-strong" id="lib-sort-btn" style="margin-inline-start: 12px; border-radius: 99px; block-size: 32px; padding: 0 16px; font-weight: 500; font-size: 13px;" type="button">Sort: Name</button>
-              </div>
-              <div id="lib-count-line" style="font-size: 14px; color: var(--text-muted); margin-block-end: 32px; padding-inline: 48px;"></div>
-              
-              <div id="lib-content" style="padding-inline: 48px;">
-                <!-- Content injected here -->
-              </div>
-            </div>
-
-            <!-- ── Settings View ────────────────────────────────── -->
-            <div id="view-settings" style="display: none; padding-inline: 48px; padding-block-start: 64px; padding-block-end: 48px; flex-direction: column; align-items: center;">
-              <div style="width: 100%; max-width: 840px; display: flex; flex-direction: column; gap: 16px;">
-                
-                <!-- Music folder card -->
-                <div class="settings-card">
-                  <h2 class="settings-card__title">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M2 5.5A2.5 2.5 0 014.5 3h3.793a1.5 1.5 0 011.06.44l1.415 1.414A.5.5 0 0011.121 5H15.5A2.5 2.5 0 0118 7.5v7A2.5 2.5 0 0115.5 17h-11A2.5 2.5 0 012 14.5v-9z"/></svg>
-                    Music folder
-                  </h2>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label" id="settings-folder-name">No folder selected</span>
-                      <span class="settings-card__desc" id="settings-folder-desc">Select a directory containing your audio files.</span>
-                    </div>
-                    <div class="settings-card__controls">
-                      <button class="settings-btn" id="settings-btn-rescan" type="button">Rescan</button>
-                      <button class="settings-btn" id="settings-btn-change-folder" type="button">Change folder</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Library card -->
-                <div class="settings-card">
-                  <h2 class="settings-card__title">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4zm0 6a2 2 0 100 4h12a2 2 0 100-4H4zm0 6a2 2 0 100 4h12a2 2 0 100-4H4z"/></svg>
-                    Library
-                  </h2>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label" id="settings-library-stats">0 songs, 0 albums, 0 artists</span>
-                      <span class="settings-card__desc">Current index statistics</span>
-                    </div>
-                  </div>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label">Hide single-track albums</span>
-                      <span class="settings-card__desc">Exclude singles from Albums view and home shelves.</span>
-                    </div>
-                    <div class="settings-card__controls">
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="settings-toggle-singles">
-                        <span class="toggle-slider"></span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Playback card -->
-                <div class="settings-card">
-                  <h2 class="settings-card__title">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
-                    Playback
-                  </h2>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label" id="settings-volume-label">Volume: 100%</span>
-                      <span class="settings-card__desc">Current audio level</span>
-                    </div>
-                    <div class="settings-card__controls">
-                      <button class="settings-btn" id="settings-btn-reset-vol" type="button">Reset to 100%</button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Data card -->
-                <div class="settings-card">
-                  <h2 class="settings-card__title">
-                    <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a8 8 0 100 16 8 8 0 000-16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-                    Data
-                  </h2>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label">Clear cover cache</span>
-                      <span class="settings-card__desc">Frees up memory used by album artwork.</span>
-                    </div>
-                    <div class="settings-card__controls">
-                      <button class="settings-btn settings-btn--danger" id="settings-btn-clear-cache" type="button">Clear</button>
-                    </div>
-                  </div>
-                  <div class="settings-card__row">
-                    <div class="settings-card__info">
-                      <span class="settings-card__label">Reset library</span>
-                      <span class="settings-card__desc">Removes all indexed tracks and forgets the folder.</span>
-                    </div>
-                    <div class="settings-card__controls" id="settings-reset-controls">
-                      <button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div style="text-align: center; color: var(--text-dim); font-size: 13px; margin-block-start: 16px;">
-                  Aubade © 2026
-                </div>
-
-              </div>
-            </div>
-
-          </div>
+          <p class="lp-footer__blurb">
+            A music player for the library you already have, built in plain
+            HTML, CSS and JavaScript with no framework and no build step.
+          </p>
         </div>
-      </main>
-
-      <!-- ── Player bar ─────────────────────────────────────── -->
-      <footer class="player glass-bar" aria-label="Now playing">
-        <!-- LEFT: cover, track info, action buttons -->
-        <div class="player__left">
-          <div class="player__cover" aria-hidden="true"></div>
-          <div class="player__track-info">
-            <span class="player__title">the cure</span>
-            <span class="player__artist">Olivia Rodrigo</span>
-          </div>
-          <button class="player__icon-btn" type="button" aria-label="Expand now playing">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="m6 12.5 4-5 4 5" />
-            </svg>
-          </button>
-          <button class="player__icon-btn" type="button" aria-label="Like">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M10 16s-5.25-3.2-5.25-7.1A3.05 3.05 0 0 1 10 6.75a3.05 3.05 0 0 1 5.25 2.15C15.25 12.8 10 16 10 16Z" />
-            </svg>
-          </button>
-          <button class="player__icon-btn" type="button" aria-label="Share">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <circle cx="14.5" cy="5" r="2.25" />
-              <circle cx="5.5" cy="10" r="2.25" />
-              <circle cx="14.5" cy="15" r="2.25" />
-              <path d="m7.5 8.75 5-2.5M7.5 11.25l5 2.5" />
-            </svg>
-          </button>
+        <div class="lp-footer__links">
+          <h4>The app</h4>
+          <a href="player.html">Open the player</a>
+          <a href="player.html#search">Search</a>
+          <a href="player.html#library">Your library</a>
+          <a href="player.html#settings">Settings</a>
         </div>
-
-        <!-- CENTRE: transport + scrubber -->
-        <div class="player__centre">
-          <div class="player__transport">
-            <button class="player__icon-btn" type="button" aria-label="Shuffle">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5" />
-                <path d="M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75" />
-                <path d="M14 12.5l2.25 2-2.25 2" />
-                <path d="M12 5.5h4.25" />
-                <path d="M14 3.5l2.25 2-2.25 2" />
-              </svg>
-            </button>
-            <button class="player__icon-btn" type="button" aria-label="Previous">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M5.5 4.5v11" />
-                <path d="M15.5 5 8 10l7.5 5V5Z" />
-              </svg>
-            </button>
-            <button class="player__play-btn" type="button" aria-label="Play">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />
-              </svg>
-            </button>
-            <button class="player__icon-btn" type="button" aria-label="Next">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M14.5 4.5v11" />
-                <path d="M4.5 5 12 10l-7.5 5V5Z" />
-              </svg>
-            </button>
-            <button class="player__icon-btn" type="button" aria-label="Repeat">
-              <svg aria-hidden="true" viewBox="0 0 20 20">
-                <path d="M4 7.5h12l-2.25-2.25" />
-                <path d="M16 12.5H4l2.25 2.25" />
-              </svg>
-            </button>
-          </div>
-          <div class="player__scrubber">
-            <span class="player__time">3:48</span>
-            <div class="player__track-bar">
-              <div class="player__track-fill" style="width: 62%"></div>
-              <div class="player__track-knob" style="left: 62%"></div>
-            </div>
-            <span class="player__time">4:57</span>
-          </div>
-        </div>
-
-        <!-- RIGHT: utility icons + volume slider -->
-        <div class="player__right">
-          <button class="player__icon-btn" type="button" aria-label="Cast">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M3.5 13.5v2h2" />
-              <path d="M3.5 10a5.5 5.5 0 0 1 5.5 5.5" />
-              <path d="M3.5 6.5a9 9 0 0 1 9 9" />
-              <path d="M7 4.5h8.5a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H14" />
-            </svg>
-          </button>
-          <button class="player__icon-btn" type="button" aria-label="Queue">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M3.5 5.5h10" />
-              <path d="M3.5 10h7" />
-              <path d="M3.5 14.5h5" />
-              <path d="M14.5 10v6" />
-              <path d="M11.5 13h6" />
-            </svg>
-          </button>
-          <button class="player__icon-btn" type="button" aria-label="Volume">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M3.5 8v4h2.75l3.25 3V5L6.25 8H3.5Z" />
-              <path d="M12.5 7a4 4 0 0 1 0 6" />
-              <path d="M14.25 5a7 7 0 0 1 0 10" />
-            </svg>
-          </button>
-          <div class="player__vol-bar">
-            <div class="player__vol-fill" style="width: 70%"></div>
-            <div class="player__vol-knob" style="left: 70%"></div>
-          </div>
-          <button class="player__icon-btn" type="button" aria-label="Mini player">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <rect x="3.5" y="3.5" width="13" height="9" rx="1.5" />
-              <rect x="9.5" y="14" width="7" height="5" rx="1" />
-            </svg>
-          </button>
-          <button class="player__icon-btn" type="button" aria-label="Fullscreen">
-            <svg aria-hidden="true" viewBox="0 0 20 20">
-              <path d="M4 7.5V4.5h3" />
-              <path d="M16 7.5V4.5h-3" />
-              <path d="M4 12.5v3h3" />
-              <path d="M16 12.5v3h-3" />
-            </svg>
-          </button>
-        </div>
-      </footer>
-      <!-- ── Now Playing Overlay ────────────────────────────── -->
-      <div id="now-playing" class="now-playing">
-        <div class="now-playing__bg">
-          <!-- Their technique: circular copies of the artwork, blurred, one
-               spinning each way and one orbiting. Placement is ours; the
-               structure and the keyframes are theirs. -->
-          <div class="ambient-layer ambient-layer--1"></div>
-          <div class="ambient-layer ambient-layer--2"></div>
-          <div class="ambient-layer ambient-layer--3"></div>
-        </div>
-        <div class="now-playing__scrim"></div>
-
-        <div class="np-credits glass-strong" id="np-credits">
-          <div class="np-credits__head">
-            <h2 class="np-credits__title">Credits</h2>
-            <button class="np-btn" id="np-credits-close" type="button" aria-label="Close credits">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
-                <path d="m6 6 8 8M14 6l-8 8"/>
-              </svg>
-            </button>
-          </div>
-          <div id="np-credits-body"></div>
-        </div>
-        
-        <div class="now-playing__content">
-          <div class="now-playing__top">
-            <button class="np-btn" id="np-close" type="button" aria-label="Close now playing">
-              <svg viewBox="0 0 20 20">
-                <path d="m5 7.5 5 5 5-5" />
-              </svg>
-            </button>
-            <div class="now-playing__meta">
-              <span class="now-playing__eyebrow">NOW PLAYING</span>
-              <span class="now-playing__album" id="np-album"></span>
-            </div>
-            <div style="position: relative;">
-              <button class="np-btn" id="np-menu-btn" type="button" aria-label="More options">
-                <svg viewBox="0 0 20 20" fill="currentColor" stroke="none">
-                  <circle cx="5" cy="10" r="1.5"/><circle cx="10" cy="10" r="1.5"/><circle cx="15" cy="10" r="1.5"/>
-                </svg>
-              </button>
-              <!-- The reference lists seventeen items in two groups. The ones with no
-                   meaning for local files (Song radio, Music video, Download,
-                   Share image/link, Suggest less, Add to playlist) are left
-                   out; the rest keep its order and its divider. -->
-              <div class="np-menu glass-strong" id="np-menu" style="display: none;">
-                <button class="np-menu__item" data-action="like" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>
-                  <span data-label>Add to Liked Songs</span>
-                </button>
-                <button class="np-menu__item" data-action="play-next" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h11M3 18h8M17 8l4 4-4 4"/></svg>
-                  <span>Play next</span>
-                </button>
-                <button class="np-menu__item" data-action="add-playlist" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11M3 12h11M3 18h7"/><path d="M18 9v10M13 14h10"/></svg>
-                  <span>Add to playlist</span>
-                </button>
-                <button class="np-menu__item" data-action="add-queue" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h13M3 12h13M3 18h9M18 12v7M21.5 15.5h-7"/></svg>
-                  <span>Add to queue</span>
-                </button>
-
-                <div class="np-menu__divider" role="separator"></div>
-
-                <button class="np-menu__item" data-action="go-album" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>
-                  <span>Go to album</span>
-                </button>
-                <button class="np-menu__item" data-action="go-artist" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.3 3.1-5.5 7-5.5s7 2.2 7 5.5"/></svg>
-                  <span>Go to artist</span>
-                </button>
-                <button class="np-menu__item" data-action="toggle-lyrics" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h13"/></svg>
-                  <span data-label>Hide lyrics</span>
-                </button>
-                <button class="np-menu__item" data-action="credits" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6v.1"/></svg>
-                  <span>View credits</span>
-                </button>
-                <button class="np-menu__item" data-action="copy-title" type="button">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-                  <span>Copy title</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          <div class="now-playing__body">
-            <div class="now-playing__left">
-              <div class="now-playing__cover" id="np-cover">
-                <!-- Bars sit over the foot of the cover, as they do in the reference. -->
-                <div class="np-eq" id="np-eq" aria-hidden="true">
-                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-                </div>
-              </div>
-
-              <!-- Title row with icons -->
-              <div class="np-title-row">
-                <div class="np-title-row__text">
-                  <h1 class="now-playing__title" id="np-title"></h1>
-                  <div class="now-playing__subtitle" id="np-subtitle"></div>
-                </div>
-                <div class="np-title-row__icons">
-                  <button class="np-icon-btn" id="np-share-btn" type="button" aria-label="Share">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-                      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-                    </svg>
-                  </button>
-                  <button class="np-icon-btn" id="np-heart-btn" type="button" aria-label="Like">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-              <div class="now-playing__scrubber" id="np-scrubber">
-                <span class="now-playing__time" id="np-time-curr">0:00</span>
-                <div class="now-playing__track-bar">
-                  <div class="now-playing__track-bg"></div>
-                  <div class="now-playing__track-fill" id="np-track-fill"></div>
-                  <div class="now-playing__track-knob" id="np-track-knob"></div>
-                </div>
-                <span class="now-playing__time now-playing__time--right" id="np-time-rem">-0:00</span>
-              </div>
-
-              <!-- Quality & speed row -->
-              <div class="np-quality-row">
-                <span class="np-quality-row__format" id="np-format">MP3</span>
-                <button class="np-quality-row__speed" id="np-speed-btn" type="button">1x</button>
-              </div>
-              
-              <div class="now-playing__transport">
-                <button class="np-btn" id="np-shuffle" type="button" aria-label="Shuffle">
-                  <svg viewBox="0 0 20 20">
-                    <path d="M3.5 14.5h2.25c1.5 0 2.5-.75 3.5-2.5" />
-                    <path d="M3.5 5.5h2.25c2.5 0 3.75 2 5.25 5s2.75 4 4.5 4h.75" />
-                    <path d="M14 12.5l2.25 2-2.25 2" />
-                    <path d="M12 5.5h4.25" />
-                    <path d="M14 3.5l2.25 2-2.25 2" />
-                  </svg>
-                </button>
-                <button class="np-btn" id="np-prev" type="button" aria-label="Previous">
-                  <svg viewBox="0 0 20 20">
-                    <path d="M5.5 4.5v11" />
-                    <path d="M15.5 5 8 10l7.5 5V5Z" />
-                  </svg>
-                </button>
-                <button class="np-btn np-btn--play" id="np-play" type="button" aria-label="Play">
-                  <svg viewBox="0 0 20 20">
-                    <path d="M7.5 4.5v11l8-5.5Z" fill="currentColor" stroke="none" />
-                  </svg>
-                </button>
-                <button class="np-btn" id="np-next" type="button" aria-label="Next">
-                  <svg viewBox="0 0 20 20">
-                    <path d="M14.5 4.5v11" />
-                    <path d="M4.5 5l7.5 5-7.5 5V5Z" />
-                  </svg>
-                </button>
-                <button class="np-btn" id="np-repeat" type="button" aria-label="Repeat">
-                  <svg viewBox="0 0 20 20">
-                    <path d="M15.5 6.5A3.5 3.5 0 0 0 12 3H4" />
-                    <path d="M6 1L4 3l2 2" />
-                    <path d="M4.5 13.5A3.5 3.5 0 0 0 8 17h8" />
-                    <path d="M14 19l2-2-2-2" />
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Bottom utility row. The reference puts an output picker hard left
-                   and the volume group to its right; there is nothing to cast
-                   to here, so ours names the only output there is. -->
-              <div class="np-utility-row">
-                <div class="np-device">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 17.5a3.5 3.5 0 0 1 3.5 3.5M3 13a8 8 0 0 1 8 8"/>
-                    <rect x="11" y="3" width="10" height="13" rx="2"/>
-                  </svg>
-                  <span>This device</span>
-                </div>
-                <div class="np-utility-row__group">
-                <button class="np-icon-btn" id="np-vol-btn" type="button" aria-label="Volume">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                  </svg>
-                </button>
-                <div class="np-vol-slider">
-                  <div class="np-vol-slider__track">
-                    <div class="np-vol-slider__fill" id="np-vol-fill" style="width: 100%"></div>
-                    <div class="np-vol-slider__knob" id="np-vol-knob" style="left: 100%"></div>
-                  </div>
-                </div>
-                <button class="np-icon-btn" id="np-lyrics-toggle" type="button" aria-label="Toggle lyrics">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                  </svg>
-                </button>
-                <button class="np-icon-btn" id="np-queue-btn" type="button" aria-label="Queue">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
-                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-                  </svg>
-                </button>
-                </div>
-              </div>
-            </div>
-            
-            <div class="now-playing__right">
-              <!-- Sync pill -->
-              <!-- The reference groups minus/Sync/plus into one 116x36 pill, then
-                   sets four 36x36 round buttons beside it. Of its four
-                   (try another source, select lines, download, share all),
-                   the two that mean anything for a local .lrc are kept. -->
-              <div class="np-sync-row" id="np-sync-row">
-                <div class="np-sync-group">
-                  <button class="np-sync-btn" id="np-sync-minus" type="button" aria-label="Lyrics earlier">−</button>
-                  <span class="np-sync-pill" id="np-sync-pill">Sync</span>
-                  <button class="np-sync-btn" id="np-sync-plus" type="button" aria-label="Lyrics later">+</button>
-                </div>
-                <button class="np-lyric-action" id="np-lyric-select" type="button" aria-label="Select multiple lines">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m3 7 1.5 1.5L7 6M3 13l1.5 1.5L7 12M3 19l1.5 1.5L7 17M11 7h10M11 13h10M11 19h10"/>
-                  </svg>
-                </button>
-                <button class="np-lyric-action" id="np-lyric-copy" type="button" aria-label="Copy all lyrics">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
-                  </svg>
-                </button>
-              </div>
-              <div class="now-playing__lyrics">
-                <span class="np-lyric-placeholder">No lyrics found</span>
-                <!--
-                <div class="np-lyric-line np-lyric-line--active">Active line example</div>
-                <div class="np-lyric-line">Inactive line example</div>
-                -->
-              </div>
-
-              <!-- Queue shares this pane with the lyrics, as it does in the reference. -->
-              <div class="np-queue" id="np-queue" hidden>
-                <div class="np-queue__head">
-                  <h2 class="np-queue__title">Queue</h2>
-                  <button class="np-queue__clear" id="np-queue-clear" type="button">Clear upcoming</button>
-                </div>
-                <div class="np-queue__list" id="np-queue-list"></div>
-              </div>
-            </div>
-          </div>
+        <div class="lp-footer__links">
+          <h4>This page</h4>
+          <a href="#features">Features</a>
+          <a href="#screens">Screens</a>
+          <a href="#private">Privacy</a>
         </div>
       </div>
-    </div>
-    <script src="app.js" type="module"></script>
+    </footer>
   </body>
 </html>

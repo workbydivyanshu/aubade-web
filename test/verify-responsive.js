@@ -5,7 +5,7 @@
 // layout that "works" but scrolls horizontally is the failure people notice
 // first, and it is invisible at desktop width.
 const { chromium } = require('playwright');
-const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
 const shell = () => {
   // Checking the element's own computed style is not enough: the now-playing
@@ -111,7 +111,7 @@ const shell = () => {
     p.on('console', (m) => {
       if (m.type() === 'error' && !m.text().includes('[cover-diag]')) errs.push(`${label}: ${m.text().slice(0, 90)}`);
     });
-    await p.goto(BASE_URL, { waitUntil: 'networkidle' });
+    await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
     await seed(p);
     await p.reload({ waitUntil: 'networkidle' });
     await p.waitForTimeout(1200);

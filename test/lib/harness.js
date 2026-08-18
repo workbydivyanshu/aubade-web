@@ -10,6 +10,10 @@ const path = require('path');
 // hand to point a single suite at a server you already have running.
 const BASE_URL = process.env.AUBADE_URL || 'http://localhost:5199';
 
+// The root is the page that introduces the app; the app itself is one
+// file along from it. Suites that drive the player want this one.
+const PLAYER_URL = BASE_URL + '/player.html';
+
 // 60 albums across 12 artists, 12 tracks each, no cover data. Deliberately
 // larger than one screen, so shelves have to scroll and the library has to
 // paginate rather than fitting whole.
@@ -115,4 +119,4 @@ function serveRepo() {
   });
 }
 
-module.exports = { BASE_URL, ROOT, seedLibrary, seed, serveRepo };
+module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo };
