@@ -196,8 +196,28 @@
     padding-inline: 16px;
   }
 
+  /* Measured on the reference at 390: the row wraps rather than squeezing,
+     and the greeting itself drops from 36/40 to 30/36. Without the wrap the
+     Library/Folders pill was pushed off the right edge — present, tappable
+     nowhere. */
   .greeting-row {
     padding-block: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .greeting-row__text {
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.75px;
+  }
+
+  /* Four columns leaves 80px a card, which is narrower than the 56px cover
+     plus a word: every label rendered as a single letter and a full stop.
+     The reference goes to two here (grid-cols-2, 10px), and so do we. */
+  .quick-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   /* ── Now playing ─────────────────────────────────────────────

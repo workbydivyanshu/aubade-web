@@ -44,11 +44,54 @@ const audit = () => {
     if (r.right > innerWidth + 2 || r.left < -2) squeezed.push(name(el) + '@w' + Math.round(r.width));
   }
 
+  // A container as wide as the viewport should never need to scroll sideways.
+  // The greeting row's pill sat 122px past the right edge and every check
+  // above cleared it: .content-frame is overflow-x:auto, so the reachability
+  // rule called it reachable, and body's overflow-x:hidden kept the document's
+  // own scrollWidth at 390. Nothing was visibly wrong to a measurement — the
+  // pill was simply off screen. Narrower scrollers are the shelves, which are
+  // meant to scroll, so the width test is what separates the two.
+  //
+  // Only auto/scroll containers count. A first pass on every element flagged
+  // .now-playing__bg, whose blurred blobs are drawn wider than the screen on
+  // purpose behind overflow:hidden — decorative overflow that nobody can
+  // scroll to is not a bug, and this project has paid for that lesson once.
+  const spilling = [];
+  for (const el of document.querySelectorAll('*')) {
+    if (el.clientWidth < innerWidth - 2) continue;
+    const ox = getComputedStyle(el).overflowX;
+    if (ox !== 'auto' && ox !== 'scroll') continue;
+    if (el.scrollWidth > el.clientWidth + 2) spilling.push(name(el) + '@' + el.scrollWidth);
+  }
+
+  // Text clipped to a fraction of itself reads as broken even though nothing
+  // overflows: at four columns the quick-pick labels came out as one letter
+  // and a full stop. An ellipsis on a long title is fine; showing under half
+  // of a short one is not.
+  const truncated = [];
+  for (const el of document.querySelectorAll('.quick-card__label, .card__title, .card__sub, .shelf__title')) {
+    if (!vis(el)) continue;
+    if (el.clientWidth < 120 && el.scrollWidth > el.clientWidth * 2) {
+      truncated.push(name(el) + '@' + el.clientWidth + 'of' + el.scrollWidth);
+    }
+  }
+
   return {
     cut: [...new Set(cut)].slice(0, 6),
     squeezed: [...new Set(squeezed)].slice(0, 4),
+    spilling: [...new Set(spilling)].slice(0, 4),
+    truncated: [...new Set(truncated)].slice(0, 4),
     scrollW: document.documentElement.scrollWidth,
   };
+};
+
+const clean = (d) => !d.cut.length && !d.squeezed.length && !d.spilling.length && !d.truncated.length;
+
+const report = (d) => {
+  if (d.cut.length) console.log(`    cut off  : ${d.cut.join(', ')}`);
+  if (d.squeezed.length) console.log(`    past edge: ${d.squeezed.join(', ')}`);
+  if (d.spilling.length) console.log(`    spilling : ${d.spilling.join(', ')}`);
+  if (d.truncated.length) console.log(`    clipped  : ${d.truncated.join(', ')}`);
 };
 
 (async () => {
@@ -81,11 +124,10 @@ const audit = () => {
     await p.evaluate((h) => { location.hash = h; }, hash);
     await p.waitForTimeout(700);
     const d = await p.evaluate(audit);
-    const ok = d.cut.length === 0 && d.squeezed.length === 0 && d.scrollW <= 391;
+    const ok = clean(d) && d.scrollW <= 391;
     if (!ok) bad++;
     console.log(`${label.padEnd(16)} scrollW=${String(d.scrollW).padEnd(5)} ${ok ? 'OK' : 'FAIL'}`);
-    if (d.cut.length) console.log(`    cut off : ${d.cut.join(', ')}`);
-    if (d.squeezed.length) console.log(`    spilling: ${d.squeezed.join(', ')}`);
+    report(d);
   }
 
   // Artist and album are reached through the library.
@@ -96,11 +138,10 @@ const audit = () => {
     await p.evaluate((x) => { location.hash = '#album/' + x; }, k);
     await p.waitForTimeout(800);
     const d = await p.evaluate(audit);
-    const ok = d.cut.length === 0 && d.squeezed.length === 0;
+    const ok = clean(d);
     if (!ok) bad++;
     console.log(`${'album'.padEnd(16)} scrollW=${String(d.scrollW).padEnd(5)} ${ok ? 'OK' : 'FAIL'}`);
-    if (d.cut.length) console.log(`    cut off : ${d.cut.join(', ')}`);
-    if (d.squeezed.length) console.log(`    spilling: ${d.squeezed.join(', ')}`);
+    report(d);
   }
 
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
