@@ -21,10 +21,32 @@ report itself.
 Read `audit/BUG-RULES.md` first and obey it. It lists every false positive this
 project has already paid for. Anything on that list is not a finding.
 
+## This round
+
+The last three commits are the target. Everything else has been hunted before.
+
+- **`test/`** — the verification suites moved into the repository behind
+  `test/run.js`, which serves the repo itself on an ephemeral port. Twelve
+  suites were ported from `~/octave-capture` by a scripted rewrite: the eval
+  hack that read `seedLibrary` out of another file became `require`, three
+  copies of the IndexedDB write became one, and `http://localhost:5199` became
+  `BASE_URL`. A scripted rewrite is exactly where a silent behaviour change
+  hides. Compare a ported suite against its original and say whether it still
+  tests the same thing.
+- **`landing.html` / `landing.css`** — new, and the only page that does not
+  load the app's stylesheets.
+- **`responsive.css`** — the phone home page changed: the greeting row now
+  wraps and the quick-pick grid drops to two columns under 768px.
+
+Run `node test/run.js` before you start. Thirteen suites, about ninety
+seconds, and it needs nothing running first.
+
 ## Ground rules
 
-- The dev server is already running on **port 5199**. Do not start it, and
-  **never kill anything on that port** — it is detached on purpose. Just use it.
+- **Never kill anything on port 5199.** If a dev server is up there it is
+  detached on purpose. The suites no longer need it — the runner serves the
+  repository itself on a spare port — so you have no reason to touch it.
+- `test/node_modules` is installed. Do not reinstall it.
 - **Do not edit any file** outside your own report. This is a read-and-report
   pass, not a fix pass.
 - **Do not commit anything.**
