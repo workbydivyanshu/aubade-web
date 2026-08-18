@@ -1,4 +1,4 @@
-/* Paste into DevTools console on music.octavestreaming.com with the expanded
+/* Paste into DevTools console on the reference player with the expanded
    now-playing view open. Copies a spec sheet to the clipboard and prints it.
    Reads only layout and style — no account data, no network calls. */
 (() => {

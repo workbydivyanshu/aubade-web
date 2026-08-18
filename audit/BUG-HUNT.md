@@ -27,7 +27,7 @@ The last three commits are the target. Everything else has been hunted before.
 
 - **`test/`** — the verification suites moved into the repository behind
   `test/run.js`, which serves the repo itself on an ephemeral port. Twelve
-  suites were ported from `~/octave-capture` by a scripted rewrite: the eval
+  suites were ported from `~/aubade-capture` by a scripted rewrite: the eval
   hack that read `seedLibrary` out of another file became `require`, three
   copies of the IndexedDB write became one, and `http://localhost:5199` became
   `BASE_URL`. A scripted rewrite is exactly where a silent behaviour change

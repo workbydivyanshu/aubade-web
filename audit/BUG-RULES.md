@@ -45,7 +45,7 @@ reload it — the repo changes every few minutes.
 | Reported | Why it was wrong |
 | --- | --- |
 | "Back/forward buttons are missing" | They exist. `audit.js` only records elements with a visible surface, and transparent icon buttons have none. Absence from the JSON is not absence from the app. |
-| "Search should be in the top bar" | Octave keeps Search in the sidebar too. Ours matches. |
+| "Search should be in the top bar" | The reference keeps Search in the sidebar too. Ours matches. |
 | "Album control row is left-aligned" | It is centred on x=848. It *starts* at x=608 because it is centred. |
 | "The overflow menu does not open" | Two elements share `aria-label="More options"` — one on the album page, one in now-playing. Match by id. |
 | "Like / sync / lyrics toggle do nothing" | They bail on `if (!record) return`. Nothing can play headlessly, so they are correctly inert. Not a bug. |
@@ -109,11 +109,11 @@ and so a finding can be traced to the code it was found in.
 Use the harness rather than inventing one:
 
 ```
-node ~/octave-capture/audit.js aubade <home|album|artist|library|search|settings> /tmp/x.json
-node ~/octave-capture/verify-menu.js /tmp/m.png
-node ~/octave-capture/verify-liked.js /tmp/l.png
-node ~/octave-capture/verify-keys.js
-node ~/octave-capture/verify-eq.js
+node ~/aubade-capture/audit.js aubade <home|album|artist|library|search|settings> /tmp/x.json
+node ~/aubade-capture/verify-menu.js /tmp/m.png
+node ~/aubade-capture/verify-liked.js /tmp/l.png
+node ~/aubade-capture/verify-keys.js
+node ~/aubade-capture/verify-eq.js
 ```
 
 The dev server runs on http://localhost:5199. If it is not up, start it with

@@ -1,4 +1,4 @@
-/* Design tokens read off the reference at music.octavestreaming.com via
+/* Design tokens read off the reference player via
    computed style. These are its literal values, not approximations. */
 
 :root {
@@ -60,7 +60,7 @@
   --player-h: 88px;
 
   /* Corner radius, measured off the live site rather than chosen.
-     Octave's artwork radius is a flat 36px, not a proportion — a 176px
+     The reference's artwork radius is a flat 36px, not a proportion — a 176px
      cover and a 224px cover both use it — so large artwork gets one value
      regardless of size, and only small thumbnails step down to 14px.
      These had been hardcoded in app.css with no token, which is how they
@@ -80,7 +80,7 @@
   --radius-art: 36px;      /* artwork and content cards in grids and shelves */
   --radius-art-lg: 24px;   /* the one large feature cover on album and now-playing */
   --radius-art-sm: 14px;   /* thumbnails, roughly 40-56px */
-  --radius-tile: 20px;     /* wide quick-link tiles (273x60 on Octave) */
+  --radius-tile: 20px;     /* wide quick-link tiles (273x60 on the reference) */
   --radius-row: 28px;      /* row hover surfaces */
   --radius-pill: 9999px;
 

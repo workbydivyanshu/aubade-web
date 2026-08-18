@@ -314,7 +314,7 @@
   gap: 12px;
 }
 
-/* Octave's is 87x46 with a hairline border rather than a filled pill. */
+/* The reference's is 87x46 with a hairline border rather than a filled pill. */
 .artist-follow-btn {
   block-size: 46px;
   padding-inline: 21px;
@@ -488,7 +488,7 @@ input:checked + .toggle-slider:before {
 
 /* ─ Liked Songs ───────────────────────────────────────────────
    A playlist header rather than an album one: the art is a gradient
-   tile, not a cover, and it sits beside the text as Octave's does. */
+   tile, not a cover, and it sits beside the text as it does in the reference. */
 
 .liked-header {
   display: flex;
@@ -548,7 +548,7 @@ input:checked + .toggle-slider:before {
   color: var(--text-muted);
 }
 
-/* Unlike sits in the row, visible on hover the way Octave's row actions do. */
+/* Unlike sits in the row, visible on hover the way the reference's row actions do. */
 .track-row__unlike {
   display: grid;
   place-items: center;
@@ -580,7 +580,7 @@ input:checked + .toggle-slider:before {
 
 
 /* ─ Browse ────────────────────────────────────────────────────
-   Octave's tile grid, measured on its search page: 263x132 cells at a
+   The reference's tile grid, measured on its search page: 263x132 cells at a
    2:1 ratio, 36px radius, label 18px/600 with -0.45px tracking. */
 
 .browse-section {

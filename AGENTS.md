@@ -2,11 +2,11 @@
 
 ## There are no test files here
 
-Verification lives in `~/octave-capture/` as Playwright scripts, not as
+Verification lives in `~/aubade-capture/` as Playwright scripts, not as
 `*.test.js` in the tree. Searching for test files by convention finds nothing
 and means nothing.
 
-    cd ~/octave-capture
+    cd ~/aubade-capture
     node audit.js aubade <home|album|artist|library|search|settings> /tmp/x.json
     node verify-np-full.js     # 13-point now-playing fidelity check
     node verify-eq.js          # visualiser reacts to a real frequency sweep

@@ -1,6 +1,6 @@
 # Building the clone
 
-A web front end that reproduces music.octavestreaming.com, for a local music
+A web front end that reproduces the reference player, for a local music
 library rather than a streaming catalogue.
 
 ## What is already settled
@@ -8,13 +8,13 @@ library rather than a streaming catalogue.
 - **Design tokens**: `tokens.css` holds the reference's literal values, read off
   the running site via computed style rather than guessed from pixels. Nothing
   in it needs re-deriving.
-- **Reference images**: 124 clean captures in `~/octave-shots2`, plus two
+- **Reference images**: 124 clean captures in `~/aubade-shots`, plus two
   full-resolution shots of screens the headless run could not reach:
   - `~/.cache/caelestia/screenshots/20260814063145` — expanded now playing
   - `~/.cache/caelestia/screenshots/20260814063443` — settings and player bar
-- **Measurements**: `~/GitHub/amberol/docs/OCTAVE.md` — sizes, weights, spacing.
+- **Measurements**: the design notes in the sibling desktop project — sizes, weights, spacing.
 - **Serving**: `python3 -m http.server 5199` from this directory.
-- **Checking**: `node ~/octave-capture/shot.js OUT.png` screenshots the local
+- **Checking**: `node ~/aubade-capture/shot.js OUT.png` screenshots the local
   page at 1440x900 and reports console errors.
 
 Plain HTML, CSS and JavaScript. No framework and no build step until the state

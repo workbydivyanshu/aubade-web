@@ -1,11 +1,11 @@
 # UI Audit: Home & Album Screens
 
-| Screen | Element | Octave | Aubade | Delta | Severity |
+| Screen | Element | Reference | Aubade | Delta | Severity |
 | --- | --- | --- | --- | --- | --- |
 | Home | Hero Card Corner Radius | r:0px | r:16px | 16px difference | High |
 | Home | Hero Card Cover Radius | r:36px | r:8px | 28px difference | High |
 | Home | Shelf Card Cover Radius | r:36px | r:8px | 28px difference | High |
-| Album | Control Buttons Alignment | Left-aligned (starts at x:608) | Centered (starts at x:613, W:99) | Octave buttons are left-aligned; Aubade is centered | High |
+| Album | Control Buttons Alignment | Left-aligned (starts at x:608) | Centered (starts at x:613, W:99) | The reference buttons are left-aligned; Aubade is centered | High |
 | Album | Control Buttons Count | 7 buttons (incl Play [w:119 h:48], others [w:48 h:48]) | 3 buttons (incl Play [w:99 h:48], others [w:48 h:48]) | 4 buttons missing in Aubade | High |
 | Home | "See all" Button Position | Y:625, aligned with subtitle (Y:635) | Y:568, aligned with title (Y:568) | 57px vertical difference | Medium |
 | Home | Hero Card Title Size | sz:36px, lh:40px | sz:48px, lh:50.4px | 12px font size difference | Medium |

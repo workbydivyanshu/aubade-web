@@ -11,7 +11,7 @@ let npOverlay;
 // hidden — measuring text, for one.
 let onOverlayOpen = null;
 
-// Octave v1.8 describes bars where "bass slams and hangs like a real kick,
+// The reference notes for v1.8 describe bars where "bass slams and hangs like a real kick,
 // hi-hats jitter fast, mids stay smooth — each column reacts on its own
 // instead of moving in lockstep", so this reads real frequency data rather
 // than animating on a timer. v2.4 then records the cost of leaving it on:

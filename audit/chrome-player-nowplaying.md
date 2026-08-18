@@ -1,9 +1,9 @@
 # Chrome & Player Bar Audit
 
-Comparing Aubade (localhost:5199) against Octave (music.octavestreaming.com).
-Measurements extracted with `~/octave-capture/audit.js`. Now-playing visual rows marked (visual) because Octave screenshots cannot be inspected by this model.
+Comparing Aubade (localhost:5199) against the reference.
+Measurements extracted with `~/aubade-capture/audit.js`. Now-playing visual rows marked (visual) because the reference screenshots cannot be inspected by this model.
 
-| Area | Element | Octave | Aubade | Delta | Severity |
+| Area | Element | Reference | Aubade | Delta | Severity |
 |------|---------|--------|--------|-------|----------|
 | Sidebar | Brand y-position | y=16 | y=23 | +7px | low |
 | Sidebar | Brand x-position | x=58 | x=53 | -5px | low |
@@ -32,6 +32,6 @@ Measurements extracted with `~/octave-capture/audit.js`. Now-playing visual rows
 
 ## Notes
 
-- **Bottom player bar:** Neither Octave nor Aubade home JSON contains a persistent bottom player bar. The screenshot darkness profile shows a dark region at viewport y≈870–900 in Octave, but no corresponding elements were extracted by the audit harness. This may indicate the bar lives in a layer the harness does not capture (shadow DOM, overlay, or native element).
-- **Now-playing view:** The two Octave screenshots (`20260814063145`, `20260814063443`) are 2880×1800 retina captures. This model cannot render or inspect images, so all now-playing rows are reported as (visual) and unmeasured on the Octave side. Measured data from `/tmp/ac-np.json` is provided for reference only.
-- **Content differences** (Octave has Radio/Podcasts, Aubade has Albums/Artists) are ignored per instructions; only form differences are registered.
+- **Bottom player bar:** Neither the reference nor Aubade home JSON contains a persistent bottom player bar. The screenshot darkness profile shows a dark region at viewport y≈870–900 in the reference, but no corresponding elements were extracted by the audit harness. This may indicate the bar lives in a layer the harness does not capture (shadow DOM, overlay, or native element).
+- **Now-playing view:** The two reference screenshots (`20260814063145`, `20260814063443`) are 2880×1800 retina captures. This model cannot render or inspect images, so all now-playing rows are reported as (visual) and unmeasured on the reference side. Measured data from `/tmp/ac-np.json` is provided for reference only.
+- **Content differences** (the reference has Radio/Podcasts, Aubade has Albums/Artists) are ignored per instructions; only form differences are registered.

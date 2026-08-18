@@ -690,7 +690,7 @@ window.addEventListener('resize', () => {
 });
 initMediaSession(audio, { next: () => nextTrack(), prev: () => prevTrack() });
 
-// Long titles were simply cut with an ellipsis. Octave scrolls them, holding
+// Long titles were simply cut with an ellipsis. The reference scrolls them, holding
 // still at each end — its keyframe rests for the first 12% and the last 12%
 // and travels between, offset by the container's own width.
 //
@@ -1156,7 +1156,7 @@ async function renderAlbumView(key) {
     playAlbum(key);
   };
 
-  // Octave shows seven controls here. Download and Save-to-library have no
+  // The reference shows seven controls here. Download and Save-to-library have no
   // meaning for files already on disk, so this is the five that do.
   const likeBtn = document.querySelector('.album-btn--like');
   const queueBtn = document.querySelector('.album-btn--queue');
@@ -1258,7 +1258,7 @@ async function renderAlbumView(key) {
 }
 
 // ── Browse ───────────────────────────────────────────────────
-// Octave browses by mood, genre, decade and region — streaming editorial we
+// The reference browses by mood, genre, decade and region — streaming editorial we
 // have no equivalent of. What the files themselves carry is genre and year,
 // so this browses by genre, decade and year, in its tile grid.
 
@@ -2147,7 +2147,7 @@ async function renderArtistView(name) {
   bg.style.background = `linear-gradient(135deg,${grad})`;
   viewArtist.style.setProperty('--album-accent', 'var(--accent)');
 
-  // Octave shows a circular artist photo. We have no artist images, so the
+  // The reference shows a circular artist photo. We have no artist images, so the
   // newest album's cover stands in — the same source the backdrop uses.
   const photo = document.getElementById('artist-photo');
   photo.style.backgroundImage = 'none';
@@ -2435,7 +2435,7 @@ npVolSlider.addEventListener('click', (e) => {
 audio.addEventListener('volumechange', updateNpVol);
 updateNpVol();
 
-// Two of Octave's four lyric actions have a local meaning. Selecting lines
+// Two of the reference's four lyric actions have a local meaning. Selecting lines
 // toggles a mode where clicking lines marks them; copying takes either the
 // selection or the whole lyric.
 let lyricSelectMode = false;
@@ -2542,7 +2542,7 @@ function openAlbumMenu(btn, items) {
 }
 
 // ── Keyboard ─────────────────────────────────────────────────
-// Only Escape was bound before. These are the bindings Octave lists, including
+// Only Escape was bound before. These are the bindings the reference lists, including
 // its ±10s seek. Typing in a field must never trigger any of them.
 
 function isTyping(target) {
@@ -2637,7 +2637,7 @@ function toggleShortcutHelp() {
 // ── Queue ────────────────────────────────────────────────────
 // The queue has existed in playerState from the start with no way to see it,
 // which left the queue buttons pointing at nothing. It shares the right-hand
-// pane with the lyrics, as Octave's does.
+// pane with the lyrics, as it does in the reference.
 
 const npQueue = document.getElementById('np-queue');
 const npQueueList = document.getElementById('np-queue-list');
@@ -2691,7 +2691,7 @@ function renderQueue() {
     npQueueList.appendChild(row);
   });
 
-  // Octave v2.0: opening the queue snaps to the current track rather than
+  // The reference notes for v2.0: opening the queue snaps to the current track rather than
   // dumping you at the top of a long list.
   const current = document.getElementById('np-queue-current');
   if (current) current.scrollIntoView({ block: 'center' });
@@ -2719,7 +2719,7 @@ document.getElementById('np-queue-clear').addEventListener('click', () => {
   showToast('Cleared what was coming next');
 });
 
-// Octave v2.4: "Scroll over the volume bar to change it on desktop."
+// The reference notes for v2.4 call for scrolling over the volume bar to change it on desktop.
 for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
   if (!bar) continue;
   bar.addEventListener('wheel', (e) => {

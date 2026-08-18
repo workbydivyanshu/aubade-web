@@ -552,7 +552,7 @@ a {
 .hero-card__title {
   margin: 0;
   color: var(--text);
-  /* Octave's lead card title measures 36px/700 with -0.9px tracking; ours
+  /* The reference's lead card title measures 36px/700 with -0.9px tracking; ours
      was 48px, which read as a different level of heading entirely. */
   font-size: 36px;
   font-weight: 700;
@@ -802,7 +802,7 @@ a {
   display: none;
 }
 
-/* Artist page sections. Octave puts its first section title at x=304, y=571
+/* Artist page sections. The reference puts its first section title at x=304, y=571
    with 24px/700, -0.6px tracking and a 32px line box. */
 .artist-content {
   padding-inline: 16px !important;

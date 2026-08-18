@@ -2,8 +2,8 @@
 
 [![tests](https://github.com/workbydivyanshu/aubade-web/actions/workflows/tests.yml/badge.svg)](https://github.com/workbydivyanshu/aubade-web/actions/workflows/tests.yml)
 
-A web music player for a local library, built to match
-[Octave](https://music.octavestreaming.com) screen for screen.
+A web music player for a local library, built to match a reference design
+screen for screen.
 
 Point it at a folder of music. It reads the tags, builds albums and artists,
 and plays them — with synced lyrics, playlists, a visualiser and per-cover
@@ -158,6 +158,6 @@ false positives this project has already paid for.
 MIT — see [LICENSE](LICENSE).
 
 `vendor/music-metadata.mjs` is third-party and carries its own MIT licence.
-The design is a study of [Octave](https://music.octavestreaming.com): the
+The design is a study of an existing streaming player's layout: the
 measurements are taken from the running site, and none of its code, artwork or
 copy is included here.

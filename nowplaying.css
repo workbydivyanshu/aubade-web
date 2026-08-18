@@ -398,7 +398,7 @@
 }
 
 /* Volume and the toggles sit together on the right; the output picker stays
-   hard left, as Octave has it. */
+   hard left, as the reference has it. */
 .np-utility-row__group {
   display: flex;
   align-items: center;

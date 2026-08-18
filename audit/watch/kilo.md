@@ -16,7 +16,7 @@ UNVERIFIED
 - Per-element contrast could not be computed for text rendered over translucent
   gradient/tinted cards: the harness records only bodyBackground (rgb(0,0,0)).
   Verified the only flat-colour text below 4.5 is --text-dim #6b6b76 @3.99, which
-  Octave uses identically, so no aubade-only contrast regression was established.
+  the reference uses identically, so no aubade-only contrast regression was established.
 
 Checked and clean: horizontal overflow on home (shelf-card__ boxes sit inside
 .shelf__row {overflow-x:auto}; scroll content, not layout overflow), album/artist
@@ -25,7 +25,7 @@ not visible), text clipping/wrapping (remaining truncation is intentional
 text-overflow:ellipsis; no unintended wrap at 1100–1600px), contrast (matches
 reference; oklab/rgba(0,0,0,0) 1.00 readings were parser artifacts on tinted
 surfaces), responsive breakpoints 1100/1280/1440/1600px (quick-grid 4-col and
-scroll shelves stable, no breakage). Octave settings captured via extended
+scroll shelves stable, no breakage). The reference settings captured via extended
 navigation timeout (harness default 30s networkidle timed out on the live site).
 
 ## 2026-08-16T08:02:46-04:00 — kilo  ·  commit 2c1ce5c
@@ -43,12 +43,12 @@ CONFIRMED
 UNVERIFIED
 - Per-element contrast on translucent/gradient/ambient surfaces was not computable
   (harness records only bodyBackground). The only flat-colour text below 4.5 on
-  black is --text-dim #6b6b76 @3.99, which Octave renders identically, so no
+  black is --text-dim #6b6b76 @3.99, which the reference renders identically, so no
   aubade-only contrast regression was established.
 - Working tree was dirty at capture time (uncommitted WIP in app.js, art.js,
   index.html, mediasession.js, state.js over HEAD 2c1ce5c; app.css/tokens.css
   clean). Captures reflect WIP that nonetheless renders without errors.
-- Octave /settings needed an extended navigation timeout (harness 30s networkidle
+- The reference /settings needed an extended navigation timeout (harness 30s networkidle
   times out on the live settings page).
 - Near-miss investigated: six parallel aubade captures all reported identical
   57 text/29 box counts plus a MutationObserver TypeError. A single sequential
@@ -66,10 +66,10 @@ CONFIRMED
 
 UNVERIFIED
 - Now-playing artwork-colour theming (8c372c1) is inert headless: no covers load (FSA permission), so the four-colour pipeline has no input to verify; not reported as a bug.
-- Octave /settings still exceeds the harness 30s networkidle limit; captured this run via an extended domcontentloaded capture (no divergence seen, but not via the stock harness line).
+- The reference /settings still exceeds the harness 30s networkidle limit; captured this run via an extended domcontentloaded capture (no divergence seen, but not via the stock harness line).
 
 Checked and clean:
-- contrast <4.5: 0 aubade-only — every low-contrast text node is --text-dim #6b6b76 @3.99, identical to Octave.
+- contrast <4.5: 0 aubade-only — every low-contrast text node is --text-dim #6b6b76 @3.99, identical to the reference.
 - overflow @1440: only .shelf__row scroll cards and .album/.artist-header__bg (clipped by overflow:hidden); no other overflow on any route.
 - responsive 1100-1600px: same surfaces only (scroll shelves + ambient washes); no layout break.
 - text clipping/wrapping: text-overflow ellipsis + "scroll long titles" marquee (15f8ab9); no bad wrap.
@@ -97,7 +97,7 @@ UNVERIFIED
   layout is unchanged from 2c6db44.
 - Per-element contrast over tinted/gradient surfaces not computable (harness
   records only bodyBackground).
-- Octave /settings needs extended-timeout capture (harness 30s networkidle limit).
+- The reference /settings needs extended-timeout capture (harness 30s networkidle limit).
 
 Checked and clean: hardcoded-token duplicates (0); CSS split renders (home 86/60, 0 errors).
 The pure-refactor split means contrast/overflow/responsive from 2c6db44 still hold.

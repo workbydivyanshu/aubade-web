@@ -3,7 +3,7 @@
    accent, the greys and the type stack stay in one place. Everything in this
    file is scoped under .lp for the same reason.
 
-   The values are read off octavestreaming.com with getComputedStyle rather
+   The values are read off the reference with getComputedStyle rather
    than eyeballed from a screenshot: a 65px fixed header over a 1280px column
    with 32px gutters, sections on a 96px vertical rhythm, and one hairline —
    rgba(255,255,255,0.08) — doing all of the dividing. The copy is ours; what

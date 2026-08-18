@@ -7,7 +7,7 @@ test/hooks/pre-commit (+17).
 
 Major changes: Firefox/Safari fallback path (`pickFolderFallback`, `sessionFiles`,
 `resolveTrackFile`, `showReconnectPrompt`), `landing.html`/`landing.css` opening page,
-entire `test/` suite ported from `~/octave-capture` into the repo behind `test/run.js`,
+entire `test/` suite ported from `~/aubade-capture` into the repo behind `test/run.js`,
 responsive.css phone home page changes (greeting-row wrap, quick-grid 2-col).
 
 ### Previous unverified: --tab-bar-h dead CSS variable — FIXED
@@ -16,7 +16,7 @@ both consumed at lines 62 and 154 in `calc()` expressions. The magic number 98 t
 previously hardcoded has been decomposed into `var(--tab-bar-h) + var(--tab-bar-gap)`.
 Verified: `grep -rn 'tab-bar-h' *.css` → declaration + 2 usages.
 
-### Test suite ported from ~/octave-capture: parity confirmed
+### Test suite ported from ~/aubade-capture: parity confirmed
 Compared 12 ported suites against their originals. The only differences are:
 1. Import mechanism: `eval(fs.readFileSync(...))` → `require('./lib/harness')`
 2. `seedLibrary` and `seed` functions moved to `test/lib/harness.js`

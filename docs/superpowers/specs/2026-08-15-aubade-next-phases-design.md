@@ -1,13 +1,13 @@
 # Aubade: next three phases
 
 Agreed 2026-08-15. Goal, in the owner's words: a real music player that is
-identical to Octave. Both halves bind — new work has to be genuinely usable
+identical to the reference. Both halves bind — new work has to be genuinely usable
 *and* measured against the reference.
 
 ## Where this starts
 
 The visual clone is largely done. Home, album, artist, library, search,
-settings and now-playing all exist; the album and artist pages match Octave's
+settings and now-playing all exist; the album and artist pages match the reference's
 measured positions exactly. Playback, synced lyrics, search over ~5,600 tracks
 and artwork extraction all work.
 
@@ -15,7 +15,7 @@ What is not done falls into three groups, in priority order below.
 
 ## Method, unchanged
 
-Differences are measured, never eyeballed. `~/octave-capture/audit.js` extracts
+Differences are measured, never eyeballed. `~/aubade-capture/audit.js` extracts
 the same computed-style spec sheet from both the live site and localhost:5199,
 and changes are verified by re-measuring. Three findings in the last audit were
 measurement errors caught this way, each of which would have caused damage if
@@ -32,14 +32,14 @@ The owner's stated priority: "every minute stuff there".
 
 ### The measurement problem, and its solution
 
-Octave's expanded now-playing cannot be reached headlessly. Probed and
+The reference's expanded now-playing cannot be reached headlessly. Probed and
 confirmed: no matching elements exist in the DOM without a session, there is no
 fixed bottom bar, and `/now-playing`, `/player` and `/queue` all return 404. The
 only other reference is a 2880x1800 desktop screenshot including browser chrome,
 where reading positions means converting pixel coordinates — the guessing this
 project has repeatedly been burned by.
 
-Solution: `~/octave-capture/DUMP-NOWPLAYING.js` is a console snippet the owner
+Solution: `~/aubade-capture/DUMP-NOWPLAYING.js` is a console snippet the owner
 runs in their own logged-in browser. It emits the same spec sheet the harness
 produces (~22KB), turning the one unreachable screen into measured data. Run
 twice, with the overflow menu closed and open.
@@ -49,7 +49,7 @@ listed as unblocked below.
 
 ### Gaps already identified from the screenshot (unblocked)
 
-- **Overflow menu.** Octave shows 17 items in two groups; ours has 4. Group one:
+- **Overflow menu.** The reference shows 17 items in two groups; ours has 4. Group one:
   View song, Add to Liked Songs, Play next, Add to queue, Add to playlist, Song
   radio. Group two: Go to album, Go to artist, View lyrics, View credits, Music
   video, Download, Select songs, Share image, Share link, Copy link, Suggest
@@ -76,7 +76,7 @@ Three of six sidebar rows are affected. This is not missing features; it is the
 interface asserting things that are false.
 
 - **`#browse` is a dead link.** No view exists. Becomes: decades, genres and
-  years derived from tags (owner's choice over a plain genre grid), in Octave's
+  years derived from tags (owner's choice over a plain genre grid), in the reference's
   tile grid — 263x132 cells, 36px radius.
 - **`#liked-songs` is a dead link.** Both the sidebar pinned item and the home
   quick-card point at it.
@@ -86,7 +86,7 @@ interface asserting things that are false.
 - **Storage nothing reads:** `aubade_liked`, `aubade_liked_albums`,
   `aubade_followed_artists` all write and are never surfaced. Two were added
   during the now-playing and album work.
-- **Queue view.** Octave has one; we have a queue in `playerState` with no way
+- **Queue view.** The reference has one; we have a queue in `playerState` with no way
   to see it. Prerequisite for the inert queue buttons.
 
 ### Success
@@ -116,14 +116,14 @@ everything.
 
 ## Out of scope
 
-Octave furniture with no local meaning, recorded so it is not rediscovered:
+Furniture from the reference with no local meaning, recorded so it is not rediscovered:
 its library stats panel (Playlists, Podcasts, Downloaded), Radio and Podcasts
 nav, follower counts, "Concerts near you". Playlists are deliberately deferred —
 they are a feature, not a gap, and would expand every phase above.
 
 ## Open question
 
-Octave's search field is a collapsed 34x38 pill in the sticky top bar, not our
+The reference's search field is a collapsed 34x38 pill in the sticky top bar, not our
 560x44 centred field. It does not expand under automation even when focused and
 typed into, so its open width is unmeasurable by the usual method. The same
 console-dump trick would settle it.
