@@ -82,17 +82,51 @@ so its media queries win without needing extra specificity.
 
 ## Checking changes
 
-The verification harness lives outside this repository, in `~/octave-capture`.
-Run it from there with the dev server up:
+The suites live in `test/` and drive a real browser through the app.
 
 ```sh
-cd ~/octave-capture
-node verify-responsive.js      # both sides of the 768px breakpoint
-node verify-nofsapi.js firefox # the no-File-System-Access path
-node verify-chrome.js          # sidebar, menus, navigation
-node verify-playlists.js       # create, add, remove, missing files
-node phone-views.js            # every route at 390px
+cd test && npm install   # once — Playwright, the only dependency anywhere here
 ```
+
+Then from the repository root:
+
+```sh
+node test/run.js                    # all twelve suites, about 90 seconds
+node test/run.js responsive phone   # only suites whose name matches
+node test/run.js --verbose chrome   # with the suite's own output
+```
+
+The runner serves the repository itself on a spare port, so nothing needs to
+be running first and a run cannot disturb a dev server you already have open.
+A suite that fails prints what it measured and the run exits non-zero.
+
+To have them run before every commit:
+
+```sh
+git config core.hooksPath test/hooks
+```
+
+`SKIP_TESTS=1 git commit` skips a run; `git config --unset core.hooksPath`
+stops them running at all.
+
+| | |
+| --- | --- |
+| `verify-chrome` | sidebar, navigation, menus |
+| `verify-keys` | keyboard shortcuts |
+| `verify-menu` | track and album overflow menus |
+| `verify-liked` | liked songs |
+| `verify-playlists` | create, add, remove, missing files |
+| `verify-escape-palette` | Escape dismissal and palette reset |
+| `verify-palette` | colours recovered from cover art |
+| `verify-np-full` | now playing against the reference |
+| `verify-eq` | the visualiser reacts to real sound |
+| `verify-responsive` | both sides of the 768px breakpoint |
+| `phone-views` | every route at 390px |
+| `verify-nofsapi` | the no-File-System-Access path |
+
+They seed a fixture library straight into IndexedDB rather than indexing a
+folder, because the folder picker cannot be driven headlessly — and the tag
+reader is not what these are testing.
 
 Design values are taken from the reference's own stylesheet and from
 `getComputedStyle` on the running site — never estimated from screenshots.

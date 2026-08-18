@@ -1,0 +1,11 @@
+{
+  "name": "aubade-test",
+  "private": true,
+  "description": "Browser checks for Aubade. The app itself has no dependencies; these do.",
+  "scripts": {
+    "test": "node run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Runs the browser suite before a commit lands. About 90 seconds.
+#
+# Enable:   git config core.hooksPath test/hooks
+# Disable:  git config --unset core.hooksPath
+# Skip one: SKIP_TESTS=1 git commit ...
+#
+# It checks the working tree rather than the index, so a partial `git add`
+# is tested as the files on disk read, not as the commit will.
+[ -n "$SKIP_TESTS" ] && exit 0
+
+if [ ! -d test/node_modules ]; then
+  echo "pre-commit: test/node_modules missing, skipping — run 'cd test && npm install'"
+  exit 0
+fi
+
+exec node test/run.js
