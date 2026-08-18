@@ -19,7 +19,9 @@ const { ROOT, serveRepo } = require('./lib/harness');
 const SUITES = [
   ['verify-landing.js', 'the opening page'],
   ['verify-chrome.js', 'sidebar, navigation, menus'],
+  ['verify-greeting.js', 'the greeting follows the clock'],
   ['verify-keys.js', 'keyboard shortcuts'],
+  ['verify-controls.js', 'controls that exist but do nothing'],
   ['verify-menu.js', 'track and album overflow menus'],
   ['verify-liked.js', 'liked songs'],
   ['verify-playlists.js', 'create, add, remove, missing files'],

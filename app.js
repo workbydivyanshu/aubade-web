@@ -974,6 +974,27 @@ uiVolBar.addEventListener('click', (e) => {
   uiVolFill.style.width = `${pct * 100}%`;
   uiVolKnob.style.left = `${pct * 100}%`;
 });
+// Both Volume buttons were markup only — the icon was drawn, the keyboard
+// binding worked, and clicking either one did nothing at all.
+const volButtons = [document.getElementById('player-vol-btn'),
+                    document.getElementById('np-vol-btn')].filter(Boolean);
+
+function syncMuted() {
+  for (const b of volButtons) {
+    b.classList.toggle('is-muted', audio.muted);
+    b.setAttribute('aria-pressed', String(audio.muted));
+    b.setAttribute('aria-label', audio.muted ? 'Unmute' : 'Mute');
+  }
+  uiVolBar?.classList.toggle('is-muted', audio.muted);
+}
+
+for (const b of volButtons) {
+  b.addEventListener('click', () => { audio.muted = !audio.muted; });
+}
+// Fires for muted as well as volume, so the keyboard route updates the icon too.
+audio.addEventListener('volumechange', syncMuted);
+syncMuted();
+
 // Init volume
 uiVolFill.style.width = `${audio.volume * 100}%`;
 uiVolKnob.style.left = `${audio.volume * 100}%`;
@@ -1072,12 +1093,33 @@ function handleRoute() {
     renderLibraryView();
   } else {
     viewHome.style.display = 'block';
+    setGreeting();
     const homeNav = document.querySelector('a[href="#home"]');
     if (homeNav) homeNav.classList.add('sidebar__nav-item--selected');
   }
 
   syncTabBar(hash);
 }
+
+// The greeting was a literal in the markup, so it read "Good evening" at
+// breakfast. The reference's own greeting does not follow the client clock —
+// it says the same thing at 04:00 and 22:00 — so there is nothing to copy
+// here and these are the conventional boundaries rather than measured ones.
+function setGreeting() {
+  const el = document.getElementById('greeting');
+  if (!el) return;
+  const h = new Date().getHours();
+  el.textContent = h < 5 ? 'Good evening'
+    : h < 12 ? 'Good morning'
+    : h < 17 ? 'Good afternoon'
+    : 'Good evening';
+}
+
+// A tab left open overnight would otherwise still be saying good evening at
+// breakfast, which is the same bug in slower motion.
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) setGreeting();
+});
 
 // The rail marks itself per route in five places above. The docked bar has
 // four destinations covering many more routes than that, so it reads the hash

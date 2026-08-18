@@ -196,7 +196,7 @@
             <div id="view-home">
               <!-- ── Greeting row ─────────────────────────────── -->
             <div class="greeting-row">
-              <h1 class="greeting-row__text">Good evening</h1>
+              <h1 class="greeting-row__text" id="greeting">Good evening</h1>
               <span id="folder-status" class="greeting-row__status"></span>
               <div class="seg-pill glass-strong">
                 <button id="seg-library" class="seg-pill__seg seg-pill__seg--active" type="button">Library</button>
@@ -552,7 +552,7 @@
                   <button class="seg-pill__seg" data-view="artists" type="button">Artists</button>
                   <button class="seg-pill__seg seg-pill__seg--active" data-view="songs" type="button">Songs</button>
                 </div>
-                <button class="seg-pill__seg glass-strong" id="lib-sort-btn" style="margin-inline-start: 12px; border-radius: 99px; block-size: 32px; padding: 0 16px; font-weight: 500; font-size: 13px;" type="button">Sort: Name</button>
+                <button class="seg-pill__seg seg-pill__seg--sort glass-strong" id="lib-sort-btn" type="button">Sort: Name</button>
               </div>
               <div id="lib-count-line" style="font-size: 14px; color: var(--text-muted); margin-block-end: 32px; padding-inline: 48px;"></div>
               
@@ -757,11 +757,13 @@
               <path d="M11.5 13h6" />
             </svg>
           </button>
-          <button class="player__icon-btn" type="button" aria-label="Volume">
+          <button class="player__icon-btn" id="player-vol-btn" type="button" aria-label="Volume">
             <svg aria-hidden="true" viewBox="0 0 20 20">
               <path d="M3.5 8v4h2.75l3.25 3V5L6.25 8H3.5Z" />
-              <path d="M12.5 7a4 4 0 0 1 0 6" />
-              <path d="M14.25 5a7 7 0 0 1 0 10" />
+              <path class="vol-wave" d="M12.5 7a4 4 0 0 1 0 6" />
+              <path class="vol-wave" d="M14.25 5a7 7 0 0 1 0 10" />
+              <path class="vol-slash" d="M12.5 7.25 17.5 12.75" fill="none"
+                    stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
             </svg>
           </button>
           <div class="player__vol-bar">
@@ -971,8 +973,9 @@
                 <button class="np-icon-btn" id="np-vol-btn" type="button" aria-label="Volume">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path class="vol-wave" d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                    <path class="vol-wave" d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path class="vol-slash" d="m15.5 9.5 6 5"/>
                   </svg>
                 </button>
                 <div class="np-vol-slider">

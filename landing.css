@@ -464,6 +464,13 @@
     display: none;
   }
 
+  /* The header's call to action is 36 tall on a desktop, which is a cursor
+     size. It is the only control on the page up here, so it can simply grow
+     rather than needing a hidden hit area. */
+  .lp-nav .lp-btn {
+    padding-block: 12px;
+  }
+
   .lp-hero {
     padding-block: 120px 64px;
   }

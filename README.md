@@ -14,7 +14,7 @@ through the browser and keeps its index in local storage.
 Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies.
 
 ![Aubade on a desktop: a sidebar of albums and artists beside a home page of
-shelves, with a hero card for the largest album.](shots/desktop.webp)
+quick links, a featured album and a shelf of recent additions.](shots/desktop.webp)
 
 ## Running it
 
@@ -142,10 +142,10 @@ They seed a fixture library straight into IndexedDB rather than indexing a
 folder, because the folder picker cannot be driven headlessly — and the tag
 reader is not what these are testing.
 
-`node test/shots.js` regenerates the two screenshots on the opening page. They
-are the real app photographed at 1440 and 390 against that same fixture
-library, so they go stale when the app changes. It needs ImageMagick for the
-WebP conversion; nothing else here does.
+The screenshots in `shots/` are taken by hand, from a real library rather than
+the fixture one — 5,458 songs with their own artwork, which is what the app
+actually looks like in use. There is no script for them: a generated shot
+shows sixty placeholder gradients and undersells the thing.
 
 Design values are taken from the reference's own stylesheet and from
 `getComputedStyle` on the running site — never estimated from screenshots.

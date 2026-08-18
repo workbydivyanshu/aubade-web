@@ -220,6 +220,52 @@
     gap: 10px;
   }
 
+  /* ── Touch targets ───────────────────────────────────────────
+     These control sizes are the reference's, matched deliberately, and they
+     are sized for a cursor: the top-bar arrows are 32x32, the segmented pill
+     28 tall, the hero card's share button 20 wide. A fingertip wants about 44.
+
+     The first attempt gave each an invisible 44px hit area through ::after,
+     which measured beautifully and did not work: elementFromPoint showed the
+     expanded areas being clipped by scrolling ancestors and covered by the
+     floating bars. Growing the controls themselves is a visible change on
+     phones, but it is one that can be verified. */
+  .top-bar__btn,
+  .top-bar__avatar {
+    inline-size: 44px;
+    block-size: 44px;
+  }
+
+  /* 50 on the pill leaves each segment at exactly 44 once padding is taken. */
+  .seg-pill {
+    block-size: 50px;
+  }
+
+  .seg-pill__seg--sort {
+    block-size: 44px;
+  }
+
+  /* Not a sizing choice: shell.css says 48x48 and it renders 20 wide,
+     because as a flex item it was free to shrink. Same defect as the sync
+     pill, same fix — and holding its real width puts the row 5px past a
+     390px screen, so the play button's 22px of side padding gives some back.
+     The label is what that padding is around, and it has room to spare. */
+  .hero-card__share {
+    flex-shrink: 0;
+  }
+
+  .hero-card__play {
+    padding-inline: 16px;
+  }
+
+  .shelf__see-all {
+    padding-block: 10px;
+  }
+
+  .settings-btn {
+    block-size: 44px;
+  }
+
   /* ── Now playing ─────────────────────────────────────────────
      The desktop view is two columns — art and transport at the left, lyrics
      down the right — held apart by 96px of side padding. At 390 that padding

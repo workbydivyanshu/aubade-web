@@ -444,6 +444,18 @@ a {
   border-radius: var(--radius-pill);
 }
 
+/* This sort control sat on the button as six inline styles, which meant no
+   stylesheet could touch it — including the phone rules, which is how it
+   stayed 32px tall on touch. */
+.seg-pill__seg--sort {
+  margin-inline-start: 12px;
+  block-size: 32px;
+  padding: 0 16px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .seg-pill__seg {
   block-size: 100%;
   padding-inline: 14px;

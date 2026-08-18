@@ -43,3 +43,24 @@
   background: rgba(255, 255, 255, 0.24);
   color: var(--text);
 }
+
+
+/* ── Muted ────────────────────────────────────────────────────
+   Both Volume buttons shipped with the icon and no handler: the keyboard
+   'm' muted, clicking did nothing. Now that they work, the icon has to show
+   which state it is in — waves for sound, a stroke through for silence. */
+.vol-slash {
+  display: none;
+}
+
+.is-muted .vol-wave {
+  display: none;
+}
+
+.is-muted .vol-slash {
+  display: inline;
+}
+
+.player__vol-bar.is-muted {
+  opacity: 0.4;
+}
