@@ -11,6 +11,9 @@ through the browser and keeps its index in local storage.
 
 Plain HTML, CSS and JavaScript. No framework, no build step, no dependencies.
 
+![Aubade on a desktop: a sidebar of albums and artists beside a home page of
+shelves, with a hero card for the largest album.](shots/desktop.webp)
+
 ## Running it
 
 From this directory:
@@ -147,3 +150,12 @@ twice before measurement settled it.
 
 `audit/BUG-RULES.md` is the brief for automated review passes, and lists the
 false positives this project has already paid for.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE).
+
+`vendor/music-metadata.mjs` is third-party and carries its own MIT licence.
+The design is a study of [Octave](https://music.octavestreaming.com): the
+measurements are taken from the running site, and none of its code, artwork or
+copy is included here.

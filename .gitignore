@@ -5,3 +5,4 @@ node_modules/
 .omc/
 .omo/
 server.log
+audit/logs/*.log

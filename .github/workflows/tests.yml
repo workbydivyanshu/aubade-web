@@ -1,0 +1,33 @@
+# The suites run here for the same reason they run on every commit locally:
+# a check nobody runs is a check that does not exist.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: test/package-lock.json
+
+      # Only Chromium: run.js drives every suite through it, and
+      # verify-nofsapi takes an engine argument for the rarer Firefox pass.
+      - name: Install Playwright
+        working-directory: test
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      # No dev server step: run.js serves the repository itself.
+      - name: Run the suites
+        run: node test/run.js
