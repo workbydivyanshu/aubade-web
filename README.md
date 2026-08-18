@@ -1,5 +1,7 @@
 # Aubade
 
+[![tests](https://github.com/workbydivyanshu/aubade-web/actions/workflows/tests.yml/badge.svg)](https://github.com/workbydivyanshu/aubade-web/actions/workflows/tests.yml)
+
 A web music player for a local library, built to match
 [Octave](https://music.octavestreaming.com) screen for screen.
 
