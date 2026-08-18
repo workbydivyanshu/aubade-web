@@ -557,6 +557,19 @@ async function playTrack(index) {
     consecutiveFailures = 0;
   } catch (err) {
     console.warn(`Could not play ${record.path}:`, err);
+    // The distinct error thrown by resolveTrackFile exists for this branch,
+    // and nothing was reading it. Without a File System Access API there is
+    // no handle to survive the reload, so every track fails for one reason —
+    // the folder is not connected this session. Falling through to the
+    // counter below skipped two tracks first and then blamed the files for
+    // having moved, which is both wrong and unactionable.
+    if (err && err.needsFolder) {
+      consecutiveFailures = 0;
+      clearPlayerUI();
+      showReconnectPrompt('Choose your music folder');
+      showToast('Your browser cannot remember the folder between sessions. Choose it again to play.');
+      return;
+    }
     // Skipping a bad file is right; skipping the whole queue in silence is
     // not. Lapsed folder permission fails every track, so an unbounded skip
     // walks thousands of them and lands on idle looking like a dead button.

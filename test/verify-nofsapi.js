@@ -69,7 +69,45 @@ const { BASE_URL, seedLibrary, seed } = require('./lib/harness');
   });
   check('a reconnect prompt is offered', !!reconnect, reconnect || 'none found');
 
-  // 4. The fallback picker is wired to a real directory input.
+  // 4. Pressing play with no folder connected says so, rather than skipping
+  //    two tracks and then blaming the files for having moved. resolveTrackFile
+  //    throws a distinct error for exactly this case and nobody was reading it.
+  // Each failed track logs one warning, so counting them counts how far the
+  // queue was walked. Without this the check passed with the bug in place:
+  // three failures still end in clearPlayerUI, so the end state looks the
+  // same however many tracks were burned getting there.
+  const attempts = [];
+  p.on('console', (m) => {
+    if (m.text().startsWith('Could not play ')) attempts.push(m.text().slice(15, 60));
+  });
+
+  const k = await p.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await p.evaluate((x) => { location.hash = '#album/' + x; }, k);
+  await p.waitForTimeout(700);
+  const played = await p.evaluate(async () => {
+    const row = document.querySelector('.track-row');
+    const first = row.querySelector('.track-row__title').textContent.trim();
+    row.click();
+    await new Promise((r) => setTimeout(r, 900));
+    const toast = document.getElementById('toast');
+    return {
+      toast: toast ? toast.textContent.trim() : '',
+      open: !!toast && toast.classList.contains('is-open'),
+      // Nothing should have been queued past the track that was asked for.
+      nowPlaying: (document.querySelector('.player__title')?.textContent || '').trim(),
+      first,
+      reconnect: !!document.querySelector('.reconnect-btn'),
+    };
+  });
+  check('play without a folder explains itself', played.open &&
+    /folder/i.test(played.toast) && !/moved|renamed/i.test(played.toast),
+    `"${played.toast}"`);
+  check('and stops at the track that was asked for', attempts.length === 1,
+    `${attempts.length} track(s) attempted`);
+  check('and leaves the player idle rather than half-loaded', played.nowPlaying === '',
+    played.nowPlaying ? `player shows "${played.nowPlaying}"` : 'player left idle');
+
+  // 5. The fallback picker is wired to a real directory input.
   const wired = await p.evaluate(() => typeof pickFolderFallback === 'function' ||
     typeof window.pickFolderFallback === 'function');
   console.log(`  ---   fallback picker reachable from page scope: ${wired}` +
