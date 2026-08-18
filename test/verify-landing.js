@@ -138,6 +138,34 @@ const CONTRAST = () => {
   check('phone header keeps only the call to action', phoneNav.links === 0 && phoneNav.cta.visible,
     `${phoneNav.links} section link(s), cta "${phoneNav.cta.text}"`);
 
+  // Motion must never be able to leave the page blank. Everything measured
+  // above still measures correctly on a page whose sections never fade in,
+  // so check the three states that matter: revealed on scroll, shown at once
+  // when motion is unwanted, and shown at once when the script never runs.
+  await p.setViewportSize({ width: 1440, height: 900 });
+  await p.goto(BASE_URL + '/', { waitUntil: 'networkidle' });
+  await p.waitForTimeout(400);
+  await p.evaluate(() => scrollTo(0, document.body.scrollHeight));
+  await p.waitForTimeout(1200);
+  const revealed = await p.evaluate(() => [...document.querySelectorAll('.reveal')]
+    .every((el) => +getComputedStyle(el).opacity === 1));
+  check('sections arrive when scrolled to', revealed);
+  check('the header takes its surface after scrolling', await p.evaluate(() =>
+    document.querySelector('.lp-header').classList.contains('is-scrolled')));
+
+  for (const [label, opts] of [['motion is unwanted', { reducedMotion: 'reduce' }],
+                               ['the script never runs', { javaScriptEnabled: false }]]) {
+    const ctx = await br.newContext({ viewport: { width: 1440, height: 900 },
+                                      colorScheme: 'dark', ...opts });
+    const q = await ctx.newPage();
+    await q.goto(BASE_URL + '/', { waitUntil: 'networkidle' });
+    await q.waitForTimeout(400);
+    const shown = await q.evaluate(() => [...document.querySelectorAll('.reveal')]
+      .every((el) => +getComputedStyle(el).opacity === 1));
+    check(`nothing is hidden when ${label}`, shown);
+    await ctx.close();
+  }
+
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;
   await br.close();

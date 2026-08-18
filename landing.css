@@ -158,15 +158,19 @@
    background reads as flat rather than dark. */
 .lp-hero__glow {
   position: absolute;
-  inset-block-start: -280px;
+  inset-block-start: -300px;
   inset-inline-start: 50%;
-  inline-size: 1100px;
-  block-size: 720px;
+  inline-size: 1500px;
+  block-size: 980px;
   translate: -50% 0;
+  /* Three washes, not two: the pair that sit high and wide, and a dimmer one
+     centred behind the heading so the type sits on colour rather than on a
+     hole between two lights. */
   background:
-    radial-gradient(closest-side, var(--bg-glow-1), transparent 70%) 30% 40% / 60% 70% no-repeat,
-    radial-gradient(closest-side, var(--bg-glow-2), transparent 70%) 72% 30% / 55% 65% no-repeat;
-  filter: blur(20px);
+    radial-gradient(closest-side, var(--bg-glow-1), transparent 72%) 26% 34% / 58% 66% no-repeat,
+    radial-gradient(closest-side, var(--bg-glow-2), transparent 72%) 74% 26% / 54% 62% no-repeat,
+    radial-gradient(closest-side, #fb2c5a1f, transparent 70%) 50% 58% / 70% 55% no-repeat;
+  filter: blur(30px);
   pointer-events: none;
 }
 
@@ -531,5 +535,192 @@
 
   .lp-footer__about {
     grid-column: 1 / -1;
+  }
+}
+
+/* ── Motion ────────────────────────────────────────────────────
+   The page is about a music player, so the one animated thing that earns its
+   place is the one the app actually does: it takes its colour from the
+   artwork and the colour moves. Everything else here is arrival — content
+   appearing where it will sit, never sliding in from off screen.
+
+   All of it is gated on `.js`, set by an inline script before this file
+   paints. With JavaScript off nothing is hidden, so the page is complete and
+   static rather than blank. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── The wash ─────────────────────────────────────────────────
+   Two colours, the same two the app uses behind a cover, breathing slowly
+   enough that you notice it only if you stay. */
+@keyframes lp-drift {
+  0%, 100% { scale: 1; opacity: 0.85; }
+  50%      { scale: 1.08; opacity: 1; }
+}
+
+.lp-hero__glow {
+  animation: lp-drift 34s ease-in-out infinite;
+}
+
+/* ── The load sequence ─────────────────────────────────────────
+   One orchestrated moment at the top of the page, in reading order. */
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.js .lp-hero__inner > * {
+  animation: lp-rise 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.js .lp-hero__inner .lp-pill    { animation-delay: 40ms; }
+.js .lp-hero__inner .lp-h1      { animation-delay: 120ms; }
+.js .lp-hero__inner .lp-lead    { animation-delay: 220ms; }
+.js .lp-hero__inner .lp-actions { animation-delay: 320ms; }
+
+/* ── Arrival ───────────────────────────────────────────────────
+   Sections come in once, on the way past. Cards inside a grid carry a
+   stagger from their index, so a row assembles instead of blinking on. */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.js .reveal .lp-card,
+.js .reveal .lp-stat,
+.js .reveal .lp-shot {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.js .reveal.is-in .lp-card,
+.js .reveal.is-in .lp-stat,
+.js .reveal.is-in .lp-shot {
+  opacity: 1;
+  transform: none;
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1) var(--stagger, 0ms),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1) var(--stagger, 0ms);
+}
+
+/* ── Header ────────────────────────────────────────────────────
+   Transparent over the wash, and it takes its surface only once the page has
+   moved — so the two are never competing for the same few pixels. The border
+   keeps its width and loses its colour, because the height is measured. */
+.lp-header {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-block-end-color: transparent;
+  transition: background 300ms ease, border-color 300ms ease;
+}
+
+.lp-header.is-scrolled {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-block-end-color: var(--lp-hairline);
+}
+
+/* ── The pill's meter ──────────────────────────────────────────
+   Three bars, the app's own visualiser in miniature. It is the first thing
+   on the page and it says "music player" before the heading does. */
+.lp-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  block-size: 10px;
+  margin-inline-end: 9px;
+}
+
+.lp-eq i {
+  inline-size: 2px;
+  block-size: 100%;
+  border-radius: 1px;
+  background: var(--accent);
+  transform-origin: bottom;
+  scale: 1 0.35;
+  animation: lp-eq 1.1s ease-in-out infinite;
+}
+
+.lp-eq i:nth-child(2) { animation-delay: 0.18s; }
+.lp-eq i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes lp-eq {
+  0%, 100% { scale: 1 0.35; }
+  50%      { scale: 1 1; }
+}
+
+/* ── Cards ─────────────────────────────────────────────────────
+   The same bright top edge the app's glass surfaces carry, so the page and
+   the product look like one thing. */
+.lp-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%), var(--lp-card);
+  transition: border-color 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+.lp-shot--desktop,
+.lp-shot--phone {
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lp-shots:hover .lp-shot--desktop {
+  transform: translateY(-3px);
+}
+
+/* ── Keyboard ──────────────────────────────────────────────────
+   Motion is no excuse for losing the focus ring. */
+.lp-btn:focus-visible,
+.lp-nav a:focus-visible,
+.lp-footer__links a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-pill);
+}
+
+/* ── Asked to sit still ────────────────────────────────────────
+   Nothing above is load-bearing, so all of it simply stops. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .js .lp-hero__inner > *,
+  .lp-hero__glow,
+  .lp-eq i {
+    animation: none;
+  }
+
+  .js .reveal,
+  .js .reveal .lp-card,
+  .js .reveal .lp-stat,
+  .js .reveal .lp-shot {
+    opacity: 1;
+    transform: none;
+  }
+
+  .lp-card,
+  .lp-shot--desktop,
+  .lp-shot--phone,
+  .lp-header {
+    transition: none;
+  }
+
+  .lp-card:hover,
+  .lp-shots:hover .lp-shot--desktop {
+    transform: none;
   }
 }

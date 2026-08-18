@@ -7,6 +7,7 @@
     <meta name="description" content="Aubade turns a folder of music into a
       proper player: albums, artists, artwork, synced lyrics. It reads your
       files where they are. Nothing is uploaded and no account is needed." />
+    <script>document.documentElement.classList.add('js');</script>
     <link rel="stylesheet" href="tokens.css" />
     <link rel="stylesheet" href="landing.css" />
   </head>
@@ -34,7 +35,10 @@
       <section class="lp-hero">
         <div class="lp-hero__glow" aria-hidden="true"></div>
         <div class="lp-hero__inner">
-          <span class="lp-pill">No server · No account · Nothing uploaded</span>
+          <span class="lp-pill">
+            <span class="lp-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+            No server · No account · Nothing uploaded
+          </span>
           <h1 class="lp-h1">Your own music.<br />Played properly.</h1>
           <p class="lp-lead">
             Point Aubade at the folder your music already lives in. It reads the
@@ -50,7 +54,7 @@
       </section>
 
       <!-- ── Features ──────────────────────────────────────────── -->
-      <section id="features" class="lp-section">
+      <section id="features" class="lp-section reveal">
         <div class="lp-section__head">
           <span class="lp-eyebrow">What it does</span>
           <h2 class="lp-h2">A player for the music you already own</h2>
@@ -132,7 +136,7 @@
       </section>
 
       <!-- ── Screens ───────────────────────────────────────────── -->
-      <section id="screens" class="lp-section lp-screens">
+      <section id="screens" class="lp-section lp-screens reveal">
         <div class="lp-section__head">
           <span class="lp-eyebrow">Every screen</span>
           <h2 class="lp-h2">The same app on a desk and in a hand</h2>
@@ -155,7 +159,7 @@
       </section>
 
       <!-- ── Numbers ───────────────────────────────────────────── -->
-      <section id="private" class="lp-stats">
+      <section id="private" class="lp-stats reveal">
         <div class="lp-stats__grid">
           <div class="lp-stat"><span class="lp-stat__value">0</span><span class="lp-stat__label">Servers</span></div>
           <div class="lp-stat"><span class="lp-stat__value">0</span><span class="lp-stat__label">Accounts</span></div>
@@ -165,7 +169,7 @@
       </section>
 
       <!-- ── Close ─────────────────────────────────────────────── -->
-      <section class="lp-cta">
+      <section class="lp-cta reveal">
         <h2 class="lp-h2 lp-h2--large">Point it at a folder.<br />Press play.</h2>
         <div class="lp-actions lp-actions--centre">
           <a class="lp-btn" href="player.html">Open Aubade</a>
@@ -206,5 +210,6 @@
         </div>
       </div>
     </footer>
+    <script src="landing.js"></script>
   </body>
 </html>
