@@ -23,23 +23,48 @@ project has already paid for. Anything on that list is not a finding.
 
 ## This round
 
-The last three commits are the target. Everything else has been hunted before.
+Three hunts. Not "does it render" — that is covered by fifteen suites. What
+those suites cannot see is a control that exists and does nothing.
 
-- **`test/`** — the verification suites moved into the repository behind
-  `test/run.js`, which serves the repo itself on an ephemeral port. Twelve
-  suites were ported from `~/aubade-capture` by a scripted rewrite: the eval
-  hack that read `seedLibrary` out of another file became `require`, three
-  copies of the IndexedDB write became one, and `http://localhost:5199` became
-  `BASE_URL`. A scripted rewrite is exactly where a silent behaviour change
-  hides. Compare a ported suite against its original and say whether it still
-  tests the same thing.
-- **`landing.html` / `landing.css`** — new, and the only page that does not
-  load the app's stylesheets.
-- **`responsive.css`** — the phone home page changed: the greeting row now
-  wraps and the quick-pick grid drops to two columns under 768px.
+### 1. Wired to nothing
 
-Run `node test/run.js` before you start. Thirteen suites, about ninety
-seconds, and it needs nothing running first.
+Both Volume buttons shipped as markup. The icon was drawn, the keyboard `m`
+binding worked, and clicking either one did nothing at all. No error, no
+failing suite, nothing missing from the page — every check we had asks
+whether a thing is *present*.
+
+Work it exhaustively and mechanically:
+
+- List every `<button>`, `<a>`, `[role="button"]` and `<input>` in
+  `player.html`. There are a lot; that is the point.
+- For each, find what binds it in `app.js` — by `id`, by class, by
+  `aria-label`, or by a delegated listener on an ancestor. Remember
+  `grep` needs `-a` there.
+- Anything with no binding is a candidate. **Prove it**: open the app, click
+  the control, and show that no state changes.
+- Report each as its own finding with the selector and the proof.
+
+### 2. Polish that is missing rather than wrong
+
+Subtle things, all verifiable:
+
+- A control whose `aria-label` still says the old thing after its state
+  changes (the Volume button said "Volume" while muted until this week).
+- A control with no `:hover`, no `:focus-visible`, or no `disabled` state.
+- A destructive action with no confirmation.
+- An empty state that renders an empty box rather than a sentence.
+- A transition that snaps on one property and eases on another.
+
+### 3. Deeper UI differences against the reference
+
+Compare with what is on disk rather than from memory: the captures in
+`~/aubade-shots` and the measuring scripts in `~/aubade-capture`. Report
+measured deltas — pixels, weights, tracking, colours — not impressions.
+"Looks slightly off" is not a finding; "48px against their 44px, measured
+with getComputedStyle at 1440" is.
+
+Ignore differences that are content rather than form: they are a streaming
+service with radio and podcasts, this is a local library.
 
 ## Ground rules
 
