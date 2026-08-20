@@ -41,13 +41,41 @@ export function hslToRgb(h, s, l) {
 export function accentLightness(hue) {
   const white = 1.05;
   for (let l = 46; l >= 20; l -= 2) {
-    const [r, g, b] = hslToRgb(hue, 0.82, l / 100);
-    const channel = (v) => {
-      v /= 255;
-      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    };
-    const lum = 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-    if (white / (lum + 0.05) >= 4.5) return l;
+    if (white / (relLuminance(...hslToRgb(hue, 0.82, l / 100)) + 0.05) >= 4.5) return l;
   }
   return 20;
+}
+
+/** WCAG relative luminance for an sRGB triple in 0–255. */
+export function relLuminance(r, g, b) {
+  const channel = (v) => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+/**
+ * Lightness for an artwork accent used as TEXT, as a percentage.
+ *
+ * `accentLightness` solves the opposite problem: it darkens the colour until
+ * white text sits safely ON it. The now-playing sheet uses the same accent the
+ * other way round — as 14px text on its scrim — where darkening is exactly
+ * wrong. Measured on the rendered sheet, a red cover gave `.np-device` 3.25:1,
+ * well under the 4.5:1 that size needs.
+ *
+ * The ground is not `--np-bg` alone: the four ambient washes sit over it and
+ * lift it. Sampling the pixels actually rendered behind that label across six
+ * hues put the ground between 0.0066 and 0.0173 relative luminance, so the
+ * darkest-text case is the lightest ground. GROUND is that worst case with a
+ * little room — computing against `--np-bg` alone left red at 4.17:1.
+ */
+const GROUND = 0.018;
+
+export function accentTextLightness(hue) {
+  for (let l = 46; l <= 88; l += 2) {
+    const lum = relLuminance(...hslToRgb(hue, 0.82, l / 100));
+    if ((lum + 0.05) / (GROUND + 0.05) >= 4.5) return l;
+  }
+  return 88;
 }

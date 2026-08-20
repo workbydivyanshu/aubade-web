@@ -8,7 +8,7 @@ import {
   allPlaylists, getPlaylist, createPlaylist, renamePlaylist, deletePlaylist,
   addToPlaylist, removeFromPlaylist, playlistTracks,
 } from './playlists.js';
-import { initVisualiser, eqShouldRun, startVisualiser, stopVisualiser } from './visualiser.js';
+import { initVisualiser } from './visualiser.js';
 import { initMediaSession, updateMediaSession, clearMediaSession } from './mediasession.js';
 import { parseLrc } from './lrc.js';
 
@@ -768,6 +768,9 @@ function clearPlayerUI() {
   npCover.style.backgroundImage = 'none';
   npBg.style.backgroundImage = 'none';
   setAmbient('none');
+  // Two other paths already clear these; going idle did not, so the sheet kept
+  // wearing the colours of a record that is no longer playing.
+  for (const prop of NP_PALETTE_PROPS) npOverlay.style.removeProperty(prop);
   document.querySelector('.player__time:first-of-type').textContent = '0:00';
   document.querySelector('.player__time:last-of-type').textContent = '0:00';
   // These four were written against names that were never declared, so this
@@ -810,7 +813,7 @@ function updatePlayerUI(record) {
 
   syncLikeIcons();
   
-  const album = state.library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
+  const album = state.library.albums.find(a => albumKey(a) === albumKey(record));
   if (album) {
     coverUrlForAlbum(album).then(url => {
       if (url) {
@@ -963,8 +966,6 @@ uiVolBar.addEventListener('click', (e) => {
   const rect = uiVolBar.getBoundingClientRect();
   const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
   audio.volume = pct;
-  uiVolFill.style.width = `${pct * 100}%`;
-  uiVolKnob.style.left = `${pct * 100}%`;
 });
 // Both Volume buttons were markup only — the icon was drawn, the keyboard
 // binding worked, and clicking either one did nothing at all.
@@ -986,10 +987,6 @@ for (const b of volButtons) {
 // Fires for muted as well as volume, so the keyboard route updates the icon too.
 audio.addEventListener('volumechange', syncMuted);
 syncMuted();
-
-// Init volume
-uiVolFill.style.width = `${audio.volume * 100}%`;
-uiVolKnob.style.left = `${audio.volume * 100}%`;
 
 // Card wiring
 document.addEventListener('click', (e) => {
@@ -1544,7 +1541,6 @@ function renderLikedView() {
 // ── Search ───────────────────────────────────────────────────
 
 const searchInput = document.getElementById('search-input');
-const viewSearch = document.getElementById('view-search');
 const searchEmpty = document.getElementById('search-empty');
 const searchQueryDisplay = document.getElementById('search-query-display');
 const searchResults = document.getElementById('search-results');
@@ -1937,9 +1933,9 @@ audio.addEventListener('timeupdate', () => {
         el.classList.add('np-lyric-line--active');
         el.style.opacity = '1';
         
-        // smooth center scroll
-        const containerRect = lyricsContainer.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
+        // Centre the active line rather than merely bringing it into view:
+        // a line that lands at the bottom edge is technically visible and
+        // useless to read along with.
         const scrollTarget = el.offsetTop - (lyricsContainer.clientHeight / 2) + (el.clientHeight / 2);
         lyricsContainer.scrollTo({ top: scrollTarget, behavior: 'smooth' });
       } else {
@@ -2176,8 +2172,10 @@ async function renderArtistView(name) {
   meta.textContent = `${artist.albums.length} album${artist.albums.length !== 1 ? 's' : ''} - ${allTracks.length} song${allTracks.length !== 1 ? 's' : ''}`;
 
   bg.style.backgroundImage = 'none';
-  const aKey = albumKey(artist.albums[0] || {});
-  const grad = gradientFor(aKey || artist.name);
+  // An artist with no albums has no cover to borrow, so the gradient comes
+  // from the name instead. Keying off an empty album would hand every such
+  // artist the same colour.
+  const grad = gradientFor(artist.albums[0] ? albumKey(artist.albums[0]) : artist.name);
   bg.style.background = `linear-gradient(135deg,${grad})`;
   viewArtist.style.setProperty('--album-accent', 'var(--accent)');
 
@@ -2350,16 +2348,21 @@ function renderSettingsView() {
     
     document.getElementById('settings-btn-rescan').addEventListener('click', async (e) => {
       const handle = await dbGet('musicDir');
-      if (handle) {
-        const btn = e.target;
-        btn.textContent = 'Scanning...';
-        btn.disabled = true;
-        // reuse statusEl for inline update? We'll just update btn text
-        await indexDir(handle, { set textContent(v) { btn.textContent = v; } });
-        btn.textContent = 'Rescan';
-        btn.disabled = false;
-        renderSettingsView(); // Update stats
+      // With no folder stored this used to fall out of the if and do nothing
+      // at all — no scan, no message, a button that simply ignored you.
+      if (!handle) {
+        showToast('Connect a music folder first');
+        return;
       }
+      const btn = e.target;
+      btn.textContent = 'Scanning...';
+      btn.disabled = true;
+      // The button doubles as the progress line: indexDir writes its count
+      // into whatever it is handed, and there is no other spare surface here.
+      await indexDir(handle, { set textContent(v) { btn.textContent = v; } });
+      btn.textContent = 'Rescan';
+      btn.disabled = false;
+      renderSettingsView();
     });
 
     document.getElementById('settings-btn-change-folder').addEventListener('click', () => {
@@ -2372,9 +2375,11 @@ function renderSettingsView() {
     });
 
     document.getElementById('settings-btn-reset-vol').addEventListener('click', () => {
+      const wasFull = audio.volume === 1 && !audio.muted;
       audio.volume = 1;
-      const volBar = document.querySelector('.player__vol-fill');
-      if (volBar) volBar.style.width = '100%';
+      audio.muted = false;
+      renderSettingsView();
+      showToast(wasFull ? 'Volume was already full' : 'Volume reset to 100%');
     });
 
     document.getElementById('settings-btn-clear-cache').addEventListener('click', () => {
@@ -2392,9 +2397,10 @@ function renderSettingsView() {
       `;
       
       document.getElementById('settings-btn-cancel-reset').addEventListener('click', () => {
-        // Restore reset button
         controls.innerHTML = `<button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>`;
-        // Rebind reset (easiest is just trigger re-render of settings, which doesn't touch DOM, so we can't do that easily... Let's just re-attach the listener, or reload settings)
+        // The replacement Reset button is a new element, so the listener that
+        // was on the old one went with it. Clearing _bound makes the re-render
+        // bind the whole panel again rather than leaving one dead button.
         viewSettings._bound = false;
         renderSettingsView();
       });
@@ -2494,24 +2500,25 @@ const npVolSlider = document.querySelector('.np-vol-slider');
 const npVolFill = document.getElementById('np-vol-fill');
 const npVolKnob = document.getElementById('np-vol-knob');
 
-function updateNpVol() {
+// Five places used to paint the volume bars by hand, each one remembering a
+// slightly different subset. Reset volume in Settings repainted the player bar
+// and left the now-playing slider where it was. One painter on the one event
+// the audio element already fires means they cannot drift again.
+function paintVolume() {
   const pct = `${Math.round(audio.volume * 100)}%`;
-  npVolFill.style.width = pct;
-  npVolKnob.style.left = pct;
+  if (npVolFill) npVolFill.style.width = pct;
+  if (npVolKnob) npVolKnob.style.left = pct;
+  if (uiVolFill) uiVolFill.style.width = pct;
+  if (uiVolKnob) uiVolKnob.style.left = pct;
 }
 
 npVolSlider.addEventListener('click', (e) => {
   const rect = npVolSlider.getBoundingClientRect();
-  const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  audio.volume = pct;
-  updateNpVol();
-  // Also sync main player vol bar
-  if (uiVolFill) uiVolFill.style.width = `${Math.round(pct * 100)}%`;
-  if (uiVolKnob) uiVolKnob.style.left = `${Math.round(pct * 100)}%`;
+  audio.volume = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
 });
 
-audio.addEventListener('volumechange', updateNpVol);
-updateNpVol();
+audio.addEventListener('volumechange', paintVolume);
+paintVolume();
 
 // Two of the reference's four lyric actions have a local meaning. Selecting lines
 // toggles a mode where clicking lines marks them; copying takes either the
@@ -2571,11 +2578,33 @@ if (localStorage.getItem('aubade_sidebar_collapsed') === 'true') {
 }
 
 // The segmented pill: Library is the state we are already in, Folders picks a
-// new one. Only the second half was wired, so the first looked broken.
-document.getElementById('seg-library')?.addEventListener('click', () => {
-  document.getElementById('seg-library').classList.add('seg-pill__seg--active');
-  document.getElementById('seg-folders').classList.remove('seg-pill__seg--active');
+// new one.
+const segLibrary = document.getElementById('seg-library');
+const segFolders = document.getElementById('seg-folders');
+function selectSegment(active) {
+  segLibrary?.classList.toggle('seg-pill__seg--active', active === segLibrary);
+  segFolders?.classList.toggle('seg-pill__seg--active', active === segFolders);
+}
+segLibrary?.addEventListener('click', () => {
+  selectSegment(segLibrary);
   window.location.hash = '#library';
+});
+// Folders was the half that was actually dead, despite the note above once
+// saying the opposite. It picks a folder, and hands the pill back if you
+// cancel — leaving it lit for a folder you never chose would be a lie.
+segFolders?.addEventListener('click', async () => {
+  selectSegment(segFolders);
+  try {
+    await pickFolder();
+  } finally {
+    selectSegment(segLibrary);
+  }
+});
+
+// A local library has no account to open, so the avatar goes where everything
+// it could plausibly mean already lives.
+document.querySelector('.top-bar__avatar')?.addEventListener('click', () => {
+  window.location.hash = '#settings';
 });
 
 // The hero card's share, which matches the album and now-playing ones.
@@ -2651,9 +2680,6 @@ document.addEventListener('keydown', (e) => {
   };
   const nudgeVolume = (delta) => {
     audio.volume = Math.max(0, Math.min(1, audio.volume + delta));
-    const pct = Math.round(audio.volume * 100);
-    if (uiVolFill) uiVolFill.style.width = pct + '%';
-    if (uiVolKnob) uiVolKnob.style.left = pct + '%';
   };
 
   switch (e.key) {
@@ -2804,10 +2830,6 @@ for (const bar of [npVolSlider, document.querySelector('.player__vol-bar')]) {
     e.preventDefault();
     const step = e.deltaY < 0 ? 0.05 : -0.05;
     audio.volume = Math.max(0, Math.min(1, audio.volume + step));
-    updateNpVol();
-    const pct = Math.round(audio.volume * 100);
-    if (uiVolFill) uiVolFill.style.width = pct + '%';
-    if (uiVolKnob) uiVolKnob.style.left = pct + '%';
   }, { passive: false });
 }
 

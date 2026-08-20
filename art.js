@@ -3,7 +3,7 @@
 
 import { dbGet } from './db.js';
 import { albumKey } from './library.js';
-import { rgbToHsl, accentLightness } from './colour.js';
+import { rgbToHsl, accentLightness, accentTextLightness } from './colour.js';
 
 const coverCache = new Map();
 
@@ -235,17 +235,19 @@ export function getCoverPalette(url) {
         };
 
         const lead = picked[0];
+        // Capped low deliberately: a bright cover has no dark pixels to
+        // sample, and following it would put light text on a light field.
+        const bgL = Math.round(Math.min(9, Math.max(4, darkest * 60)));
         resolve({
           c1: toColour(picked[0], 0.55),
           c2: toColour(picked[1], 0.5),
           c3: toColour(picked[2], 0.45),
           c4: toColour(picked[3], 0.45),
           // A near-black tinted toward the cover, the way --np-bg reads.
-          // A near-black tinted toward the cover. Capped low deliberately: a
-          // bright cover has no dark pixels to sample, and following it would
-          // put light text on a light field.
-          bg: `hsl(${Math.round(lead.hue)} 42% ${Math.round(Math.min(9, Math.max(4, darkest * 60)))}%)`,
-          accent: `hsl(${Math.round(lead.hue)} 82% ${accentLightness(lead.hue)}%)`,
+          bg: `hsl(${Math.round(lead.hue)} 42% ${bgL}%)`,
+          // The sheet spends this one as text on the scrim above, not as a
+          // fill, so it wants the lightness raised rather than lowered.
+          accent: `hsl(${Math.round(lead.hue)} 82% ${accentTextLightness(lead.hue)}%)`,
         });
       } catch {
         resolve(null);
