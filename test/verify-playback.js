@@ -175,6 +175,73 @@ const { PLAYER_URL, seed, seedLibrary, fakeFilesystem } = require('./lib/harness
     shuffled.title === await p.evaluate(() => window.__before) && !shuffled.paused,
     `"${shuffled.title}"`);
 
+  // ── What the rest of the machine is told ────────────────────────
+  // The OS media controls and the play counts that drive the home shelves are
+  // both written from the playback path, so neither could be reached either.
+  const m = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  m.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
+  await fakeFilesystem(m);
+  // Chromium's own mediaSession accepts everything and reports nothing back,
+  // so it is replaced with one that records what the app asked for.
+  await m.addInitScript(() => {
+    window.__ms = { meta: null, handlers: [], state: null, pos: null };
+    Object.defineProperty(navigator, 'mediaSession', {
+      configurable: true,
+      value: {
+        set metadata(v) {
+          window.__ms.meta = v && { title: v.title, artist: v.artist, album: v.album };
+        },
+        get metadata() { return window.__ms.meta; },
+        set playbackState(v) { window.__ms.state = v; },
+        get playbackState() { return window.__ms.state; },
+        setActionHandler: (a, h) => { if (h) window.__ms.handlers.push(a); },
+        setPositionState: (s) => { window.__ms.pos = s && Math.round(s.duration); },
+      },
+    });
+  });
+  await m.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+  await seed(m, seedLibrary());
+  await m.reload({ waitUntil: 'networkidle' });
+  await m.waitForTimeout(1400);
+  const mk = await m.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await m.evaluate((k) => { location.hash = '#album/' + k; }, mk);
+  await m.waitForTimeout(900);
+  await m.evaluate(() => document.querySelector('.track-row')?.click());
+  // Metadata can take a couple of seconds to arrive, and everything the OS is
+  // told about position waits on it. Reading before then measures the clock,
+  // not the app.
+  await m.evaluate(() => new Promise((r) => {
+    const a = document.querySelector('audio');
+    if (Number.isFinite(a.duration) && a.duration > 0) return r();
+    a.addEventListener('loadedmetadata', r, { once: true });
+    setTimeout(r, 6000);
+  }));
+  await m.waitForTimeout(1500);
+
+  const ms = await m.evaluate(() => window.__ms);
+  check('the OS is told what is playing',
+    !!ms.meta && ms.meta.title && ms.meta.artist && ms.meta.album,
+    JSON.stringify(ms.meta));
+  check('and that it is playing', ms.state === 'playing', String(ms.state));
+  check('and given somewhere to send the hardware keys',
+    ['play', 'pause', 'previoustrack', 'nexttrack'].every((a) => ms.handlers.includes(a)),
+    ms.handlers.join(', '));
+  check('and where in the track we are, so its scrubber can move',
+    ms.pos > 0, `duration reported as ${ms.pos}`);
+
+  // Most played is a home shelf, and it is built from this.
+  await m.evaluate(() => new Promise((r) => {
+    const a = document.querySelector('audio');
+    if (Number.isFinite(a.duration) && a.duration > 0) return r();
+    a.addEventListener('loadedmetadata', r, { once: true }); setTimeout(r, 4000);
+  }));
+  await m.evaluate(() => { const a = document.querySelector('audio'); a.currentTime = a.duration - 0.2; });
+  await m.waitForTimeout(1500);
+  const counts = await m.evaluate(() => JSON.parse(localStorage.getItem('aubade_play_counts') || '{}'));
+  const played = Object.values(counts);
+  check('a finished track is counted, so Most played has something to say',
+    played.length > 0 && played[0].n > 0, JSON.stringify(counts).slice(0, 80));
+
   check('nothing threw through any of that', errs.length === 0, errs.slice(0, 2).join(' | '));
   await br.close();
   console.log(bad === 0 ? 'it plays music' : `${bad} check(s) failed`);
