@@ -7,7 +7,7 @@
 // nothing, so what is asserted here is the pixels that change when a control
 // takes focus, not the value of outline-width.
 const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, fakeFilesystem } = require('./lib/harness');
 
 // The ring is 2px at an offset of 2, so it lives in a band just outside the
 // control. Screenshotting a slightly grown box catches it without dragging in
@@ -296,6 +296,46 @@ const PAD = 8;
 
   await p.evaluate(() => document.querySelector('.now-playing').classList.remove('is-open'));
   await p.waitForTimeout(400);
+
+  // A track change was announced nowhere: the titles are set with textContent
+  // on elements that are not live, so a screen reader had no way to know the
+  // track had changed. It is a separate node rather than aria-live on the
+  // title itself, because that title scrolls when it is too long and would
+  // re-announce on every step of the marquee.
+  // updatePlayerUI only runs once a file actually opens, so the announcer is
+  // reached on a second page with the filesystem stood in for.
+  const a = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  const patched = await fakeFilesystem(a);
+  await a.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+  await seed(a);
+  await a.reload({ waitUntil: 'networkidle' });
+  await a.waitForTimeout(1500);
+  check('the filesystem stand-in still fits the code it stands in for', patched.db);
+  await a.evaluate(() => { location.hash = '#home'; });
+  await a.waitForTimeout(600);
+  const k = await a.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await a.evaluate((key) => { location.hash = '#album/' + key; }, k);
+  await a.waitForTimeout(900);
+  await a.evaluate(() => document.querySelector('.track-row')?.click());
+  await a.waitForTimeout(1500);
+
+  const said = await a.evaluate(() => {
+    const el = document.getElementById('np-announce');
+    if (!el) return null;
+    const cs = getComputedStyle(el);
+    return {
+      text: (el.textContent || '').trim(),
+      live: el.getAttribute('aria-live'),
+      // display:none and visibility:hidden both take it out of the
+      // accessibility tree, which would leave it announcing to nobody.
+      readable: cs.display !== 'none' && cs.visibility !== 'hidden',
+      drawn: el.getBoundingClientRect().width > 4,
+    };
+  });
+  check('the track that started is announced, out of sight',
+    said && said.text.length > 0 && said.live === 'polite' && said.readable && !said.drawn,
+    said ? `"${said.text}" live=${said.live} readable=${said.readable} drawn=${said.drawn}`
+         : 'no announcer element');
 
   // Reduced motion has to reach everything that moves, or the setting is a
   // promise the app only half keeps.

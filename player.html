@@ -777,6 +777,11 @@
           </button>
         </div>
       </footer>
+      <!-- Announces the track to a screen reader. The title in the player bar
+           scrolls when it is too long, and marking that element live would
+           re-announce it on every step of the marquee. -->
+      <p class="a11y-only" id="np-announce" role="status" aria-live="polite"></p>
+
       <!-- ── Now Playing Overlay ────────────────────────────── -->
       <div id="now-playing" class="now-playing">
         <div class="now-playing__bg">

@@ -823,6 +823,13 @@ function updatePlayerUI(record) {
   setScrollingText(npSubtitle, `${albumName} · ${artist}`);
   npAlbum.textContent = albumName;
 
+  // Said once per track. Nothing else here is announced: the titles are set
+  // with textContent on elements that are not live, so a screen reader had no
+  // way to know the track had changed at all.
+  const announce = document.getElementById('np-announce');
+  const said = `${record.title || record.name} by ${artist}`;
+  if (announce && announce.textContent !== said) announce.textContent = said;
+
   // Format label from file extension
   const fmtEl = document.getElementById('np-format');
   if (fmtEl && record.path) {

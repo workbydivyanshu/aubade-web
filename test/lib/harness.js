@@ -120,6 +120,47 @@ function serveRepo() {
 }
 
 /**
+ * Stand in for the filesystem, which is the one thing a headless page cannot
+ * have: no folder can be picked, so no track resolves, and every code path
+ * that runs after a file opens — the player UI, the palette, the announcer —
+ * is unreachable without this.
+ *
+ * The stub sits at the file boundary. dbGet is taught to hand back a fake
+ * directory handle; everything above it is the real code.
+ *
+ * Returns a `patched` object the caller can assert on, so a rename in db.js
+ * shows up as a failed check rather than as a suite that quietly tests
+ * nothing.
+ */
+async function fakeFilesystem(page) {
+  const patched = { db: false };
+  await page.addInitScript(() => {
+    window.__aubadeFakeDir = {
+      name: 'Test Music',
+      queryPermission: async () => 'granted',
+      requestPermission: async () => 'granted',
+      async getDirectoryHandle() { return window.__aubadeFakeDir; },
+      getFileHandle: async (name) => ({
+        name,
+        getFile: async () => new File([new Uint8Array(4096)], name, { type: 'audio/ogg' }),
+      }),
+    };
+  });
+  await page.route('**/db.js', async (route) => {
+    const res = await route.fetch();
+    const src = await res.text();
+    const marker = "export async function dbGet(key, storeName = 'handles') {";
+    patched.db = src.includes(marker);
+    route.fulfill({
+      headers: { 'content-type': 'text/javascript; charset=utf-8' },
+      body: src.replace(marker, marker +
+        "\n  if (key === 'musicDir' && window.__aubadeFakeDir) return window.__aubadeFakeDir;"),
+    });
+  });
+  return patched;
+}
+
+/**
  * Answer the app's own ask() dialog, which replaced window.prompt and
  * window.confirm. Suites used to hook page.on('dialog'); that hook is silent
  * against an in-page dialog, so every one of them passed a click through to
@@ -134,4 +175,4 @@ async function answer(page, text) {
   await page.waitForSelector('.ask-scrim', { state: 'detached', timeout: 4000 });
 }
 
-module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo, answer };
+module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo, answer, fakeFilesystem };

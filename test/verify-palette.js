@@ -7,7 +7,7 @@
 // computing a palette and never putting it on the page. Both are silent: the
 // scrim still renders, just wrong. Every measurement below is now an assertion.
 const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, fakeFilesystem } = require('./lib/harness');
 
 // The hues actually in the test covers, so a failure can name what was missed.
 // Read off the same rgb→hsl the extractor uses, then quantised into its 15°
@@ -279,31 +279,11 @@ async function measureAccent(p, hue) {
   const qErrs = [];
   q.on('pageerror', (e) => qErrs.push(String(e).slice(0, 140)));
 
-  await q.addInitScript(() => {
-    window.__aubadeFakeDir = {
-      name: 'Test Music',
-      queryPermission: async () => 'granted',
-      requestPermission: async () => 'granted',
-      async getDirectoryHandle() { return window.__aubadeFakeDir; },
-      getFileHandle: async (name) => ({
-        name,
-        getFile: async () => new File([new Uint8Array(4096)], name, { type: 'audio/ogg' }),
-      }),
-    };
-  });
-
-  const patched = { db: false, art: false };
-  await q.route('**/db.js', async (route) => {
-    const res = await route.fetch();
-    const src = await res.text();
-    const marker = "export async function dbGet(key, storeName = 'handles') {";
-    patched.db = src.includes(marker);
-    route.fulfill({
-      headers: { 'content-type': 'text/javascript; charset=utf-8' },
-      body: src.replace(marker, marker +
-        "\n  if (key === 'musicDir' && window.__aubadeFakeDir) return window.__aubadeFakeDir;"),
-    });
-  });
+  // The directory half of this lives in the harness — verify-focus needs the
+  // same seam, and two copies of a stub is two things to keep in step with
+  // db.js. The cover half is this suite's own business.
+  const patched = await fakeFilesystem(q);
+  patched.art = false;
   await q.route('**/art.js', async (route) => {
     const res = await route.fetch();
     const src = await res.text();
