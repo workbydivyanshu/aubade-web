@@ -86,6 +86,28 @@ rows, 60fps scrolling while new rows arrive, and keystrokes landing in about
 the line. The node count is the bar that matters — rendering the list eagerly
 takes it to 79,991 while the frame times barely move.
 
+## Regressions this session introduced, caught by review
+
+Worth recording as a pattern rather than a list: three of the four were the
+same mistake. Putting something above the shell — the inert sweep, a z-index —
+without checking what else already lives up there.
+
+- The inert sweep exempted the toast **by id** and took `#np-announce` with
+  everything else, so track changes announced nothing exactly while the sheet
+  was open. Exempting live regions by what they are, not by name, is the shape
+  that would not have had this bug.
+- The ask dialog at z-index 300 against the sheet's 1000 — invisible and
+  unclickable when opened from the sheet's own overflow menu. The identical
+  bug to the toast, made two commits after fixing the toast.
+- The phone rule hiding the volume button matched `[aria-label="Volume"]`,
+  which `syncMuted` rewrites to "Mute" at module load. Third selector this
+  session broken by labels that now carry state.
+- **The avatar was never dead.** The behavioural sweep called it inert because
+  it was clicked from `#settings`, where routing to `#settings` changes nothing
+  observable. A second handler was added beside one that had existed since
+  "Add settings". A sweep that watches for *any* observable change cannot tell
+  "does nothing" from "does what was already done".
+
 ## Two suites that passed while testing nothing
 
 Worth recording because both looked green:
