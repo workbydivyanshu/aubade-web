@@ -158,13 +158,29 @@ async function fakeFilesystem(page) {
       queryPermission: async () => 'granted',
       requestPermission: async () => 'granted',
       async getDirectoryHandle() { return window.__aubadeFakeDir; },
-      getFileHandle: async (name) => ({
-        name,
-        // Real, decodable audio rather than a block of zeroes: with zeroes the
-        // element sets MEDIA_ERR_SRC_NOT_SUPPORTED and every path that runs
-        // after playback actually starts stays out of reach.
-        getFile: async () => new File([window.__aubadeWav()], name, { type: 'audio/wav' }),
-      }),
+      getFileHandle: async (name) => {
+        // A real directory does not contain every file you ask it for. An
+        // earlier version of this stub answered any name with audio, so the
+        // app read the WAV as its .lrc sidecar and rendered the bytes as
+        // lyrics — a fake world, and a bug that only existed inside it.
+        // Lyrics only exist where a suite has asked for them, by setting
+        // window.__aubadeLrc. Everything else with an .lrc name is absent,
+        // the way a folder without sidecars is.
+        if (/\.lrc$/i.test(name) && window.__aubadeLrc) {
+          const text = window.__aubadeLrc;
+          return { name, getFile: async () => new File([text], name, { type: 'text/plain' }) };
+        }
+        if (!/\.(opus|mp3|m4a|flac|ogg|wav|aac)$/i.test(name)) {
+          throw Object.assign(new Error('not found: ' + name), { name: 'NotFoundError' });
+        }
+        return {
+          name,
+          // Real, decodable audio rather than a block of zeroes: with zeroes
+          // the element sets MEDIA_ERR_SRC_NOT_SUPPORTED and every path that
+          // runs after playback starts stays out of reach.
+          getFile: async () => new File([window.__aubadeWav()], name, { type: 'audio/wav' }),
+        };
+      },
     };
   });
   await page.route('**/db.js', async (route) => {

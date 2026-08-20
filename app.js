@@ -1923,6 +1923,14 @@ async function loadLyrics(record) {
     
     const file = await lrcHandle.getFile();
     const content = await file.text();
+    // A sidecar with NUL bytes in it is not lyrics — it is an audio file that
+    // got renamed, or a text file that got mangled. parseLrc will happily
+    // treat the bytes as untimed lines and put them on screen as the words to
+    // the song, so it never gets the chance.
+    if (content.includes('\0')) {
+      applyLyrics(null);
+      return;
+    }
     const parsed = parseLrc(content);
     
     lyricsCache.set(record.path, parsed);

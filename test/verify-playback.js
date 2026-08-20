@@ -242,6 +242,91 @@ const { PLAYER_URL, seed, seedLibrary, fakeFilesystem } = require('./lib/harness
   check('a finished track is counted, so Most played has something to say',
     played.length > 0 && played[0].n > 0, JSON.stringify(counts).slice(0, 80));
 
+  // ── The now-playing sheet, with something in it ─────────────────
+  // Synced lyrics are a signature feature and have never been exercised: they
+  // need a real .lrc beside a real file, and neither existed headlessly.
+  const l = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  l.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
+  await fakeFilesystem(l);
+  await l.addInitScript(() => {
+    window.__aubadeLrc = [
+      '[ti:Test]', '[offset:0]',
+      '[00:01.00]first line',
+      '[00:05.00]second line',
+      '[00:10.00]',                 // an instrumental gap, which must be kept
+      '[00:15.00]third line',
+    ].join('\n');
+  });
+  await l.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+  await seed(l, seedLibrary());
+  await l.reload({ waitUntil: 'networkidle' });
+  await l.waitForTimeout(1400);
+  const lk = await l.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await l.evaluate((k) => { location.hash = '#album/' + k; }, lk);
+  await l.waitForTimeout(900);
+  await l.evaluate(() => document.querySelector('.track-row')?.click());
+  await l.waitForTimeout(2000);
+  await l.evaluate(() =>
+    document.querySelector('.player__icon-btn[aria-label="Expand now playing"]')?.click());
+  await l.waitForTimeout(900);
+
+  const queue = await l.evaluate(() => {
+    document.getElementById('np-queue-btn')?.click();
+    return null;
+  });
+  await l.waitForTimeout(700);
+  const q = await l.evaluate(() => ({
+    rows: document.querySelectorAll('#np-queue-list .np-queue__row').length,
+    current: document.querySelectorAll('#np-queue-list .is-current').length,
+  }));
+  check('the queue lists the album and marks where you are',
+    q.rows > 1 && q.current === 1, `${q.rows} rows, ${q.current} marked current`);
+
+  const lyricLines = () => l.evaluate(() => {
+    const els = [...document.querySelectorAll('.np-lyric-line')];
+    return {
+      count: els.length,
+      active: els.findIndex((e) => e.classList.contains('np-lyric-line--active')),
+      text: els.map((e) => e.textContent.trim()).join('|'),
+    };
+  });
+  const ly = await lyricLines();
+  check('a sidecar .lrc is found and parsed', ly.count >= 4,
+    `${ly.count} lines: "${ly.text.slice(0, 60)}"`);
+
+  // The line that is lit has to follow the clock, which is the whole point of
+  // a synced lyric and the thing a static render cannot show.
+  await l.evaluate(() => { document.querySelector('audio').currentTime = 6; });
+  await l.waitForTimeout(700);
+  const atSix = await lyricLines();
+  await l.evaluate(() => { document.querySelector('audio').currentTime = 16; });
+  await l.waitForTimeout(700);
+  const atSixteen = await lyricLines();
+  check('the lit line follows the clock',
+    atSix.active >= 0 && atSixteen.active > atSix.active,
+    `line ${atSix.active} at 6s -> line ${atSixteen.active} at 16s`);
+
+  // A sidecar that is not lyrics must not be shown as lyrics.
+  const b = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  await fakeFilesystem(b);
+  await b.addInitScript(() => { window.__aubadeLrc = 'RIFF\u0000\u0000WAVEfmt \u0000binary'; });
+  await b.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+  await seed(b, seedLibrary());
+  await b.reload({ waitUntil: 'networkidle' });
+  await b.waitForTimeout(1400);
+  const bk = await b.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await b.evaluate((k) => { location.hash = '#album/' + k; }, bk);
+  await b.waitForTimeout(900);
+  await b.evaluate(() => document.querySelector('.track-row')?.click());
+  await b.waitForTimeout(2000);
+  const junk = await b.evaluate(() => {
+    const c = document.querySelector('.now-playing__lyrics');
+    return { found: !!c, text: (c ? c.textContent : '').trim().slice(0, 60) };
+  });
+  check('a sidecar that is not lyrics is not shown as lyrics',
+    junk.found && junk.text.length > 0 && !/RIFF|WAVE/.test(junk.text),
+    junk.found ? `"${junk.text}"` : 'no lyrics container found');
+
   check('nothing threw through any of that', errs.length === 0, errs.slice(0, 2).join(' | '));
   await br.close();
   console.log(bad === 0 ? 'it plays music' : `${bad} check(s) failed`);
