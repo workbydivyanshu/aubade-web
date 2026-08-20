@@ -90,13 +90,6 @@ a {
   color: var(--text);
 }
 
-.icon-button:focus-visible,
-.sidebar__nav-item:focus-visible,
-.pinned-item:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .icon-button svg,
 .sidebar__nav-item svg {
   inline-size: 20px;
@@ -303,11 +296,6 @@ a {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.top-bar__btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .top-bar__btn svg {
   inline-size: 20px;
   block-size: 20px;
@@ -339,11 +327,6 @@ a {
 
 .top-bar__avatar:hover {
   opacity: 0.85;
-}
-
-.top-bar__avatar:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .top-bar__avatar svg {
@@ -608,11 +591,6 @@ a {
   opacity: 0.9;
 }
 
-.hero-card__play:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .hero-card__play svg {
   inline-size: 18px;
   block-size: 18px;
@@ -635,11 +613,6 @@ a {
 .hero-card__share:hover {
   background: rgba(255, 255, 255, 0.14);
   color: var(--text);
-}
-
-.hero-card__share:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .hero-card__share svg {

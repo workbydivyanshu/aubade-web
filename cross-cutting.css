@@ -156,3 +156,19 @@
 .np-btn.is-on {
   color: var(--accent);
 }
+
+/* ── Focus ───────────────────────────────────────────────────
+   The same ring was written out eight times across four files, and two whole
+   files — the now-playing sheet and every album and artist button — had none
+   at all, so tabbing through them left no trace of where you were. One rule
+   covers everything focusable instead.
+
+   :where() keeps this at zero specificity, so the two controls that need a
+   different ring (the tab bar, which is clipped, and the ask field) still win
+   without having to fight it. */
+:where(a[href], area, button, input, select, textarea, summary,
+       [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"],
+       [contenteditable="true"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

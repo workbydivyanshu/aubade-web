@@ -87,11 +87,6 @@
   color: var(--text);
 }
 
-.player__icon-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
 .player__icon-btn svg {
   inline-size: 20px;
   block-size: 20px;
@@ -135,11 +130,6 @@
 
 .player__play-btn:hover {
   transform: scale(1.05);
-}
-
-.player__play-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .player__play-btn svg {
