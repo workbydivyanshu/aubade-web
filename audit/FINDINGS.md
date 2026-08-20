@@ -46,6 +46,59 @@ verdicts is what surfaced these.
 - The ask dialog's styles went into a stylesheet nothing links, so it behaved
   perfectly and looked like a browser default.
 
+## Found once playback itself became testable
+
+No folder can be picked headlessly, so no file ever opened, so everything past
+that point went unexercised for the life of the project — nineteen suites and
+none of them had heard a note. The filesystem stand-in now hands back real
+decodable audio, and with it:
+
+- **The now-playing sheet leaked seventeen tab stops.** It slides off screen
+  rather than being removed, so every control in it stayed in the tab order
+  while invisible. Open, it covers the screen, and the page behind it had the
+  same problem in the other direction: twenty-four of forty stops landed on
+  controls nobody could see.
+- **The toast was drawn behind the sheet that raises it** — z-index 300 against
+  1000. Measured: zero pixels of it reached the screen. Share and Like both
+  raise a toast from inside the sheet, so the confirmation for what you had
+  just done was the one you could not see.
+- **Nothing announced a track change.** The titles are set with textContent on
+  elements that are not live, so a screen reader read the page on arrival and
+  then went quiet for the rest of the album.
+- **A sidecar that is not lyrics was shown as lyrics.** loadLyrics handed
+  whatever it read to parseLrc, which treats unparseable bytes as untimed lines
+  and puts them on screen as the words to the song.
+- **Three album keys were built by hand with a literal NUL typed into the
+  source**, which is why grep needed `-a` on app.js. They all duplicated
+  albumKey.
+
+Verified working and now guarded rather than assumed: play, pause, next, the
+three-second rule on Previous, auto-advance at the end of a track, repeat-all
+wrapping the queue, shuffle keeping what is playing, the scrubber tracking,
+synced lyrics following the clock with instrumental gaps kept, the OS media
+controls, play counts, one missing file being stepped over, a run of them
+stopping with a message, and lapsed permission saying to reconnect.
+
+**Scale.** Measured against 1200 albums and 13,200 tracks: home usable in
+640ms, routes under 130ms, the songs view holding 1391 nodes rather than 13,200
+rows, 60fps scrolling while new rows arrive, and keystrokes landing in about
+20ms after the search index is built. Nothing needed fixing; verify-scale holds
+the line. The node count is the bar that matters — rendering the list eagerly
+takes it to 79,991 while the frame times barely move.
+
+## Two suites that passed while testing nothing
+
+Worth recording because both looked green:
+
+- The missing-file check matched by substring against a name that arrives bare,
+  so it never fired — and "1 track.opus" as a substring would also have taken
+  out "11 track.opus".
+- The binary-lyrics check read a selector that matched no element, so it was
+  comparing an empty string against a pattern.
+
+Both were found by breaking the thing they guard and watching them stay green.
+That is the only way to find this class of check.
+
 ## Examined and kept as they are
 
 - **`.now-playing__bg` overflows its container.** Intentional: the ambient blobs
