@@ -165,6 +165,36 @@ const { PLAYER_URL, seed } = require('./lib/harness');
   check('the bar Fullscreen button acts', fs.open && (fs.real || /fullscreen/i.test(fs.toast)),
     `open=${fs.open} fullscreen=${fs.real} toast="${fs.toast}"`);
 
+  // Every toggle in one sweep. Shuffle and repeat announced themselves by
+  // turning accent-coloured and nothing else — no aria-pressed, no change of
+  // label — so the only cue a screen reader had was a colour it cannot see.
+  // Asserting the whole family means the next toggle cannot ship stale.
+  // The fullscreen check above left the sheet as the fullscreen element, which
+  // covers the bar whether or not it still calls itself open.
+  await p.evaluate(async () => {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    document.querySelector('.now-playing').classList.remove('is-open');
+  });
+  await p.waitForTimeout(500);
+  for (const id of ['player-shuffle-btn', 'player-repeat-btn', 'player-vol-btn', 'player-like-btn']) {
+    const before = await p.evaluate((i) => {
+      const b = document.getElementById(i);
+      return b && { pressed: b.getAttribute('aria-pressed'), label: b.getAttribute('aria-label') };
+    }, id);
+    if (!before) { check(`${id} is there to toggle`, false, 'no such button'); continue; }
+    await p.click('#' + id);
+    await p.waitForTimeout(250);
+    const after = await p.evaluate((i) => {
+      const b = document.getElementById(i);
+      return { pressed: b.getAttribute('aria-pressed'), label: b.getAttribute('aria-label') };
+    }, id);
+    check(`${id} says out loud that it flipped`,
+      before.pressed !== after.pressed && before.label !== after.label,
+      `aria-pressed ${before.pressed}->${after.pressed}, "${before.label}" -> "${after.label}"`);
+    await p.click('#' + id);
+    await p.waitForTimeout(250);
+  }
+
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;
   await br.close();

@@ -148,3 +148,11 @@
   .ask-scrim { animation: ask-in 140ms ease-out; }
   @keyframes ask-in { from { opacity: 0; } to { opacity: 1; } }
 }
+
+/* Shuffle and repeat used to set an inline colour from three different places,
+   two of which found their button by an aria-label that state now changes.
+   One class, set in one function, is what the state looks like. */
+.player__icon-btn.is-on,
+.np-btn.is-on {
+  color: var(--accent);
+}

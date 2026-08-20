@@ -645,8 +645,10 @@ const uiPlayBtn = document.querySelector('.player__play-btn');
 const uiPlayIcon = uiPlayBtn.querySelector('svg');
 const uiPrevBtn = document.querySelector('button[aria-label="Previous"]');
 const uiNextBtn = document.querySelector('button[aria-label="Next"]');
-const uiShuffleBtn = document.querySelector('button[aria-label="Shuffle"]');
-const uiRepeatBtn = document.querySelector('button[aria-label="Repeat"]');
+// By id, not by label: the label is what the toggle changes, so looking these
+// up by it worked only for as long as they had never been pressed.
+const uiShuffleBtn = document.getElementById('player-shuffle-btn');
+const uiRepeatBtn = document.getElementById('player-repeat-btn');
 const uiCover = document.querySelector('.player__cover');
 const uiTitle = document.querySelector('.player__title');
 const uiArtist = document.querySelector('.player__artist');
@@ -914,10 +916,21 @@ npPlayBtn.addEventListener('click', togglePlay);
 npPrevBtn.addEventListener('click', prevTrack);
 npNextBtn.addEventListener('click', nextTrack);
 
+// Shuffle and repeat announced themselves by turning the icon accent-coloured
+// and nothing else: no aria-pressed, no change of label. Colour on its own is
+// not a state anyone can read out, and it is the only cue a screen reader had.
+function syncToggle(buttons, on, name) {
+  for (const b of buttons) {
+    if (!b) continue;
+    b.classList.toggle('is-on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', on ? `Turn ${name} off` : `Turn ${name} on`);
+  }
+}
+
 const handleShuffle = () => {
   playerState.shuffle = !playerState.shuffle;
-  uiShuffleBtn.style.color = playerState.shuffle ? 'var(--accent)' : '';
-  npShuffleBtn.style.color = playerState.shuffle ? 'var(--accent)' : '';
+  syncToggle([uiShuffleBtn, npShuffleBtn], playerState.shuffle, 'shuffle');
   
   if (playerState.queue.length > 0) {
     const currentTrack = playerState.queue[playerState.index];
@@ -934,11 +947,13 @@ npShuffleBtn.addEventListener('click', handleShuffle);
 
 const handleRepeat = () => {
   playerState.repeat = !playerState.repeat;
-  uiRepeatBtn.style.color = playerState.repeat ? 'var(--accent)' : '';
-  npRepeatBtn.style.color = playerState.repeat ? 'var(--accent)' : '';
+  syncToggle([uiRepeatBtn, npRepeatBtn], playerState.repeat, 'repeat');
 };
 uiRepeatBtn.addEventListener('click', handleRepeat);
 npRepeatBtn.addEventListener('click', handleRepeat);
+
+syncToggle([uiShuffleBtn, npShuffleBtn], playerState.shuffle, 'shuffle');
+syncToggle([uiRepeatBtn, npRepeatBtn], playerState.repeat, 'repeat');
 
 // Scrubber interaction
 const handleScrub = (bar, e) => {
@@ -1186,7 +1201,7 @@ async function renderAlbumView(key) {
   playBtn.onclick = () => playAlbum(key);
   shuffleBtn.onclick = () => {
     playerState.shuffle = true;
-    document.querySelector('button[aria-label="Shuffle"]').style.color = 'var(--accent)';
+    syncToggle([uiShuffleBtn, npShuffleBtn], true, 'shuffle');
     playAlbum(key);
   };
 
@@ -1526,6 +1541,7 @@ function playTrackList(tracks, startIndex = 0, shuffle = false) {
   playerState.originalQueue = [...tracks];
   playerState.queue = shuffle ? seededShuffle([...tracks]) : [...tracks];
   playerState.shuffle = shuffle;
+  syncToggle([uiShuffleBtn, npShuffleBtn], shuffle, 'shuffle');
   const start = shuffle ? 0 : startIndex;
   playTrack(start);
 }
@@ -2336,8 +2352,8 @@ async function renderArtistView(name) {
     playerState.originalQueue = sortedTracks;
     playerState.queue = shuffle ? seededShuffle([...playerState.originalQueue]) : [...playerState.originalQueue];
     if (shuffle) {
-      document.querySelector('button[aria-label="Shuffle"]').style.color = 'var(--accent)';
       playerState.shuffle = true;
+      syncToggle([uiShuffleBtn, npShuffleBtn], true, 'shuffle');
     }
     playTrack(0);
   };
