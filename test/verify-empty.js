@@ -105,6 +105,19 @@ const EMPTY = { tracks: [], albums: [], artists: [] };
   await reads('liked songs explains how songs get there', '#liked-empty', /heart/i);
 
   await p.click('#new-playlist-btn');
+  // The first version of this dialog was styled into a stylesheet the page
+  // does not load, so it worked perfectly and looked like a browser default.
+  // Behaviour checks alone cannot see that.
+  await p.waitForSelector('.ask-scrim');
+  const dressed = await p.evaluate(() => {
+    const s = getComputedStyle(document.querySelector('.ask'));
+    return { radius: parseFloat(s.borderRadius), pad: parseFloat(s.padding),
+             scrim: getComputedStyle(document.querySelector('.ask-scrim')).backgroundColor };
+  });
+  check('the dialog is wearing the app\'s own clothes, not the browser\'s',
+    dressed.radius >= 12 && dressed.pad >= 16 && /rgba?\(0, 0, 0/.test(dressed.scrim),
+    `radius ${dressed.radius}, padding ${dressed.pad}, scrim ${dressed.scrim}`);
+  await p.screenshot({ path: 'audit/shots/ask-dialog.png' });
   await answer(p, 'Empty on purpose');
   await p.waitForTimeout(900);
   await reads('a playlist with nothing in it says how to fill it',

@@ -1470,7 +1470,7 @@ function ask({ title, body, value, confirmLabel = 'OK', danger = false }) {
         ${value === undefined ? '' : '<input class="ask__input" type="text">'}
         <div class="ask__row">
           <button class="settings-btn" type="button" data-ask="cancel">Cancel</button>
-          <button class="settings-btn${danger ? ' settings-btn--danger' : ''}" type="button" data-ask="ok">${escapeHTML(confirmLabel)}</button>
+          <button class="settings-btn ${danger ? 'settings-btn--danger' : 'ask__go'}" type="button" data-ask="ok">${escapeHTML(confirmLabel)}</button>
         </div>
       </div>`;
     document.body.appendChild(scrim);
