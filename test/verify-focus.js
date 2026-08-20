@@ -237,6 +237,63 @@ const PAD = 8;
   check('and never leaves it for the page underneath while it is open',
     escaped.length === 0, escaped.slice(0, 8).join(', ') || `${open.length} stops, none behind it`);
 
+  // Inerting the shell must not take the toast with it, and the sheet must not
+  // draw over it: Share and Like both raise a toast from inside the sheet, so
+  // the confirmation for what you just did was the one you could not see.
+  // Share needs something to share. Playback cannot start headlessly, but
+  // clicking a row still fills the queue, which is what the handler reads.
+  await p.evaluate(() => {
+    document.querySelector('.now-playing').classList.remove('is-open');
+    document.querySelector('.track-row')?.click();
+  });
+  await p.waitForTimeout(800);
+  await p.evaluate(() => {
+    document.getElementById('app').classList.remove('is-idle');
+    document.querySelector('.now-playing').classList.add('is-open');
+  });
+  await p.waitForTimeout(500);
+  await p.evaluate(() => { document.getElementById('np-share-btn')?.click(); });
+  await p.waitForTimeout(600);
+  const toast = await p.evaluate(() => {
+    const t = document.getElementById('toast');
+    if (!t) return null;
+    const b = t.getBoundingClientRect();
+    return {
+      text: (t.textContent || '').trim(),
+      inert: t.hasAttribute('inert') || !!t.closest('[inert]'),
+      role: t.getAttribute('role'),
+      clip: { x: Math.max(0, Math.round(b.x)), y: Math.max(0, Math.round(b.y)),
+              width: Math.round(b.width), height: Math.round(b.height) },
+    };
+  });
+  if (!toast) {
+    check('a toast raised from the open sheet is on top of it and still announced', false, 'no toast element');
+  } else {
+    // elementFromPoint is no use here: the toast is pointer-events: none, so
+    // it always reports whatever is behind it. What matters is whether its
+    // pixels reach the screen, so hide it and see whether anything changes.
+    const withToast = await p.screenshot({ clip: toast.clip });
+    await p.evaluate(() => { document.getElementById('toast').style.opacity = '0'; });
+    await p.waitForTimeout(300);
+    const without = await p.screenshot({ clip: toast.clip });
+    await p.evaluate(() => { document.getElementById('toast').style.opacity = ''; });
+    const drawn = await p.evaluate(async ({ a, b }) => {
+      const load = async (d) => { const i = new Image(); i.src = 'data:image/png;base64,' + d;
+        await i.decode(); const c = document.createElement('canvas');
+        c.width = i.width; c.height = i.height; c.getContext('2d').drawImage(i, 0, 0);
+        return c.getContext('2d').getImageData(0, 0, i.width, i.height).data; };
+      const [A, B] = [await load(a), await load(b)];
+      let n = 0;
+      for (let i = 0; i < A.length; i += 4) {
+        if (Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2]) > 20) n++;
+      }
+      return n;
+    }, { a: withToast.toString('base64'), b: without.toString('base64') });
+    check('a toast raised from the open sheet is on top of it and still announced',
+      drawn > 200 && !toast.inert && toast.role === 'status' && toast.text.length > 0,
+      `${drawn} pixels drawn, inert=${toast.inert}, role=${toast.role}, "${toast.text.slice(0, 40)}"`);
+  }
+
   await p.evaluate(() => document.querySelector('.now-playing').classList.remove('is-open'));
   await p.waitForTimeout(400);
 

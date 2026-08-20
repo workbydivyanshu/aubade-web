@@ -827,7 +827,11 @@ a {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.2s, translate 0.2s;
-  z-index: 300;
+  /* Above the now-playing sheet, which sits at 1000. At 300 every toast the
+     sheet itself raises — Share, Like, the overflow menu — was drawn behind
+     it, so the confirmation for the thing you just did was the one you could
+     not see. */
+  z-index: 1100;
 }
 
 .toast.is-open {

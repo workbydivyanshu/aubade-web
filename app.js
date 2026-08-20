@@ -2786,7 +2786,9 @@ function openAlbumMenu(btn, items) {
 new MutationObserver(() => {
   const open = npOverlay.classList.contains('is-open');
   for (const el of document.getElementById('app').children) {
-    if (el !== npOverlay) el.toggleAttribute('inert', open);
+    // The toast is a live region and has to keep announcing from behind the
+    // sheet; inert would take it out of the accessibility tree with the rest.
+    if (el !== npOverlay && el.id !== 'toast') el.toggleAttribute('inert', open);
   }
 }).observe(npOverlay, { attributes: true, attributeFilter: ['class'] });
 
