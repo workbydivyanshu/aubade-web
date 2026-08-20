@@ -808,15 +808,7 @@ function updatePlayerUI(record) {
   if (!document.getElementById('np-queue').hidden) renderQueue();
   updateMediaSession(record);
 
-  // Heart state
-  const heartBtn = document.getElementById('np-heart-btn');
-  if (heartBtn) {
-    const likedPaths = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
-    const isLiked = !!likedPaths[record.path];
-    heartBtn.classList.toggle('np-icon-btn--active', isLiked);
-    const svg = heartBtn.querySelector('svg');
-    if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
-  }
+  syncLikeIcons();
   
   const album = state.library.albums.find(a => albumKey(a) === `${record.albumArtist.trim().toLowerCase()}\0${record.album.trim().toLowerCase()}`);
   if (album) {
@@ -2424,23 +2416,67 @@ function renderSettingsView() {
 
 // ── Now-Playing extras (Step 16 fixes) ───────────────────────
 
-// 2. Heart (like) toggle
-document.getElementById('np-heart-btn').addEventListener('click', () => {
+// 2. Heart (like) toggle. There are two of these — the now-playing heart and
+// the player bar's own Like button, which was markup with no handler and had
+// hover and focus states, so it looked like it worked. One toggle, both icons.
+function likeButtons() {
+  return [document.getElementById('np-heart-btn'),
+          document.getElementById('player-like-btn')].filter(Boolean);
+}
+
+function syncLikeIcons() {
+  const record = playerState.queue[playerState.index];
+  const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
+  const isLiked = !!(record && liked[record.path]);
+  for (const btn of likeButtons()) {
+    btn.classList.toggle('np-icon-btn--active', isLiked);
+    btn.setAttribute('aria-pressed', String(isLiked));
+    btn.setAttribute('aria-label', isLiked ? 'Remove from liked songs' : 'Add to liked songs');
+    const svg = btn.querySelector('svg');
+    if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+  }
+}
+
+function toggleLikeCurrent() {
   const record = playerState.queue[playerState.index];
   if (!record) return;
   const liked = JSON.parse(localStorage.getItem('aubade_liked') || '{}');
-  if (liked[record.path]) {
-    delete liked[record.path];
-  } else {
-    liked[record.path] = true;
-  }
+  if (liked[record.path]) delete liked[record.path];
+  else liked[record.path] = true;
   localStorage.setItem('aubade_liked', JSON.stringify(liked));
-  // Update icon
-  const isLiked = !!liked[record.path];
-  const btn = document.getElementById('np-heart-btn');
-  btn.classList.toggle('np-icon-btn--active', isLiked);
-  const svg = btn.querySelector('svg');
-  if (svg) svg.setAttribute('fill', isLiked ? 'currentColor' : 'none');
+  syncLikeIcons();
+}
+
+for (const btn of likeButtons()) btn.addEventListener('click', toggleLikeCurrent);
+
+// The player bar's Share, Queue and Fullscreen were markup too. Each has a
+// counterpart that already works, so these reach the same behaviour rather
+// than growing a second copy of it.
+document.getElementById('player-share-btn')?.addEventListener('click', async () => {
+  const record = playerState.queue[playerState.index];
+  if (!record) return;
+  try {
+    await navigator.clipboard.writeText(`${record.title} — ${record.artist}`);
+    showToast('Copied track name');
+  } catch { /* clipboard blocked */ }
+});
+
+document.getElementById('player-queue-btn')?.addEventListener('click', () => {
+  document.querySelector('.now-playing').classList.add('is-open');
+  setQueueOpen(true);
+});
+
+document.getElementById('player-fullscreen-btn')?.addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    document.querySelector('.now-playing').classList.add('is-open');
+    await document.querySelector('.now-playing').requestFullscreen();
+  } catch {
+    showToast('Your browser would not allow fullscreen.');
+  }
 });
 
 // 3. Playback speed control

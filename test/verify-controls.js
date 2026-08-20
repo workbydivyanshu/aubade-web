@@ -9,7 +9,11 @@ const { PLAYER_URL, seed } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
-  const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  const ctx = await br.newContext({
+    viewport: { width: 1440, height: 900 }, colorScheme: 'dark',
+    permissions: ['clipboard-read', 'clipboard-write'],
+  });
+  const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 120)); });
@@ -74,6 +78,92 @@ const { PLAYER_URL, seed } = require('./lib/harness');
   const key = await state();
   check('the m key keeps the icon in step', key.muted === false && key.barIcon === false,
     `muted=${key.muted} icon=${key.barIcon}`);
+
+  // Closing it again is the other half of the pair, and the checks below
+  // need it shut: the open sheet covers the whole player bar, so a click on
+  // any bar button lands on .now-playing__body instead.
+  await p.click('#np-close');
+  await p.waitForTimeout(500);
+  check('the sheet closes again', await p.evaluate(() =>
+    !document.querySelector('.now-playing').classList.contains('is-open')));
+
+  // ── The player bar's own controls ──────────────────────────────
+  // Six of these were markup with no handler at all. Like and Share were the
+  // worst of it: they carry hover and focus states, so they looked alive.
+  // Playback cannot start headlessly, but clicking a track still fills the
+  // queue, which is what these handlers act on.
+  await p.evaluate(() => { location.hash = '#home'; });
+  await p.waitForTimeout(400);
+  const albumKey = await p.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+  await p.evaluate((k) => { location.hash = '#album/' + k; }, albumKey);
+  await p.waitForTimeout(800);
+  await p.evaluate(() => document.querySelector('.track-row')?.click());
+  await p.waitForTimeout(900);
+  await p.evaluate(() => document.getElementById('app').classList.remove('is-idle'));
+
+  check('a track is queued for the bar controls to act on', await p.evaluate(() =>
+    document.querySelectorAll('.track-row').length > 0));
+
+  // Cast and Mini player were removed: a control that cannot ever work is
+  // worse than one that is absent.
+  const absent = await p.evaluate(() => ({
+    cast: document.querySelectorAll('[aria-label="Cast"]').length,
+    mini: document.querySelectorAll('[aria-label="Mini player"]').length,
+  }));
+  check('Cast and Mini player are gone rather than dead',
+    absent.cast === 0 && absent.mini === 0, JSON.stringify(absent));
+
+  const likeState = () => p.evaluate(() => {
+    const btn = document.getElementById('player-like-btn');
+    return { pressed: btn.getAttribute('aria-pressed'), label: btn.getAttribute('aria-label'),
+             stored: Object.keys(JSON.parse(localStorage.getItem('aubade_liked') || '{}')).length,
+             npPressed: document.getElementById('np-heart-btn').getAttribute('aria-pressed') };
+  });
+  const likeBefore = await likeState();
+  await p.click('#player-like-btn');
+  await p.waitForTimeout(250);
+  const likeAfter = await likeState();
+  check('the bar Like button likes the track',
+    likeAfter.stored === likeBefore.stored + 1 && likeAfter.pressed === 'true',
+    `stored ${likeBefore.stored} to ${likeAfter.stored}, aria-pressed ${likeAfter.pressed}`);
+  check('and the now-playing heart agrees', likeAfter.npPressed === 'true');
+  check('and its label says what pressing it will do now',
+    likeAfter.label === 'Remove from liked songs', `"${likeAfter.label}"`);
+  await p.click('#player-like-btn');
+  await p.waitForTimeout(250);
+  const likeUndone = await likeState();
+  check('clicking again unlikes it', likeUndone.stored === likeBefore.stored);
+
+  await p.click('#player-share-btn');
+  await p.waitForTimeout(400);
+  const shared = await p.evaluate(() => ({
+    toast: (document.getElementById('toast')?.textContent || '').trim(),
+    clip: navigator.clipboard.readText ? null : undefined,
+  }));
+  check('the bar Share button copies the track', /copied/i.test(shared.toast),
+    `toast "${shared.toast}"`);
+
+  await p.click('#player-queue-btn');
+  await p.waitForTimeout(400);
+  check('the bar Queue button opens the queue', await p.evaluate(() =>
+    document.querySelector('.now-playing').classList.contains('is-open') &&
+    !document.getElementById('np-queue').hidden));
+
+  // Fullscreen cannot be granted to a headless page, so the check is the
+  // handler's own observable step rather than the API's outcome: it opens the
+  // sheet before asking, and toasts if the browser refuses. Both are absent
+  // when the button is unbound, which is the thing being tested.
+  await p.click('#np-close');
+  await p.waitForTimeout(400);
+  await p.click('#player-fullscreen-btn');
+  await p.waitForTimeout(500);
+  const fs = await p.evaluate(() => ({
+    open: document.querySelector('.now-playing').classList.contains('is-open'),
+    real: !!document.fullscreenElement,
+    toast: (document.getElementById('toast')?.textContent || '').trim(),
+  }));
+  check('the bar Fullscreen button acts', fs.open && (fs.real || /fullscreen/i.test(fs.toast)),
+    `open=${fs.open} fullscreen=${fs.real} toast="${fs.toast}"`);
 
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;

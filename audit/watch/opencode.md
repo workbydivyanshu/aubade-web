@@ -1,72 +1,79 @@
 # opencode — big-pickle — Sisyphus
-2026-08-18T06:42:40-04:00 — HEAD 503a879
+2026-08-18T09:15:00-04:00 — HEAD ca3e0a0
 
-Delta since my last pass (d1270b0): app.js (+148), landing.html (+210), landing.css (+528),
-responsive.css (+31), test/ (+12 files, +6300), README.md (+149), shots/ (+2 images),
-test/hooks/pre-commit (+17).
+Delta since my last pass (503a879): app.js (+73), player.html (new, +1048),
+responsive.css (+46), plus 57 files total across 8 commits.
 
-Major changes: Firefox/Safari fallback path (`pickFolderFallback`, `sessionFiles`,
-`resolveTrackFile`, `showReconnectPrompt`), `landing.html`/`landing.css` opening page,
-entire `test/` suite ported from `~/aubade-capture` into the repo behind `test/run.js`,
-responsive.css phone home page changes (greeting-row wrap, quick-grid 2-col).
+Major changes: player.html rewritten with now-playing overlay, ambient layers,
+queue pane, credits panel; volume mute toggle wired for both player and NP bars;
+`playTrack` catch block now checks `err.needsFolder` (previous unverified finding
+— FIXED); greeting is time-of-day instead of literal; "Octave" references updated
+to "the reference" in comments.
 
-### Previous unverified: --tab-bar-h dead CSS variable — FIXED
-responsive.css now defines `--tab-bar-h: 70px` (line 41) and `--tab-bar-gap: 28px` (line 42),
-both consumed at lines 62 and 154 in `calc()` expressions. The magic number 98 that was
-previously hardcoded has been decomposed into `var(--tab-bar-h) + var(--tab-bar-gap)`.
-Verified: `grep -rn 'tab-bar-h' *.css` → declaration + 2 usages.
+### Previous unverified: playTrack catch block — FIXED
+The `err.needsFolder` branch (app.js:560-566) now resets `consecutiveFailures`,
+calls `clearPlayerUI()` and `showReconnectPrompt()`, and shows a toast. No longer
+falls through to the misleading "files may have moved" message.
 
-### Test suite ported from ~/aubade-capture: parity confirmed
-Compared 12 ported suites against their originals. The only differences are:
-1. Import mechanism: `eval(fs.readFileSync(...))` → `require('./lib/harness')`
-2. `seedLibrary` and `seed` functions moved to `test/lib/harness.js`
-3. `phone-views.js` has additional overflow/spilling/truncated checks (new features)
-Test logic (what each suite asserts) is preserved. `node test/run.js` → 13/13 pass.
+## CONFIRMED
 
-### landing.html / landing.css: clean
-Pure HTML, no JavaScript. References `tokens.css`, `landing.css`, `index.html`,
-`shots/desktop.webp`, `shots/phone.webp` — all exist. Scoped under `.lp` class.
-No script tags, no event listeners, no DOM manipulation. No bugs found.
+### Player bar: six decorative buttons — wired to nothing
+The player bar's right section (player.html:742-787) contains seven icon buttons.
+Only the volume button (`id="player-vol-btn"`) is bound. The other six have no
+id, no selector, and no listener anywhere in app.js:
 
-### responsive.css phone home page: clean
-Greeting row now wraps (`flex-wrap: wrap`), `greeting-row__text` drops to 30/36,
-quick-grid drops to 2 columns at `max-width: 767.98px`. Both selectors exist in
-index.html. Measurements match the reference. No layout regressions found.
+| Line | aria-label | Visible desktop | Visible mobile | Bound |
+|------|-----------|----------------|---------------|-------|
+| 680 | Like | yes | yes | **no** |
+| 685 | Share | yes | yes | **no** |
+| 743 | Cast | yes | hidden (responsive.css:173) | **no** |
+| 751 | Queue | yes | hidden (responsive.css:173) | **no** |
+| 773 | Mini player | yes | hidden (responsive.css:175) | **no** |
+| 779 | Fullscreen | yes | hidden (responsive.css:176) | **no** |
 
-### New code: Firefox/Safari fallback path — clean
-- `sessionFiles` Map (line 350): declared, populated in `pickFolderFallback`, checked in `resolveTrackFile`.
-- `resolveTrackFile` (line 327): checks sessionFiles first, then directory handle. Throws with
-  `needsFolder: true` when neither is available.
-- `pickFolderFallback` (line 372): uses `<input webkitdirectory>`, populates sessionFiles and entries.
-- `showReconnectPrompt` (line 433): creates reconnect button, calls `pickFolder()` on click.
-- `init()` (line 445): no-FS-API path loads library from IndexedDB, shows reconnect prompt, routes.
-- `HAS_FS_ACCESS` (line 321): `'showDirectoryPicker' in window`. Used in pickFolder and resolveTrackFile.
-- All identifiers declared, all imports/exports aligned, no ReferenceError risk.
+Repro: `grep -an 'player__icon-btn' app.js` → only one match (line 665, the
+"Expand now playing" button). No matches for `Cast`, `Mini player`, `Fullscreen`,
+`Queue` in the player bar context.
 
-## Unverified
+Why it matters: Like and Share are the worst — they have `:hover` and
+`:focus-visible` states (player.css:86-93), so they look functional. Clicking
+either does nothing. The others are hidden on mobile but still respond to pointer
+events on desktop with no effect.
 
-- `playTrack` catch block (line 558) does not check `err.needsFolder`. When a no-FS-API user
-  has not reconnected the folder and tries to play, the error "Folder not connected" is caught
-  and after 3 failures shows "Could not play these files. They may have moved or been renamed"
-  — a misleading message for this case. Not a crash; the reconnect prompt is visible. Cosmetic UX.
+Note: BUG-RULES.md exempts the *now-playing overlay's* Like button (line 900,
+`id="np-heart-btn"`) for being inert headlessly. The *player bar's* Like button
+(line 680) is a different element with a different failure mode — it has no
+listener at all, not a bail-on-null-record.
+
+### Player bar Queue button duplicates now-playing Queue without binding
+The now-playing overlay has `id="np-queue-btn"` (player.html:992) bound at
+app.js:2750, which toggles the queue pane. The player bar has a second Queue
+button (player.html:751) with no id and no binding. On desktop both are visible;
+only the NP one works.
 
 ## Checked and clean
 
-- All six views load with zero diagnostics: audit.js for home|album|artist|library|search|settings
-  all exit 0.
-- `verify-keys.js` — keyboard shortcuts, typing does not fire shortcuts: pass.
-- `verify-menu.js` — 9 menu items, box 248×373, all actions verified: pass.
-- `verify-liked.js` — 5→4→0 rows, stats update, empty state with "No songs yet": pass.
-- `verify-eq.js` — 7 bars respond to frequency sweep, is-live flag correct: pass.
-- `verify-np-full.js` — all 13 now-playing elements present and sized: pass.
-- `verify-chrome.js` — sidebar collapse, album menu outside-click, removed controls absent: pass.
-- `verify-playlists.js` — create, add album, duplicate guard, remove, missing-file skip: pass.
-- `verify-nofsapi.js` — app renders, routes, reconnect prompt offered: pass.
-- `verify-escape-palette.js` — Escape dismissal and palette reset: pass.
-- `verify-palette.js` — colours recovered from cover art: pass.
-- `verify-responsive.js` — both sides of the 768px breakpoint: pass.
-- `phone-views.js` — every route at 390px: pass.
-- `verify-landing.js` — the opening page: pass.
-- All import/export graphs match. No new identifiers used but undeclared.
-- No listeners bound to nonexistent elements. `home-empty-pick` exists at index.html:220.
-- No actual NUL bytes in new code (the `M-bM-^@M-^T` in comments are UTF-8 em dashes).
+- `playTrack` catch block: properly handles `err.needsFolder`, shows reconnect
+  prompt and toast, no longer shows misleading error.
+- Volume mute toggle: `volButtons` array (app.js:977) collects both
+  `player-vol-btn` and `np-vol-btn`; `syncMuted()` toggles `is-muted` class,
+  `aria-pressed`, and `aria-label`; `volumechange` event fires for both mute and
+  volume changes. Both buttons work.
+- Greeting: `setGreeting()` (app.js:1106) uses `new Date().getHours()` with
+  conventional boundaries; `visibilitychange` listener refreshes on tab focus.
+- All views load: home, album, artist, library, search, settings — no console
+  errors in code review.
+- `lib-filter-pill` and `lib-sort-btn` properly bound (app.js:1978-1994);
+  pill click delegates to `data-view`, sort cycles through Name/Artist/Year/
+  Recently added.
+- NP overlay: all buttons with ids bound — close, menu, credits-close, heart,
+  share, play/prev/next, shuffle, repeat, queue-btn/clear, lyrics-toggle,
+  lyric-select/copy, sync-minus/plus, speed, vol-btn, vol-slider.
+- Album view: all five buttons (shuffle/play/like/queue/share) bound via
+  `renderAlbumView`; overflow menu created dynamically by `openAlbumMenu`.
+- Artist view: all buttons bound in `renderArtistView`.
+- Settings: all six buttons bound (rescan, change-folder, toggle-singles,
+  reset-vol, clear-cache, reset).
+- Keyboard shortcuts: properly guard against typing in input fields.
+- NUL bytes: no new ones in added code.
+- All new identifiers declared; no ReferenceError risk from new code.

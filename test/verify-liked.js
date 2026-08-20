@@ -28,6 +28,12 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   await p.evaluate(() => { location.hash = '#liked-songs'; });
   await p.waitForTimeout(900);
 
+  let bad = 0;
+  const check = (label, ok, detail = '') => {
+    console.log(`  ${ok ? 'OK  ' : 'FAIL'}  ${label}${detail ? '  — ' + detail : ''}`);
+    if (!ok) bad++;
+  };
+
   const state = await p.evaluate(() => ({
     visible: document.getElementById('view-liked').style.display,
     otherViewsShown: ['home', 'album', 'search', 'library', 'artist', 'settings']
@@ -41,6 +47,13 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     title: (document.getElementById('liked-title') || {}).textContent,
   }));
   console.log('with 5 liked:', JSON.stringify(state));
+  check('the liked view is shown', state.visible === 'block');
+  check('no other view is painted underneath it', state.otherViewsShown.length === 0,
+    state.otherViewsShown.join(', '));
+  check('all 5 liked tracks are rendered', state.rows === 5, `${state.rows} rows`);
+  check('the stats line counts them', state.stats === '5 songs · 11 min', state.stats);
+  check('the empty state is hidden', state.emptyHidden === true);
+  check('the title reads Liked Songs', state.title === 'Liked Songs', state.title);
 
   // The sidebar link should reach it.
   await p.evaluate(() => { location.hash = '#home'; });
@@ -50,7 +63,7 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     if (a) a.click();
   });
   await p.waitForTimeout(700);
-  console.log('sidebar link lands on liked view: ' + await p.evaluate(() =>
+  check('sidebar link lands on liked view', await p.evaluate(() =>
     document.getElementById('view-liked').style.display === 'block'));
 
   // Unlike one.
@@ -59,9 +72,13 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     if (b) b.click();
   });
   await p.waitForTimeout(600);
-  console.log('after one unlike: ' + await p.evaluate(() =>
-    document.querySelectorAll('#liked-tracks .track-row').length + ' rows, stats "' +
-    document.getElementById('liked-stats').textContent + '"'));
+  const afterUnlike = await p.evaluate(() => ({
+    rows: document.querySelectorAll('#liked-tracks .track-row').length,
+    stats: document.getElementById('liked-stats').textContent,
+  }));
+  console.log(`after one unlike: ${afterUnlike.rows} rows, stats "${afterUnlike.stats}"`);
+  check('unliking removes exactly one row', afterUnlike.rows === 4, `${afterUnlike.rows} rows`);
+  check('the stats line updates with it', afterUnlike.stats === '4 songs · 9 min', afterUnlike.stats);
 
   // Empty state.
   await p.evaluate(() => {
@@ -78,8 +95,15 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     playDisabled: document.getElementById('liked-play').disabled,
   }));
   console.log('empty state:', JSON.stringify(empty));
+  check('no rows remain', empty.rows === 0, `${empty.rows} rows`);
+  check('the empty state is shown', empty.emptyShown === true);
+  check('the stats line reads the empty message', empty.stats === 'No songs yet', empty.stats);
+  check('play is disabled with nothing to play', empty.playDisabled === true);
 
   await p.screenshot({ path: process.argv[2] || '/tmp/liked.png' });
-  console.log('errors: ' + (errs.length ? errs.slice(0, 4).join(' | ') : 'none'));
+  console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
+  if (errs.length) bad++;
   await br.close();
+  console.log(bad === 0 ? 'liked songs renders, counts, unlikes, and empties out correctly' : `${bad} check(s) failed`);
+  process.exit(bad ? 1 : 0);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(1); });

@@ -15,18 +15,24 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   await p.reload({ waitUntil: 'networkidle' });
   await p.waitForTimeout(1400);
 
-  console.log('mediaSession available: ' + await p.evaluate(() => 'mediaSession' in navigator));
-  console.log('handlers registered without throwing: ' + (errs.length === 0));
+  let bad = 0;
+  const check = (label, ok, detail = '') => {
+    console.log(`  ${ok ? 'OK  ' : 'FAIL'}  ${label}${detail ? '  — ' + detail : ''}`);
+    if (!ok) bad++;
+  };
 
-  // Volume via arrows.
-  const vol = await p.evaluate(() => document.querySelector('audio') ? 'dom' : 'detached');
-  void vol;
+  console.log('mediaSession available: ' + await p.evaluate(() => 'mediaSession' in navigator));
+  check('handlers registered without throwing', errs.length === 0);
+
+  // Volume via arrows. Each press nudges by 5%, so two ArrowDown presses
+  // from a full bar land on 90% — not just "some decrease".
   const before = await p.evaluate(() => document.getElementById('np-vol-fill').style.width);
   await p.keyboard.press('ArrowDown');
   await p.keyboard.press('ArrowDown');
   await p.waitForTimeout(200);
   const after = await p.evaluate(() => document.getElementById('np-vol-fill').style.width);
-  console.log(`ArrowDown x2 volume: ${before} -> ${after}`);
+  check(`ArrowDown x2 drops volume by 10%`, before === '100%' && after === '90%',
+    `${before} -> ${after}`);
 
   // ? opens the list, Escape closes it.
   await p.keyboard.press('?');
@@ -38,7 +44,8 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   await p.keyboard.press('Escape');
   await p.waitForTimeout(300);
   const closed = await p.evaluate(() => !document.getElementById('shortcuts'));
-  console.log(`? opens help: ${help} | Escape closes it: ${closed}`);
+  check('? opens the shortcuts list', help !== 'MISSING', help);
+  check('Escape closes it', closed);
 
   // f toggles now playing.
   await p.keyboard.press('f');
@@ -47,8 +54,10 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     document.querySelector('.now-playing').classList.contains('is-open'));
   await p.keyboard.press('f');
   await p.waitForTimeout(300);
-  console.log('f toggles now playing: opened=' + opened + ' closed=' + await p.evaluate(() =>
-    !document.querySelector('.now-playing').classList.contains('is-open')));
+  const reclosed = await p.evaluate(() =>
+    !document.querySelector('.now-playing').classList.contains('is-open'));
+  check('f opens now playing', opened);
+  check('f again closes it', reclosed);
 
   // The important negative: typing must not fire shortcuts.
   await p.evaluate(() => { location.hash = '#search'; });
@@ -64,8 +73,16 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
     npOpen: document.querySelector('.now-playing').classList.contains('is-open'),
   }));
   console.log('typing in search: ' + JSON.stringify(state));
-  console.log('  volume unchanged while typing: ' + (state.vol === volBefore));
+  check('typed text lands in the field, not eaten by shortcuts',
+    state.typed === 'quiet flm space', `"${state.typed}"`);
+  check('volume unchanged while typing (m/f/? did not fire)', state.vol === volBefore,
+    `${volBefore} -> ${state.vol}`);
+  check('? did not open the help panel while typing', state.helpOpen === false);
+  check('f did not open now playing while typing', state.npOpen === false);
 
-  console.log('errors: ' + (errs.length ? errs.slice(0, 4).join(' | ') : 'none'));
+  console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
+  if (errs.length) bad++;
   await br.close();
+  console.log(bad === 0 ? 'keyboard shortcuts behave and stay out of text input' : `${bad} check(s) failed`);
+  process.exit(bad ? 1 : 0);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(1); });

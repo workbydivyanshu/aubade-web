@@ -170,9 +170,7 @@
   .player__scrubber,
   .player__time,
   .player__vol-bar,
-  .player__right .player__icon-btn[aria-label="Cast"],
   .player__right .player__icon-btn[aria-label="Volume"],
-  .player__right .player__icon-btn[aria-label="Mini player"],
   .player__right .player__icon-btn[aria-label="Fullscreen"] {
     display: none;
   }

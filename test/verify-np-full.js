@@ -69,25 +69,31 @@ const SIZE = [
   }, { type: TYPE, size: SIZE });
 
   let bad = 0;
+  const check = (label, ok, detail = '') => {
+    console.log(`  ${ok ? 'OK  ' : 'FAIL'}  ${label}${detail ? '  — ' + detail : ''}`);
+    if (!ok) bad++;
+  };
+
   console.log('── type ──');
   for (const [sel, want] of TYPE) {
     const mine = got.type[sel];
-    if (mine === 'MISSING') { console.log(`  MISSING  ${sel}`); bad++; continue; }
-    const diffs = Object.entries(want).filter(([k, v]) => mine[k] !== v)
-      .map(([k, v]) => `${k} want ${v} got ${mine[k]}`);
-    if (diffs.length) { console.log(`  DIFF     ${sel}: ${diffs.join(', ')}`); bad += diffs.length; }
-    else console.log(`  ok       ${sel}`);
+    // a missing element is a failure, not a skipped line — the reference has it.
+    check(sel, mine !== 'MISSING' && Object.keys(want).every((k) => mine[k] === want[k]),
+      mine === 'MISSING' ? 'MISSING'
+        : Object.entries(want).filter(([k, v]) => mine[k] !== v)
+            .map(([k, v]) => `${k} want ${v} got ${mine[k]}`).join(', '));
   }
   console.log('── size ──');
   for (const [sel, w, h] of SIZE) {
     const mine = got.size[sel];
-    if (mine === 'MISSING') { console.log(`  MISSING  ${sel}`); bad++; continue; }
-    const off = Math.abs(mine[0] - w) + Math.abs(mine[1] - h);
-    if (off > 2) { console.log(`  DIFF     ${sel}: want ${w}x${h} got ${mine[0]}x${mine[1]}`); bad++; }
-    else console.log(`  ok       ${sel}  ${mine[0]}x${mine[1]}`);
+    const off = mine === 'MISSING' ? Infinity : Math.abs(mine[0] - w) + Math.abs(mine[1] - h);
+    check(sel, off <= 2,
+      mine === 'MISSING' ? 'MISSING' : `want ${w}x${h} got ${mine[0]}x${mine[1]}`);
   }
 
-  console.log(`\n${bad === 0 ? 'all match' : bad + ' mismatches'}`);
-  console.log('errors: ' + (errs.length ? errs.slice(0, 3).join(' | ') : 'none'));
+  console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
+  if (errs.length) bad++;
   await br.close();
+  console.log(bad === 0 ? 'now playing matches the reference' : `${bad} check(s) failed`);
+  process.exit(bad ? 1 : 0);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(1); });
