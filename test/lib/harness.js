@@ -135,6 +135,24 @@ function serveRepo() {
 async function fakeFilesystem(page) {
   const patched = { db: false };
   await page.addInitScript(() => {
+    // Thirty seconds of a quiet tone, built here so no fixture has to be
+    // shipped. Long enough that a track does not run out while a suite is
+    // between two checks, which made everything after the first one race.
+    window.__aubadeWav = (secs = 30, freq = 440) => {
+      const rate = 8000, n = rate * secs;
+      const buf = new ArrayBuffer(44 + n * 2);
+      const v = new DataView(buf);
+      const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+      str(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); str(8, 'WAVEfmt ');
+      v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+      v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true);
+      v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+      str(36, 'data'); v.setUint32(40, n * 2, true);
+      for (let i = 0; i < n; i++) {
+        v.setInt16(44 + i * 2, Math.sin((2 * Math.PI * freq * i) / rate) * 8000, true);
+      }
+      return buf;
+    };
     window.__aubadeFakeDir = {
       name: 'Test Music',
       queryPermission: async () => 'granted',
@@ -142,7 +160,10 @@ async function fakeFilesystem(page) {
       async getDirectoryHandle() { return window.__aubadeFakeDir; },
       getFileHandle: async (name) => ({
         name,
-        getFile: async () => new File([new Uint8Array(4096)], name, { type: 'audio/ogg' }),
+        // Real, decodable audio rather than a block of zeroes: with zeroes the
+        // element sets MEDIA_ERR_SRC_NOT_SUPPORTED and every path that runs
+        // after playback actually starts stays out of reach.
+        getFile: async () => new File([window.__aubadeWav()], name, { type: 'audio/wav' }),
       }),
     };
   });
