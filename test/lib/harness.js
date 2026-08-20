@@ -198,15 +198,24 @@ async function fakeFilesystem(page) {
     };
   });
   await page.route('**/db.js', async (route) => {
-    const res = await route.fetch();
-    const src = await res.text();
+    // route.fetch rejects if the page navigates while it is in flight, which
+    // took down a whole run once. Falling through serves the unpatched module,
+    // so the "stand-in still fits" check goes red instead — a named failure
+    // rather than a stack trace, and never a suite that quietly tests nothing.
+    let src;
+    try {
+      src = await (await route.fetch()).text();
+    } catch {
+      await route.continue().catch(() => {});
+      return;
+    }
     const marker = "export async function dbGet(key, storeName = 'handles') {";
     patched.db = src.includes(marker);
-    route.fulfill({
+    await route.fulfill({
       headers: { 'content-type': 'text/javascript; charset=utf-8' },
       body: src.replace(marker, marker +
         "\n  if (key === 'musicDir' && window.__aubadeFakeDir) return window.__aubadeFakeDir;"),
-    });
+    }).catch(() => {});
   });
   return patched;
 }

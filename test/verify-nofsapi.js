@@ -113,6 +113,26 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   console.log(`  ---   fallback picker reachable from page scope: ${wired}` +
               ' (module scope, so false is expected)');
 
+  // The stored index is rebuilt from its own records rather than trusted, so
+  // a library written before a naming rule existed heals on the next boot
+  // without a rescan. Three boot paths read that index and only one of them
+  // went through the rebuild, so the heal never reached this one — the branch
+  // taken by every browser without the File System Access API.
+  const stale = seedLibrary();
+  stale.tracks[0] = { ...stale.tracks[0], albumArtist: '', album: '', title: '' };
+  stale.albums = [{ album: '', albumArtist: '', tracks: [stale.tracks[0]] }];
+  stale.artists = [{ name: '', albums: stale.albums }];
+  await p.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+  await seed(p, stale);
+  await p.reload({ waitUntil: 'networkidle' });
+  await p.waitForTimeout(1200);
+  await p.evaluate(() => { location.hash = '#library'; });
+  await p.waitForTimeout(800);
+  const healed = await p.evaluate(() =>
+    (document.getElementById('view-library')?.innerText || '').replace(/\s+/g, ' '));
+  check('an index with blank names heals on this boot path too, without a rescan',
+    /Unknown Artist|Unknown Album/.test(healed), `"${healed.slice(0, 70)}"`);
+
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;
   await br.close();

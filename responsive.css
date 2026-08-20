@@ -170,8 +170,12 @@
   .player__scrubber,
   .player__time,
   .player__vol-bar,
-  .player__right .player__icon-btn[aria-label="Volume"],
-  .player__right .player__icon-btn[aria-label="Fullscreen"] {
+  /* By id. These were matched on aria-label, and syncMuted rewrites the volume
+     button's to "Mute" at module load, so the rule never applied and the mute
+     icon stayed on screen below 768px. Fullscreen's label happens to be static
+     today, which is not a reason to key on it. */
+  #player-vol-btn,
+  #player-fullscreen-btn {
     display: none;
   }
 

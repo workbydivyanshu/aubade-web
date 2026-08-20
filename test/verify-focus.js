@@ -332,6 +332,22 @@ const PAD = 8;
       drawn: el.getBoundingClientRect().width > 4,
     };
   });
+  // The inert sweep took this out of the accessibility tree along with the
+  // rest of the shell, so a track change announced nothing exactly while the
+  // now-playing sheet was up — the one surface where it matters most.
+  await a.evaluate(() => document.querySelector('.now-playing').classList.add('is-open'));
+  await a.waitForTimeout(500);
+  const underSheet = await a.evaluate(() => {
+    const el = document.getElementById('np-announce');
+    return { inert: !!el.closest('[inert]') || el.hasAttribute('inert'),
+             text: (el.textContent || '').trim() };
+  });
+  check('and keeps announcing while the now-playing sheet is open',
+    !underSheet.inert && underSheet.text.length > 0,
+    `inert=${underSheet.inert} "${underSheet.text}"`);
+  await a.evaluate(() => document.querySelector('.now-playing').classList.remove('is-open'));
+  await a.waitForTimeout(400);
+
   check('the track that started is announced, out of sight',
     said && said.text.length > 0 && said.live === 'polite' && said.readable && !said.drawn,
     said ? `"${said.text}" live=${said.live} readable=${said.readable} drawn=${said.drawn}`

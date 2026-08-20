@@ -118,6 +118,16 @@ const EMPTY = { tracks: [], albums: [], artists: [] };
     dressed.radius >= 12 && dressed.pad >= 16 && /rgba?\(0, 0, 0/.test(dressed.scrim),
     `radius ${dressed.radius}, padding ${dressed.pad}, scrim ${dressed.scrim}`);
   await p.screenshot({ path: 'audit/shots/ask-dialog.png' });
+  // Reachable from the sheet's own overflow menu, where the dialog used to be
+  // drawn behind it: invisible, unclickable, and escapable only with Escape.
+  const layered = await p.evaluate(() => {
+    const scrim = document.querySelector('.ask-scrim');
+    const np = document.querySelector('.now-playing');
+    const z = (el) => parseInt(getComputedStyle(el).zIndex, 10) || 0;
+    return { ask: z(scrim), sheet: z(np) };
+  });
+  check('and sits above the now-playing sheet, which can open it',
+    layered.ask > layered.sheet, `ask ${layered.ask} vs sheet ${layered.sheet}`);
   await answer(p, 'Empty on purpose');
   await p.waitForTimeout(900);
   await reads('a playlist with nothing in it says how to fill it',

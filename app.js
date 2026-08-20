@@ -430,7 +430,7 @@ function showReconnect(handle) {
       // Check for cached index first
       const cached = await dbGet('index', 'library');
       if (cached) {
-        state.library = cached;
+        state.library = fromCache(cached);
         statusEl.textContent = formatStatus(state.library, 0);
         renderHome(state.library);
       } else {
@@ -469,7 +469,7 @@ async function init() {
     renderHome(state.library);
     const saved = await dbGet('index', 'library');
     if (saved) {
-      state.library = saved;
+      state.library = fromCache(saved);
       statusEl.textContent = formatStatus(state.library, 0);
       renderHome(state.library);
       showReconnectPrompt('Reconnect your music folder to play');
@@ -486,13 +486,7 @@ async function init() {
   // folder handle (e.g. if handle was cleared but index persists)
   const cached = await dbGet('index', 'library');
   if (cached) {
-    // Rebuilt rather than trusted. An index written before a grouping or
-    // naming rule existed keeps its own answer forever otherwise, and a store
-    // that has been half-written reaches every view raw. The records are the
-    // durable thing; the grouping is cheap enough to derive each boot.
-    state.library = Array.isArray(cached.tracks) && cached.tracks.length
-      ? buildLibrary(cached.tracks)
-      : cached;
+    state.library = fromCache(cached);
     statusEl.textContent = formatStatus(state.library, 0);
     renderHome(state.library);
   }
@@ -530,6 +524,20 @@ audio.id = 'player-audio';
 document.body.append(audio);
 
 let currentObjectUrl = null;
+
+// Rebuilt rather than trusted. An index written before a grouping or naming
+// rule existed keeps its own answer forever otherwise, and a store that has
+// been half-written reaches every view raw. The records are the durable thing
+// and the grouping is cheap enough to derive each boot.
+//
+// Three boot paths read this index — permission already granted, no File
+// System Access API at all, and the reconnect prompt — and only one of them
+// went through here, so the heal did not reach Firefox or Safari.
+function fromCache(cached) {
+  return Array.isArray(cached && cached.tracks) && cached.tracks.length
+    ? buildLibrary(cached.tracks)
+    : cached;
+}
 
 // A run of unplayable files should stop and say so rather than skip forever.
 let consecutiveFailures = 0;
@@ -2297,7 +2305,27 @@ async function renderArtistView(name) {
       'Nothing in your library is filed under this artist any more.';
     document.querySelector('.artist-grid--albums').innerHTML = '';
     document.querySelector('.artist-list--songs').innerHTML = '';
+    // Clearing the words is not enough: the buttons keep the onclick handlers
+    // the last artist gave them, so Play on a page that says there is nothing
+    // to play would play whoever you looked at before.
+    for (const id of ['artist-play-btn', 'artist-shuffle-btn', 'artist-follow-btn',
+                      'artist-share-btn', 'artist-more-btn']) {
+      const b = document.getElementById(id);
+      if (!b) continue;
+      b.onclick = null;
+      b.disabled = true;
+    }
+    const staleBg = document.querySelector('.artist-header__bg');
+    if (staleBg) { staleBg.style.backgroundImage = 'none'; staleBg.style.background = ''; }
+    const staleArt = document.getElementById('artist-photo');
+    if (staleArt) { staleArt.style.backgroundImage = 'none'; staleArt.style.background = ''; }
+    document.getElementById('view-artist').style.removeProperty('--album-accent');
     return;
+  }
+  for (const id of ['artist-play-btn', 'artist-shuffle-btn', 'artist-follow-btn',
+                    'artist-share-btn', 'artist-more-btn']) {
+    const b = document.getElementById(id);
+    if (b) b.disabled = false;
   }
 
   const bg = document.querySelector('.artist-header__bg');
@@ -2452,7 +2480,9 @@ async function renderArtistView(name) {
 // ── Settings View ────────────────────────────────────────────
 
 const viewSettings = document.getElementById('view-settings');
-document.querySelector('.top-bar__avatar').addEventListener('click', () => {
+// A local library has no account to open, so the avatar goes where everything
+// it could plausibly mean already lives.
+document.querySelector('.top-bar__avatar')?.addEventListener('click', () => {
   window.location.hash = '#settings';
 });
 
@@ -2532,24 +2562,39 @@ function renderSettingsView() {
                         : 'Cache was already empty');
     });
 
-    document.getElementById('settings-btn-reset').addEventListener('click', (e) => {
-      const controls = document.getElementById('settings-reset-controls');
-      controls.innerHTML = `
+    // Reset swaps itself for a confirm/cancel pair and back again, so the
+    // button that carries the listener keeps being replaced. Binding it
+    // directly meant Cancel had to clear _bound and re-render to get the
+    // listener back — which re-bound the whole panel, while every other
+    // control on it was the same node as before. Three cancels, four
+    // concurrent rescans, and four toasts of which you see the last.
+    //
+    // One listener on the container instead. Nothing inside it needs a
+    // listener of its own, so nothing can lose or gain one.
+    const resetControls = document.getElementById('settings-reset-controls');
+    const showReset = () => {
+      resetControls.innerHTML =
+        '<button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>';
+    };
+    resetControls.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      if (btn.id === 'settings-btn-reset') {
+        resetControls.innerHTML = `
         <span style="font-size: 13px; color: var(--text);">Are you sure?</span>
         <button class="settings-btn" id="settings-btn-cancel-reset" type="button">Cancel</button>
         <button class="settings-btn settings-btn--danger" id="settings-btn-confirm-reset" type="button">Reset</button>
       `;
-      
-      document.getElementById('settings-btn-cancel-reset').addEventListener('click', () => {
-        controls.innerHTML = `<button class="settings-btn settings-btn--danger" id="settings-btn-reset" type="button">Reset</button>`;
-        // The replacement Reset button is a new element, so the listener that
-        // was on the old one went with it. Clearing _bound makes the re-render
-        // bind the whole panel again rather than leaving one dead button.
-        viewSettings._bound = false;
-        renderSettingsView();
-      });
+        return;
+      }
 
-      document.getElementById('settings-btn-confirm-reset').addEventListener('click', async () => {
+      if (btn.id === 'settings-btn-cancel-reset') {
+        showReset();
+        return;
+      }
+
+      if (btn.id === 'settings-btn-confirm-reset') {
         const db = await openDB();
         const tx = db.transaction(['handles', 'library'], 'readwrite');
         tx.objectStore('handles').clear();
@@ -2559,7 +2604,7 @@ function renderSettingsView() {
           window.location.hash = '#home';
           window.location.reload();
         };
-      });
+      }
     });
   }
 }
@@ -2745,12 +2790,6 @@ segFolders?.addEventListener('click', async () => {
   }
 });
 
-// A local library has no account to open, so the avatar goes where everything
-// it could plausibly mean already lives.
-document.querySelector('.top-bar__avatar')?.addEventListener('click', () => {
-  window.location.hash = '#settings';
-});
-
 // The hero card's share, which matches the album and now-playing ones.
 document.querySelector('.hero-card__share')?.addEventListener('click', async (e) => {
   e.preventDefault();
@@ -2801,9 +2840,12 @@ function openAlbumMenu(btn, items) {
 new MutationObserver(() => {
   const open = npOverlay.classList.contains('is-open');
   for (const el of document.getElementById('app').children) {
-    // The toast is a live region and has to keep announcing from behind the
-    // sheet; inert would take it out of the accessibility tree with the rest.
-    if (el !== npOverlay && el.id !== 'toast') el.toggleAttribute('inert', open);
+    // Live regions have to keep announcing from behind the sheet; inert would
+    // take them out of the accessibility tree with the rest. Named by what
+    // they are rather than by id — exempting the toast by hand and forgetting
+    // np-announce is exactly the mistake this shape prevents.
+    const live = el.hasAttribute('aria-live') || el.getAttribute('role') === 'status';
+    if (el !== npOverlay && !live) el.toggleAttribute('inert', open);
   }
 }).observe(npOverlay, { attributes: true, attributeFilter: ['class'] });
 

@@ -195,6 +195,35 @@ const { PLAYER_URL, seed } = require('./lib/harness');
     await p.waitForTimeout(250);
   }
 
+  // Settings' Reset swaps itself for a confirm/cancel pair. Cancel used to put
+  // the panel back by re-binding all of it, while every other control on it
+  // was the same node as before — so each cancel left one more listener on
+  // Rescan, Change folder, Reset volume and Clear cache.
+  //
+  // Reset volume is the one that says which happened out loud: run once from
+  // half volume it reports the reset, run twice it finds the volume already
+  // full the second time and that is the message left on screen.
+  await p.evaluate(() => { location.hash = '#settings'; });
+  await p.waitForTimeout(700);
+  for (let i = 0; i < 3; i++) {
+    await p.click('#settings-btn-reset');
+    await p.waitForTimeout(250);
+    await p.click('#settings-btn-cancel-reset');
+    await p.waitForTimeout(400);
+  }
+  await p.evaluate(() => { document.querySelector('audio').volume = 0.5; });
+  await p.waitForTimeout(200);
+  await p.click('#settings-btn-reset-vol');
+  await p.waitForTimeout(500);
+  const resetSaid = await p.evaluate(() =>
+    ((document.getElementById('toast') || {}).textContent || '').trim());
+  check('cancelling Reset three times does not leave three listeners behind',
+    /reset to 100%/i.test(resetSaid), `toast "${resetSaid}"`);
+  check('and Reset still offers to confirm afterwards', await p.evaluate(() => {
+    document.getElementById('settings-btn-reset')?.click();
+    return !!document.getElementById('settings-btn-confirm-reset');
+  }));
+
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;
   await br.close();

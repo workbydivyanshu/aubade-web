@@ -78,6 +78,20 @@ const CASES = [
       const named = await p.evaluate(() =>
         (document.querySelector('.artist-header__name')?.textContent || '').trim());
       check(`${name}: the artist page names who it is about`, named.length > 0, `"${named}"`);
+      // Clearing the words was not enough. The buttons keep whatever onclick
+      // the last artist gave them, so Play on a page saying there is nothing
+      // to play would play whoever you looked at before.
+      const wired = await p.evaluate(() => {
+        const out = [];
+        for (const id of ['artist-play-btn', 'artist-shuffle-btn', 'artist-follow-btn',
+                          'artist-share-btn', 'artist-more-btn']) {
+          const b = document.getElementById(id);
+          if (b && (b.onclick || !b.disabled)) out.push(id);
+        }
+        return out;
+      });
+      check(`${name}: and its buttons are not still wired to the last one`,
+        wired.length === 0, wired.join(', ') || 'all five inert');
     }
     p.removeAllListeners('pageerror');
   }

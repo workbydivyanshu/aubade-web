@@ -74,7 +74,12 @@
 .ask-scrim {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  /* Above the now-playing sheet at 1000, the same as the toast. ask() appends
+     to document.body, so the two compare directly in the root stacking
+     context — and "+ New playlist…" is reachable from the sheet's own overflow
+     menu, where at 300 the dialog was invisible and its buttons unclickable
+     with only Escape to get out. */
+  z-index: 1100;
   display: flex;
   align-items: center;
   justify-content: center;

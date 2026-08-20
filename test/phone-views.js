@@ -146,6 +146,23 @@ const report = (d) => {
 
   console.log(`\nerrors: ${errs.length ? errs.slice(0, 3).join(' | ') : 'none'}`);
   if (errs.length) bad++;
+  // Two rules hid these by aria-label, and syncMuted rewrites the volume
+  // button's to "Mute" at module load, so the rule never matched and the icon
+  // stayed on screen below 768px.
+  await p.evaluate(() => document.getElementById('app').classList.remove('is-idle'));
+  await p.waitForTimeout(300);
+  const hiddenOnPhone = await p.evaluate(() => {
+    const out = {};
+    for (const id of ['player-vol-btn', 'player-fullscreen-btn']) {
+      const el = document.getElementById(id);
+      out[id] = !el ? 'absent' : getComputedStyle(el).display;
+    }
+    return out;
+  });
+  const phoneHideOk = Object.values(hiddenOnPhone).every((v) => v === 'none');
+  if (!phoneHideOk) bad++;
+  console.log(`${'phone-only chrome'.padEnd(16)} ${phoneHideOk ? 'OK' : 'FAIL'}  ${JSON.stringify(hiddenOnPhone)}`);
+
   await br.close();
   console.log(bad === 0 ? 'every view clean at 390' : `${bad} view(s) need work`);
   process.exit(bad ? 1 : 0);

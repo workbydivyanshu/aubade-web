@@ -285,8 +285,16 @@ async function measureAccent(p, hue) {
   const patched = await fakeFilesystem(q);
   patched.art = false;
   await q.route('**/art.js', async (route) => {
-    const res = await route.fetch();
-    const src = await res.text();
+    // Same guard as the db.js seam in the harness: a fetch in flight when the
+    // page navigates rejects, and falling through fails the seam check rather
+    // than the run.
+    let src;
+    try {
+      src = await (await route.fetch()).text();
+    } catch {
+      await route.continue().catch(() => {});
+      return;
+    }
     const marker = 'export async function coverUrlForAlbum(album) {';
     patched.art = src.includes(marker);
     route.fulfill({
