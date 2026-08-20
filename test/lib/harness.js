@@ -119,4 +119,19 @@ function serveRepo() {
   });
 }
 
-module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo };
+/**
+ * Answer the app's own ask() dialog, which replaced window.prompt and
+ * window.confirm. Suites used to hook page.on('dialog'); that hook is silent
+ * against an in-page dialog, so every one of them passed a click through to
+ * nothing and reported the feature broken.
+ *
+ * Pass text for a question that wants a name, nothing for a yes/no.
+ */
+async function answer(page, text) {
+  await page.waitForSelector('.ask-scrim', { timeout: 4000 });
+  if (text !== undefined) await page.fill('.ask__input', text);
+  await page.click('[data-ask="ok"]');
+  await page.waitForSelector('.ask-scrim', { state: 'detached', timeout: 4000 });
+}
+
+module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo, answer };

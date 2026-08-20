@@ -1059,6 +1059,9 @@ function handleRoute() {
     viewArtist.style.display = 'block';
   } else if (hash.startsWith('#search')) {
     viewSearch.style.display = 'block';
+    // Arriving on the view is a search of whatever is in the box — usually
+    // nothing, which is how the prompt gets chosen for the state it is in.
+    doSearch();
     const searchNav = document.querySelector('a[href="#search"]');
     if (searchNav) searchNav.classList.add('sidebar__nav-item--selected');
     setTimeout(() => {
@@ -1365,15 +1368,20 @@ function renderPlaylistView(id) {
   moreBtn.onclick = (e) => {
     e.stopPropagation();
     openAlbumMenu(moreBtn, [
-      ['Rename', () => {
-        const name = window.prompt('Playlist name', p.name);
+      ['Rename', async () => {
+        const name = await ask({ title: 'Rename playlist', value: p.name, confirmLabel: 'Rename' });
         if (name === null) return;
         renamePlaylist(id, name);
         renderPlaylistSidebar();
         renderPlaylistView(id);
       }],
-      ['Delete playlist', () => {
-        if (!window.confirm(`Delete "${p.name}"? The files stay where they are.`)) return;
+      ['Delete playlist', async () => {
+        const yes = await ask({
+          title: `Delete "${p.name}"?`,
+          body: 'The songs stay where they are on disk. Only the playlist goes.',
+          confirmLabel: 'Delete', danger: true,
+        });
+        if (!yes) return;
         deletePlaylist(id);
         renderPlaylistSidebar();
         window.location.hash = '#home';
@@ -1434,8 +1442,8 @@ function playlistMenuItems(paths, label) {
       showToast(n ? `Added ${n} to ${p.name}` : `Already in ${p.name}`);
     },
   ]);
-  items.push(['+ New playlist…', () => {
-    const name = window.prompt('Playlist name', label || 'New Playlist');
+  items.push(['+ New playlist…', async () => {
+    const name = await ask({ title: 'New playlist', value: label || 'New Playlist', confirmLabel: 'Create' });
     if (name === null) return;
     const p = createPlaylist(name);
     addToPlaylist(p.id, paths);
@@ -1445,8 +1453,53 @@ function playlistMenuItems(paths, label) {
   return items;
 }
 
-document.getElementById('new-playlist-btn')?.addEventListener('click', () => {
-  const name = window.prompt('Playlist name', 'New Playlist');
+// Ask a question in the app's own voice rather than the browser's. Returns
+// the answer, or null if the question was dismissed — the same contract
+// window.prompt and window.confirm had, so the callers read the same.
+//
+// Escape and a click on the scrim both mean no, which is what people expect
+// of a dialog and what the native ones did.
+function ask({ title, body, value, confirmLabel = 'OK', danger = false }) {
+  return new Promise((resolve) => {
+    const scrim = document.createElement('div');
+    scrim.className = 'ask-scrim';
+    scrim.innerHTML = `
+      <div class="ask glass-strong" role="dialog" aria-modal="true" aria-label="${escapeHTML(title)}">
+        <p class="ask__title">${escapeHTML(title)}</p>
+        ${body ? `<p class="ask__body">${escapeHTML(body)}</p>` : ''}
+        ${value === undefined ? '' : '<input class="ask__input" type="text">'}
+        <div class="ask__row">
+          <button class="settings-btn" type="button" data-ask="cancel">Cancel</button>
+          <button class="settings-btn${danger ? ' settings-btn--danger' : ''}" type="button" data-ask="ok">${escapeHTML(confirmLabel)}</button>
+        </div>
+      </div>`;
+    document.body.appendChild(scrim);
+
+    const input = scrim.querySelector('.ask__input');
+    if (input) { input.value = value; input.focus(); input.select(); }
+    else scrim.querySelector('[data-ask="ok"]').focus();
+
+    const close = (answer) => {
+      document.removeEventListener('keydown', onKey, true);
+      scrim.remove();
+      resolve(answer);
+    };
+    const accept = () => close(input ? input.value.trim() || null : true);
+    function onKey(e) {
+      if (e.key === 'Escape') { e.stopPropagation(); close(null); }
+      if (e.key === 'Enter' && input) { e.preventDefault(); accept(); }
+    }
+    // Captured, or the app's own Escape handler closes the now-playing sheet
+    // behind the dialog instead of answering the question in front of it.
+    document.addEventListener('keydown', onKey, true);
+    scrim.addEventListener('click', (e) => { if (e.target === scrim) close(null); });
+    scrim.querySelector('[data-ask="cancel"]').addEventListener('click', () => close(null));
+    scrim.querySelector('[data-ask="ok"]').addEventListener('click', accept);
+  });
+}
+
+document.getElementById('new-playlist-btn')?.addEventListener('click', async () => {
+  const name = await ask({ title: 'New playlist', value: 'New Playlist', confirmLabel: 'Create' });
   if (name === null) return;
   const p = createPlaylist(name);
   renderPlaylistSidebar();
@@ -1542,6 +1595,7 @@ function renderLikedView() {
 
 const searchInput = document.getElementById('search-input');
 const searchEmpty = document.getElementById('search-empty');
+const searchIdle = document.getElementById('search-idle');
 const searchQueryDisplay = document.getElementById('search-query-display');
 const searchResults = document.getElementById('search-results');
 
@@ -1573,13 +1627,25 @@ function escapeHTML(s) {
 
 function doSearch() {
   const q = searchInput.value.trim().toLowerCase();
-  if (!q) {
+  // Three ways to have no results, and they used to look identical: a blank
+  // page. Which one you are in decides what you should do next, so each says.
+  const idle = (text) => {
+    searchIdle.textContent = text;
+    searchIdle.hidden = false;
     searchEmpty.style.display = 'none';
     searchResults.style.display = 'none';
+  };
+  // Having nothing to search is the more useful thing to say, so it is asked
+  // first — otherwise an empty library invites you to search it.
+  if (!state.library.tracks || state.library.tracks.length === 0) {
+    idle('There is nothing to search yet. Connect a music folder first.');
     return;
   }
-  
-  if (!state.library.tracks || state.library.tracks.length === 0) return;
+  if (!q) {
+    idle('Search your library by song, album or artist.');
+    return;
+  }
+  searchIdle.hidden = true;
   enrichSearchIndex(state.library);
 
   // Match logic
@@ -1989,7 +2055,16 @@ const SONGS_BATCH_SIZE = 100;
 
 function renderLibraryView() {
   currentLibView = localStorage.getItem('aubade_lib_view') || 'albums';
-  if (!state.library.tracks || state.library.tracks.length === 0) return;
+  const libEmpty = document.getElementById('lib-empty');
+  // This used to return early and leave whatever the last render had put
+  // there — usually nothing, which reads as a page that failed to load.
+  if (!state.library.tracks || state.library.tracks.length === 0) {
+    libContent.innerHTML = '';
+    libEmpty.textContent = 'Your library is empty. Connect a music folder and Aubade will fill this in.';
+    libEmpty.hidden = false;
+    return;
+  }
+  libEmpty.hidden = true;
   
   // Update UI state
   Array.from(libFilterPill.children).forEach(btn => {
@@ -2017,7 +2092,15 @@ function renderLibraryView() {
     });
     
     libCountLine.textContent = `${albums.length} album${albums.length !== 1 ? 's' : ''}`;
-    
+
+    // A library that is not empty can still show nothing here: Hide singles
+    // takes every one-track album out, and with a folder of loose files that
+    // is all of them. "0 albums" over a blank grid does not explain itself.
+    if (albums.length === 0 && hideSingles) {
+      libEmpty.textContent = 'Every album here has a single track, and Hide singles is on. Turn it off in Settings to see them.';
+      libEmpty.hidden = false;
+    }
+
     const grid = document.createElement('div');
     grid.className = 'lib-grid--albums';
     for (const a of albums) {

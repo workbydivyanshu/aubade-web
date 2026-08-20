@@ -32,6 +32,7 @@ const SUITES = [
   ['verify-responsive.js', 'both sides of the 768px breakpoint'],
   ['phone-views.js', 'every route at 390px'],
   ['verify-nofsapi.js', 'the no-File-System-Access path'],
+  ['verify-empty.js', 'what each view says when it has nothing'],
 ];
 
 function runSuite(file, url, verbose) {

@@ -22,9 +22,6 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 110)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 110)); });
-  // '+ New playlist…' asks for a name. Nothing here means to reach it, but an
-  // unanswered prompt would hang the whole run rather than fail a check.
-  p.on('dialog', (d) => d.accept('From the menu'));
 
   let bad = 0;
   const check = (label, ok, detail = '') => {

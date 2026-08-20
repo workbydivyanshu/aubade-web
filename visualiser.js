@@ -59,8 +59,12 @@ function ensureAnalyser() {
 }
 
 function eqShouldRun() {
+  // Muting silences the element but not the graph the analyser taps, so the
+  // bars carried on dancing to a sound nobody could hear — and because the
+  // element also stops firing timeupdate, they froze partway up instead.
   return npOverlay.classList.contains('is-open')
     && !audio.paused
+    && !audio.muted
     && document.visibilityState === 'visible';
 }
 
@@ -112,6 +116,9 @@ export function initVisualiser(audioEl, overlayEl, whenOpened) {
 
   audio.addEventListener('play', startVisualiser);
   audio.addEventListener('pause', stopVisualiser);
+  audio.addEventListener('volumechange', () => {
+    if (eqShouldRun()) startVisualiser(); else stopVisualiser();
+  });
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && !audio.paused) startVisualiser();
     else stopVisualiser();

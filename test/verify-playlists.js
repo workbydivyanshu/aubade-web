@@ -1,7 +1,7 @@
 // Playlists end to end: create, add, view, play, remove, rename, delete —
 // plus the case that matters for local files, a path that no longer resolves.
 const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, answer } = require('./lib/harness');
 
 (async () => {
   const br = await chromium.launch();
@@ -9,7 +9,6 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 140)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text().slice(0, 140)); });
-  p.on('dialog', (d) => d.accept('Road Trip'));
 
   let bad = 0;
   const check = (label, ok, detail = '') => {
@@ -26,6 +25,7 @@ const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
 
   // Create via the sidebar control (the prompt is auto-accepted above).
   await p.evaluate(() => document.getElementById('new-playlist-btn').click());
+  await answer(p, 'Road Trip');
   await p.waitForTimeout(800);
   const created = await p.evaluate(() => ({
     hash: location.hash,

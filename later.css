@@ -1,0 +1,70 @@
+
+/* ── Ask ─────────────────────────────────────────────────────
+   Naming a playlist went through window.prompt and deleting one through
+   window.confirm: chrome-coloured boxes with the browser's own typography,
+   landing on top of a UI that is otherwise entirely ours. This is the same
+   question asked in the app's own voice. One dialog serves all three, so a
+   fourth question cannot invent a fourth look. */
+.ask-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.ask {
+  inline-size: min(380px, 100%);
+  border-radius: var(--radius-tile, 20px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ask__title {
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ask__body {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--text-muted);
+}
+
+.ask__input {
+  margin-block-start: 8px;
+  block-size: 38px;
+  border-radius: 10px;
+  padding-inline: 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+}
+
+.ask__input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.ask__row {
+  margin-block-start: 16px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ask-scrim { animation: ask-in 140ms ease-out; }
+  @keyframes ask-in { from { opacity: 0; } to { opacity: 1; } }
+}
