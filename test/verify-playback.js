@@ -36,7 +36,7 @@ const { PLAYER_URL, seed, seedLibrary, fakeFilesystem } = require('./lib/harness
     return {
       paused: a.paused, err: a.error && a.error.code,
       at: a.currentTime, dur: a.duration, src: !!a.src,
-      title: (document.querySelector('.player__title') || {}).textContent.trim(),
+      title: ((document.querySelector('.player__title') || {}).textContent || '').trim(),
       idle: document.getElementById('app').classList.contains('is-idle'),
       scrub: fill ? parseFloat(fill.style.width) || 0 : -1,
     };
@@ -326,6 +326,57 @@ const { PLAYER_URL, seed, seedLibrary, fakeFilesystem } = require('./lib/harness
   check('a sidecar that is not lyrics is not shown as lyrics',
     junk.found && junk.text.length > 0 && !/RIFF|WAVE/.test(junk.text),
     junk.found ? `"${junk.text}"` : 'no lyrics container found');
+
+  // ── When the files are not where the index says ─────────────────
+  // Every one of these is ordinary — files get moved, folders lose permission
+  // between sessions — and none of it could be reached before.
+  const gone = async (missing, denied, all = false) => {
+    const g = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+    g.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
+    await fakeFilesystem(g);
+    await g.addInitScript(([m, d, a]) => {
+      window.__aubadeMissing = m;
+      window.__aubadeDenied = d;
+      window.__aubadeMissingAll = a;
+    }, [missing, denied, all]);
+    await g.goto(PLAYER_URL, { waitUntil: 'networkidle' });
+    await seed(g, seedLibrary());
+    await g.reload({ waitUntil: 'networkidle' });
+    await g.waitForTimeout(1400);
+    const gk = await g.evaluate(() => document.querySelector('[data-album]')?.dataset.album);
+    await g.evaluate((k) => { location.hash = '#album/' + k; }, gk);
+    await g.waitForTimeout(900);
+    await g.evaluate(() => document.querySelector('.track-row')?.click());
+    await g.waitForTimeout(3000);
+    const out = await g.evaluate(() => ({
+      title: ((document.querySelector('.player__title') || {}).textContent || '').trim(),
+      toast: ((document.getElementById('toast') || {}).textContent || '').trim(),
+      idle: document.getElementById('app').classList.contains('is-idle'),
+      playing: !document.querySelector('audio').paused,
+    }));
+    await g.close();
+    return out;
+  };
+
+  // One bad file is skipped, and the next one plays. Saying nothing here is
+  // right: the person asked for the album, and they are getting the album.
+  const oneBad = await gone(['1 track.opus'], false);
+  check('one missing file is stepped over and the album keeps playing',
+    oneBad.playing && !oneBad.idle && oneBad.title.length > 0 && oneBad.title !== 'brutal',
+    `"${oneBad.title}" playing=${oneBad.playing} toast="${oneBad.toast}"`);
+
+  // A run of them stops and says so. An unbounded skip walks the whole queue
+  // in silence and lands on idle looking like a dead button.
+  const allBad = await gone([], false, true);
+  check('a run of missing files stops rather than walking the queue',
+    allBad.idle && /moved or been renamed/i.test(allBad.toast),
+    `idle=${allBad.idle} toast="${allBad.toast}"`);
+
+  // Lapsed permission is a different problem with a different answer, and
+  // blaming the files for it is both wrong and unactionable.
+  const denied = await gone([], true);
+  check('lost folder permission says so, rather than blaming the files',
+    denied.idle && /reconnect/i.test(denied.toast), `toast="${denied.toast}"`);
 
   check('nothing threw through any of that', errs.length === 0, errs.slice(0, 2).join(' | '));
   await br.close();

@@ -173,6 +173,20 @@ async function fakeFilesystem(page) {
         if (!/\.(opus|mp3|m4a|flac|ogg|wav|aac)$/i.test(name)) {
           throw Object.assign(new Error('not found: ' + name), { name: 'NotFoundError' });
         }
+        // Files a suite has declared gone, and the error a folder whose
+        // permission has lapsed throws instead. Both are ordinary and neither
+        // could be reached before.
+        //
+        // Exact names, not substrings: getFileHandle is passed a bare file
+        // name, so "1 track.opus" as a substring also takes out "11 track.opus"
+        // and a check meant to lose one file quietly loses two. Use
+        // __aubadeMissingAll for the every-file case.
+        if (window.__aubadeMissingAll || (window.__aubadeMissing || []).includes(name)) {
+          throw Object.assign(new Error('gone: ' + name), { name: 'NotFoundError' });
+        }
+        if (window.__aubadeDenied) {
+          throw Object.assign(new Error('denied'), { name: 'NotAllowedError' });
+        }
         return {
           name,
           // Real, decodable audio rather than a block of zeroes: with zeroes
