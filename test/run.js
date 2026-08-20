@@ -35,6 +35,7 @@ const SUITES = [
   ['verify-empty.js', 'what each view says when it has nothing'],
   ['verify-focus.js', 'every control shows where the keyboard is'],
   ['verify-hostile.js', 'library data that should never happen'],
+  ['verify-scale.js', 'a library the size of a real one'],
 ];
 
 function runSuite(file, url, verbose) {

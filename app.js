@@ -1732,7 +1732,7 @@ function doSearch() {
   
   for (const m of matchedTracks) {
     if (m.track.albumArtist && m.track.album) {
-      matchedAlbumKeys.add(`${m.track.albumArtist.trim().toLowerCase()} ${m.track.album.trim().toLowerCase()}`);
+      matchedAlbumKeys.add(albumKey(m.track));
     }
     if (m.track.albumArtist) {
       matchedArtistKeys.add(m.track.albumArtist.toLowerCase());
@@ -1770,7 +1770,7 @@ function doSearch() {
     searchSongsList.appendChild(row);
     
     // Async cover
-    const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
+    const aKey = r.albumArtist && r.album ? albumKey(r) : null;
     if (aKey) {
       const album = state.library.albums.find(a => albumKey(a) === aKey);
       if (album) {
@@ -2230,7 +2230,7 @@ function renderLibraryView() {
         frag.appendChild(row);
         
         // cover
-        const aKey = r.albumArtist && r.album ? `${r.albumArtist.trim().toLowerCase()} ${r.album.trim().toLowerCase()}` : null;
+        const aKey = r.albumArtist && r.album ? albumKey(r) : null;
         if (aKey) {
           const album = state.library.albums.find(a => albumKey(a) === aKey);
           if (album) {
