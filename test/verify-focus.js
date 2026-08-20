@@ -198,6 +198,48 @@ const PAD = 8;
     ['#view-album .album-btn--play', '#view-album .album-btn--shuffle',
      '#view-album .album-btn--share', '#view-album .album-btn--more']);
 
+  // ── Where Tab can actually go ───────────────────────────────────
+  // The sheet slides off screen rather than being removed, so all seventeen of
+  // its controls sat in the tab order while invisible: tabbing through the page
+  // walked into a panel nobody could see. Open, it covers everything, and the
+  // page behind it had the same problem in the other direction.
+  const walk = async (steps) => {
+    const stops = [];
+    for (let i = 0; i < steps; i++) {
+      await p.keyboard.press('Tab');
+      stops.push(await p.evaluate(() => {
+        const el = document.activeElement;
+        if (!el || el === document.body) return { name: 'BODY', inSheet: false, body: true };
+        return {
+          name: el.id || el.getAttribute('aria-label') || (el.className || '').toString().split(' ')[0] || el.tagName,
+          inSheet: !!el.closest('.now-playing'), body: false,
+        };
+      }));
+    }
+    return stops;
+  };
+
+  await p.evaluate(() => {
+    document.querySelector('.now-playing').classList.remove('is-open');
+    document.body.focus();
+  });
+  await p.waitForTimeout(500);
+  const closed = await walk(80);
+  const ghosts = [...new Set(closed.filter((s) => s.inSheet).map((s) => s.name))];
+  check('Tab never lands inside the closed now-playing sheet',
+    ghosts.length === 0, ghosts.slice(0, 8).join(', ') || `${closed.length} stops, none in the sheet`);
+
+  await p.evaluate(() => document.querySelector('.now-playing').classList.add('is-open'));
+  await p.waitForTimeout(600);
+  await p.evaluate(() => document.getElementById('np-close').focus());
+  const open = await walk(40);
+  const escaped = [...new Set(open.filter((s) => !s.inSheet && !s.body).map((s) => s.name))];
+  check('and never leaves it for the page underneath while it is open',
+    escaped.length === 0, escaped.slice(0, 8).join(', ') || `${open.length} stops, none behind it`);
+
+  await p.evaluate(() => document.querySelector('.now-playing').classList.remove('is-open'));
+  await p.waitForTimeout(400);
+
   // Reduced motion has to reach everything that moves, or the setting is a
   // promise the app only half keeps.
   const rm = await br.newContext({ viewport: { width: 1440, height: 900 },

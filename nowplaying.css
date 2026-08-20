@@ -6,6 +6,10 @@
 
 /* ── Now Playing Overlay ──────────────────────────────────── */
 
+/* Sliding it off screen left all seventeen of its controls in the tab order,
+   so tabbing through the page walked into a sheet nobody could see and put
+   focus on invisible buttons. visibility takes them out; it is delayed by the
+   length of the slide so the sheet is still there to watch leave. */
 .now-playing {
   position: fixed;
   inset: 0;
@@ -14,12 +18,15 @@
   flex-direction: column;
   background: var(--page);
   transform: translateY(100%);
-  transition: transform 0.25s ease-out;
+  visibility: hidden;
+  transition: transform 0.25s ease-out, visibility 0s linear 0.25s;
   overflow: hidden;
 }
 
 .now-playing.is-open {
   transform: translateY(0);
+  visibility: visible;
+  transition: transform 0.25s ease-out, visibility 0s;
 }
 
 .now-playing__bg {

@@ -2777,6 +2777,19 @@ function openAlbumMenu(btn, items) {
   setTimeout(() => document.addEventListener('click', away), 0);
 }
 
+// The sheet covers the whole screen when it is open, and everything under it
+// stayed in the tab order: twenty-four of forty stops landed on controls
+// nobody could see. Its siblings go inert while it is up.
+//
+// Watched rather than called, for the same reason the visualiser watches it —
+// the sheet is opened and closed from six places, and a seventh would forget.
+new MutationObserver(() => {
+  const open = npOverlay.classList.contains('is-open');
+  for (const el of document.getElementById('app').children) {
+    if (el !== npOverlay) el.toggleAttribute('inert', open);
+  }
+}).observe(npOverlay, { attributes: true, attributeFilter: ['class'] });
+
 // ── Keyboard ─────────────────────────────────────────────────
 // Only Escape was bound before. These are the bindings the reference lists, including
 // its ±10s seek. Typing in a field must never trigger any of them.
