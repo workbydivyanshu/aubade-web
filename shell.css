@@ -135,6 +135,13 @@ a {
   color: var(--accent);
 }
 
+/* The selected row's own background sits later in this file than the hover
+   rule and at the same weight, so it won every time and hovering the page you
+   are already on did nothing at all. */
+.sidebar__nav-item--selected:hover {
+  background: color-mix(in srgb, var(--surface-3) 82%, #fff);
+}
+
 .sidebar__rule {
   block-size: 1px;
   margin: 12px 20px;
@@ -462,8 +469,10 @@ a {
   color: #fff;
 }
 
+/* This rule used to set the colour the active segment already had, which
+   reads as a hover state and behaves as nothing. */
 .seg-pill__seg--active:hover {
-  color: #fff;
+  background: color-mix(in srgb, var(--accent) 86%, #fff);
 }
 
 /* ── Quick-links grid ─────────────────────────────────────── */

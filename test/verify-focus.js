@@ -126,6 +126,78 @@ const PAD = 8;
   await family('the now-playing sheet',
     ['#np-close', '#np-heart-btn', '#np-shuffle', '#np-repeat', '#np-queue-btn', '#np-vol-btn']);
 
+  // ── Hover, measured the same way ────────────────────────────────
+  // A family where four of five members light up on hover and the fifth does
+  // not is the kind of thing nobody reports and everybody feels. Same clip,
+  // same pixel count; the only difference is what is done to the control.
+  const hoverOf = async (sel) => {
+    const box = await p.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return null;
+      const b = el.getBoundingClientRect();
+      if (b.width < 1 || b.height < 1) return null;
+      el.blur();
+      return { x: b.x, y: b.y, w: b.width, h: b.height };
+    }, sel);
+    if (!box) return null;
+    const clip = {
+      x: Math.max(0, Math.round(box.x - 2)), y: Math.max(0, Math.round(box.y - 2)),
+      width: Math.round(box.w + 4), height: Math.round(box.h + 4),
+    };
+    if (clip.x + clip.width > 1440 || clip.y + clip.height > 900) return null;
+    await p.mouse.move(1439, 899);
+    await p.waitForTimeout(150);
+    const before = await p.screenshot({ clip });
+    await p.hover(sel);
+    await p.waitForTimeout(250);
+    const after = await p.screenshot({ clip });
+    await p.mouse.move(1439, 899);
+    return p.evaluate(async ({ a, b }) => {
+      const load = async (d) => { const i = new Image(); i.src = 'data:image/png;base64,' + d;
+        await i.decode(); const c = document.createElement('canvas');
+        c.width = i.width; c.height = i.height; c.getContext('2d').drawImage(i, 0, 0);
+        return c.getContext('2d').getImageData(0, 0, i.width, i.height).data; };
+      const [A, B] = [await load(a), await load(b)];
+      let n = 0;
+      for (let i = 0; i < A.length; i += 4) {
+        if (Math.abs(A[i] - B[i]) + Math.abs(A[i + 1] - B[i + 1]) + Math.abs(A[i + 2] - B[i + 2]) > 16) n++;
+      }
+      return n;
+    }, { a: before.toString('base64'), b: after.toString('base64') });
+  };
+
+  const hovers = async (name, sels) => {
+    const results = [];
+    for (const sel of sels) results.push([sel, await hoverOf(sel)]);
+    // 40 is the floor for "a person can see this". The album buttons used to
+    // answer with 12 pixels where their siblings gave 61 and 91 — a hover that
+    // technically existed. Everything on the page now lands between 82 and
+    // 5096, so nothing real is anywhere near this line.
+    const silent = results.filter(([, n]) => n !== null && n < 40).map(([s]) => s);
+    const missing = results.filter(([, n]) => n === null).map(([s]) => s);
+    check(`${name} all answer the pointer`, silent.length === 0 && missing.length === 0,
+      [...silent.map((s) => s + ' is inert'), ...missing.map((s) => s + ' absent')].join(', ')
+      || results.map(([, n]) => n).join('/') + ' pixels');
+  };
+
+  await p.evaluate(() => document.querySelector('.now-playing').classList.remove('is-open'));
+  await p.evaluate(() => { location.hash = '#home'; });
+  await p.waitForTimeout(800);
+  await hovers('the player bar icons',
+    ['#player-shuffle-btn', '#player-repeat-btn', '#player-like-btn',
+     '#player-share-btn', '#player-queue-btn', '#player-vol-btn', '#player-fullscreen-btn']);
+  await hovers('the sidebar rows', ['.sidebar__nav-item', '.pinned-item']);
+  await hovers('the top bar buttons',
+    ['.top-bar__btn[aria-label="Go back"]', '.top-bar__btn[aria-label="Go forward"]',
+     '.top-bar__avatar']);
+  await hovers('the home segment pills', ['#seg-library', '#seg-folders']);
+
+  await p.evaluate((k) => { location.hash = '#album/' + k; }, albumKey);
+  await p.waitForTimeout(900);
+  await hovers('the album buttons',
+    ['#view-album .album-btn--play', '#view-album .album-btn--shuffle',
+     '#view-album .album-btn--share', '#view-album .album-btn--more']);
+
   // Reduced motion has to reach everything that moves, or the setting is a
   // promise the app only half keeps.
   const rm = await br.newContext({ viewport: { width: 1440, height: 900 },

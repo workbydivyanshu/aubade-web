@@ -163,8 +163,18 @@
   block-size: 20px;
 }
 
+/* brightness(1.1) over a 10%-white fill moves almost nothing: measured, these
+   buttons answered the pointer with a tenth of the change every other family
+   on the page makes. The accent-filled Play button has enough colour for the
+   filter to bite; the glass ones need the fill itself to lift. */
 .album-btn:hover {
   filter: brightness(1.1);
+}
+
+.album-btn--shuffle:hover,
+.album-btn--share:hover,
+.album-btn--more:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .album-tracks {
