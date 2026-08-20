@@ -34,6 +34,7 @@ const SUITES = [
   ['verify-nofsapi.js', 'the no-File-System-Access path'],
   ['verify-empty.js', 'what each view says when it has nothing'],
   ['verify-focus.js', 'every control shows where the keyboard is'],
+  ['verify-hostile.js', 'library data that should never happen'],
 ];
 
 function runSuite(file, url, verbose) {

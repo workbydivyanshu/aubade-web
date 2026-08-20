@@ -49,10 +49,24 @@ export function getLibrary() { return state.library; }
 export function getTracks() { return state.library.tracks; }
 
 function buildLibrary(records) {
+  // A file whose tags are missing or empty used to arrive here as an untouched
+  // empty string and come out the other end as a card with no words on it —
+  // indistinguishable from a song whose title the indexer had simply dropped.
+  // Naming it once, here, means every view downstream inherits the name
+  // instead of each deciding its own fallback (three already had, differently).
+  for (const r of records) {
+    if (!String(r.albumArtist || '').trim()) r.albumArtist = 'Unknown Artist';
+    if (!String(r.album || '').trim()) r.album = 'Unknown Album';
+    if (!String(r.title || '').trim()) {
+      const file = String(r.path || '').split('/').pop() || 'Untitled';
+      r.title = file.replace(/\.[^.]+$/, '');
+    }
+  }
+
   // Group albums by case-insensitive (albumArtist + album)
   const albumMap = new Map();
   for (const r of records) {
-    const key = `${r.albumArtist.trim().toLowerCase()}\0${r.album.trim().toLowerCase()}`;
+    const key = albumKey(r);
     if (!albumMap.has(key)) {
       albumMap.set(key, {
         album: r.album.trim(),
@@ -472,7 +486,13 @@ async function init() {
   // folder handle (e.g. if handle was cleared but index persists)
   const cached = await dbGet('index', 'library');
   if (cached) {
-    state.library = cached;
+    // Rebuilt rather than trusted. An index written before a grouping or
+    // naming rule existed keeps its own answer forever otherwise, and a store
+    // that has been half-written reaches every view raw. The records are the
+    // durable thing; the grouping is cheap enough to derive each boot.
+    state.library = Array.isArray(cached.tracks) && cached.tracks.length
+      ? buildLibrary(cached.tracks)
+      : cached;
     statusEl.textContent = formatStatus(state.library, 0);
     renderHome(state.library);
   }
@@ -2253,7 +2273,17 @@ window.__DEBUG_LIBRARY = function() { return state.library; };
 
 async function renderArtistView(name) {
   const artist = state.library.artists.find(a => a.name.toLowerCase() === name.toLowerCase());
-  if (!artist) return;
+  // Returning here left the header from whichever artist you looked at last,
+  // or an empty one on a cold load: a page with a Play button, no name, and
+  // nothing to play. A link that has gone stale should say so.
+  if (!artist) {
+    document.querySelector('.artist-header__name').textContent = name || 'Unknown artist';
+    document.querySelector('.artist-header__meta').textContent =
+      'Nothing in your library is filed under this artist any more.';
+    document.querySelector('.artist-grid--albums').innerHTML = '';
+    document.querySelector('.artist-list--songs').innerHTML = '';
+    return;
+  }
 
   const bg = document.querySelector('.artist-header__bg');
   const nameEl = document.querySelector('.artist-header__name');
