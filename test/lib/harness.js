@@ -120,6 +120,64 @@ function serveRepo() {
 }
 
 /**
+ * Launch the engine the run asked for, defaulting to Chromium.
+ *
+ * Every suite used to name chromium directly, so the app was only ever proven
+ * in one engine — and the one browser family that cannot use the File System
+ * Access API at all is the one it was never run in. Firefox is not Safari, but
+ * it is a second rendering engine and a real absence of that API rather than a
+ * Chromium pretending.
+ *
+ * Chromium-only launch arguments are dropped for other engines rather than
+ * passed and ignored, because Firefox treats an unknown argument as a fatal
+ * command line.
+ */
+function launch(options = {}) {
+  const pw = require('playwright');
+  const engine = process.env.AUBADE_ENGINE || 'chromium';
+  const type = pw[engine];
+  if (!type) throw new Error('no such engine: ' + engine);
+  const opts = { ...options };
+  if (engine === 'chromium') {
+    // The suites that need sound play a real tone. Headless Chromium has no
+    // output device on CI but does on a desktop, and a test run has no
+    // business coming out of the speakers.
+    opts.args = [...(options.args || []), '--mute-audio'];
+  } else {
+    // Firefox treats an unknown command line argument as fatal, so Chromium's
+    // are dropped rather than passed and ignored.
+    delete opts.args;
+    opts.firefoxUserPrefs = {
+      ...(options.firefoxUserPrefs || {}),
+      // Silence the output stage. The analyser taps the graph ahead of it, so
+      // the visualiser still sees the signal it is being tested on — muting
+      // the element itself would zero that too.
+      'media.volume_scale': '0.0',
+    };
+    if ((options.args || []).some((a) => a.includes('autoplay'))) {
+      opts.firefoxUserPrefs['media.autoplay.default'] = 0;
+      opts.firefoxUserPrefs['media.autoplay.blocking_policy'] = 0;
+    }
+  }
+  return type.launch(opts);
+}
+
+/** The engine this run is using, for suites that must say so in their output. */
+const ENGINE = process.env.AUBADE_ENGINE || 'chromium';
+
+/**
+ * Permissions this engine will accept. Firefox rejects the whole context with
+ * "Unknown permission" rather than ignoring one it does not implement, so a
+ * suite asking for clipboard access cannot even open a page there. Dropping
+ * them means the clipboard checks in that suite fail on their own terms, which
+ * is the right way to find out an engine cannot do something.
+ */
+function permissions(wanted) {
+  if (ENGINE === 'chromium') return wanted;
+  return wanted.filter((p) => !p.startsWith('clipboard'));
+}
+
+/**
  * Stand in for the filesystem, which is the one thing a headless page cannot
  * have: no folder can be picked, so no track resolves, and every code path
  * that runs after a file opens — the player UI, the palette, the announcer —
@@ -235,4 +293,4 @@ async function answer(page, text) {
   await page.waitForSelector('.ask-scrim', { state: 'detached', timeout: 4000 });
 }
 
-module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo, answer, fakeFilesystem };
+module.exports = { BASE_URL, PLAYER_URL, ROOT, seedLibrary, seed, serveRepo, answer, fakeFilesystem, launch, ENGINE, permissions };

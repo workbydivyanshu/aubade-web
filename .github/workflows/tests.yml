@@ -20,14 +20,19 @@ jobs:
           cache: npm
           cache-dependency-path: test/package-lock.json
 
-      # Only Chromium: run.js drives every suite through it, and
-      # verify-nofsapi takes an engine argument for the rarer Firefox pass.
       - name: Install Playwright
         working-directory: test
         run: |
           npm ci
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps chromium firefox
 
       # No dev server step: run.js serves the repository itself.
       - name: Run the suites
         run: node test/run.js
+
+      # A second rendering engine, and the only browser family here that
+      # genuinely lacks the File System Access API rather than being told to
+      # pretend. Everything but the visualiser runs; that one needs real signal
+      # reaching the analyser and cannot be silenced.
+      - name: Run them again in Firefox
+        run: node test/run.js --engine=firefox

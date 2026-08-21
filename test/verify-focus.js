@@ -6,8 +6,7 @@
 // this repo has been bitten before by styles that measured correctly and did
 // nothing, so what is asserted here is the pixels that change when a control
 // takes focus, not the value of outline-width.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed, fakeFilesystem } = require('./lib/harness');
+const { PLAYER_URL, seed, fakeFilesystem, launch } = require('./lib/harness');
 
 // The ring is 2px at an offset of 2, so it lives in a band just outside the
 // control. Screenshotting a slightly grown box catches it without dragging in
@@ -15,7 +14,7 @@ const { PLAYER_URL, seed, fakeFilesystem } = require('./lib/harness');
 const PAD = 8;
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const p = await ctx.newPage();
   const errs = [];
@@ -60,8 +59,13 @@ const PAD = 8;
       // being a key, so a real Tab is pressed at the element before focusing.
       el.focus({ focusVisible: true });
     }, sel);
-    await p.keyboard.press('Shift+Tab');
+    // Forward then back, not back then forward. The first control in the
+    // now-playing sheet has nothing behind it once the shell is inert, so
+    // Shift+Tab had nowhere to go and the following Tab landed on the *next*
+    // control — the ring was drawn, just not on the element being measured.
+    // Chromium hid that by wrapping through its own UI; Firefox did not.
     await p.keyboard.press('Tab');
+    await p.keyboard.press('Shift+Tab');
     await p.waitForTimeout(120);
     const after = await p.screenshot({ clip });
     const changed = await p.evaluate(async ({ a, b, clip }) => {

@@ -4,8 +4,7 @@
 // The reference's own greeting does not follow the client clock: faking the
 // time and reloading it returned the same words at 00:30 and 22:30, so there
 // were no boundaries to copy and these are the conventional ones.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, launch } = require('./lib/harness');
 
 const CASES = [
   [8, 'Good morning'],
@@ -18,7 +17,7 @@ const CASES = [
 ];
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   let bad = 0;
   for (const [hour, expected] of CASES) {
     const ctx = await br.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });

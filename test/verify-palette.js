@@ -6,8 +6,7 @@
 // the extractor did — including returning one fixed colour for every cover, or
 // computing a palette and never putting it on the page. Both are silent: the
 // scrim still renders, just wrong. Every measurement below is now an assertion.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed, fakeFilesystem } = require('./lib/harness');
+const { PLAYER_URL, seed, fakeFilesystem, launch } = require('./lib/harness');
 
 // The hues actually in the test covers, so a failure can name what was missed.
 // Read off the same rgb→hsl the extractor uses, then quantised into its 15°
@@ -122,7 +121,7 @@ async function measureAccent(p, hue) {
 }
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 140)));

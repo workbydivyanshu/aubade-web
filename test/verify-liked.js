@@ -1,10 +1,9 @@
 // The Liked Songs route was dead. Seed some likes, visit it, and check it
 // renders, counts, unlikes, and reaches the empty state.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));

@@ -5,14 +5,13 @@
 // did — the sidebar "collapsed" by one pixel and the log called it OK. Every
 // probe below now asserts the behaviour the source promises, and the measured
 // value rides along in the detail so a failure names the number.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch, permissions } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({
     viewport: { width: 1440, height: 900 }, colorScheme: 'dark',
-    permissions: ['clipboard-read', 'clipboard-write'],
+    permissions: permissions(['clipboard-read', 'clipboard-write']),
   });
   const p = await ctx.newPage();
   const errs = [];

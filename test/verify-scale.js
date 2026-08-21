@@ -8,8 +8,7 @@
 // The timing bars are deliberately loose. They are here to catch a change of
 // approach, not to grade the machine: a list that stops being built lazily
 // misses by an order of magnitude, and a slow CI runner does not.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, launch } = require('./lib/harness');
 
 const ALBUMS = 1200, PER_ALBUM = 11;
 
@@ -34,7 +33,7 @@ function bigLibrary() {
 }
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));

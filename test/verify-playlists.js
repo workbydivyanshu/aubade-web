@@ -1,10 +1,9 @@
 // Playlists end to end: create, add, view, play, remove, rename, delete —
 // plus the case that matters for local files, a path that no longer resolves.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed, answer } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, answer, launch } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 140)));

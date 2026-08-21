@@ -9,14 +9,13 @@
 // nothing. So a track is queued first, and each row now has to move something
 // the page can see — storage, the queue list, a panel, the route, the
 // clipboard — and to close the menu behind it.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch, permissions } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({
     viewport: { width: 1440, height: 900 }, colorScheme: 'dark',
-    permissions: ['clipboard-read', 'clipboard-write'],
+    permissions: permissions(['clipboard-read', 'clipboard-write']),
   });
   const p = await ctx.newPage();
   const errs = [];

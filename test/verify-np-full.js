@@ -2,8 +2,7 @@
 // last edited. The targets are from two console dumps off the running site,
 // taken at 839px and 1394px wide — they were identical at both, so these are
 // viewport-independent and can be compared at any width.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch } = require('./lib/harness');
 
 // selector -> what the reference measures
 const TYPE = [
@@ -26,7 +25,7 @@ const SIZE = [
 ];
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));

@@ -5,8 +5,7 @@
 // white pill with white text — .lp-nav a is the more specific selector, so
 // the button inherited the nav's colour and rendered with no visible label.
 // Nothing overflowed, no error was logged, and every other check passed.
-const { chromium } = require('playwright');
-const { BASE_URL } = require('./lib/harness');
+const { BASE_URL, launch } = require('./lib/harness');
 
 // Contrast, composited over the page's black, which is what every
 // translucent fill on this page sits on.
@@ -39,7 +38,7 @@ const CONTRAST = () => {
 };
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const errs = [];
   const failedReqs = [];
   let bad = 0;

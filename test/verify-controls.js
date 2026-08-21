@@ -4,14 +4,13 @@
 // binding worked, and clicking either one did nothing. Nothing failed, no
 // error was logged, and every other suite passed — a dead control is
 // invisible to a test that only asks whether things are present.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, launch, permissions } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({
     viewport: { width: 1440, height: 900 }, colorScheme: 'dark',
-    permissions: ['clipboard-read', 'clipboard-write'],
+    permissions: permissions(['clipboard-read', 'clipboard-write']),
   });
   const p = await ctx.newPage();
   const errs = [];

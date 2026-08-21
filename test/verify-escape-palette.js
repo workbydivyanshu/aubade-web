@@ -6,11 +6,10 @@
 //      leaving the previous record's colours on it.
 //   3. Settings stays hidden on a browser with no File System Access API,
 //      where init() returns early and the router never runs.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch } = require('./lib/harness');
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   let bad = 0;
 
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });

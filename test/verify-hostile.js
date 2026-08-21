@@ -6,8 +6,7 @@
 // indexer does not produce these, but a file with no tags, a corrupt store or
 // a half-finished scan can, and "the page is blank and the console is clean"
 // is the worst way to find out.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed } = require('./lib/harness');
+const { PLAYER_URL, seed, launch } = require('./lib/harness');
 
 const track = (over) => ({
   path: 'x/y/1.opus', title: 'a title', artist: 'an artist',
@@ -35,7 +34,7 @@ const CASES = [
 ];
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const p = await ctx.newPage();
 

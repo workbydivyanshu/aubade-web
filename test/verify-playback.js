@@ -5,13 +5,12 @@
 // a track, repeat, shuffle, prev's rewind rule — went unexercised for the
 // entire life of the project. The harness now stands in for the filesystem and
 // hands back real decodable audio, so all of it is reachable.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed, seedLibrary, fakeFilesystem } = require('./lib/harness');
+const { PLAYER_URL, seed, seedLibrary, fakeFilesystem, launch } = require('./lib/harness');
 
 (async () => {
   // The tone is real but there is no output device, so autoplay has to be
   // allowed or play() rejects before any of this begins.
-  const br = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const br = await launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));

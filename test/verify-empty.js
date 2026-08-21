@@ -4,13 +4,12 @@
 // not read as "there is nothing here" — it reads as a page that failed to
 // load, and the difference decides whether you go and connect a folder or
 // reload and try again.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seed, seedLibrary, answer } = require('./lib/harness');
+const { PLAYER_URL, seed, seedLibrary, answer, launch } = require('./lib/harness');
 
 const EMPTY = { tracks: [], albums: [], artists: [] };
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const ctx = await br.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const p = await ctx.newPage();
   const errs = [];

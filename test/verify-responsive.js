@@ -4,8 +4,7 @@
 // The important check is the last one — nothing may spill sideways. A phone
 // layout that "works" but scrolls horizontally is the failure people notice
 // first, and it is invisible at desktop width.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch } = require('./lib/harness');
 
 const shell = () => {
   // Checking the element's own computed style is not enough: the now-playing
@@ -94,7 +93,7 @@ const shell = () => {
 };
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   let bad = 0;
   const errs = [];
 

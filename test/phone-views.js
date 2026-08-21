@@ -2,8 +2,7 @@
 // The shell swapping correctly says nothing about the views inside it — now
 // playing and the album header both looked fine by the shell check and were
 // badly broken when measured.
-const { chromium } = require('playwright');
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+const { PLAYER_URL, seedLibrary, seed, launch } = require('./lib/harness');
 
 const audit = () => {
   const vis = (el) => {
@@ -95,7 +94,7 @@ const report = (d) => {
 };
 
 (async () => {
-  const br = await chromium.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 390, height: 844 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 100)));

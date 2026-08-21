@@ -4,8 +4,7 @@
 // This suite used to only print what it found, which meant it passed whether
 // the bars danced or sat dead — the same blind spot that let a dead volume
 // button ship. Every number it measures is now an assertion.
-const { chromium } = require('playwright');
-const { PLAYER_URL } = require('./lib/harness');
+const { PLAYER_URL, launch } = require('./lib/harness');
 
 // scaleY(0.35) is a bar at rest: the visualiser draws 0.35 + level * 0.65, so
 // anything at 0.35 is reading silence in its band, and 0 is no inline
@@ -22,7 +21,7 @@ const centre = (bars) => {
 };
 
 (async () => {
-  const br = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const br = await launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
