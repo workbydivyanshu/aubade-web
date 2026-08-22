@@ -5,13 +5,15 @@
 //
 // Chromium with the API removed is not Firefox, so this proves the code path,
 // not the browser. Real Firefox still needs a look.
-const ENGINE = process.argv[2] || 'chromium';
-const pw = require('playwright');
-const browserType = pw[ENGINE];
-const { PLAYER_URL, seedLibrary, seed } = require('./lib/harness');
+// run.js names the engine in the environment, and this suite used to read
+// only argv — so the whole Firefox sweep ran this one in Chromium with the
+// API deleted, which is exactly the substitute the comment above warns about.
+// An argument still wins, for running it by hand.
+if (process.argv[2]) process.env.AUBADE_ENGINE = process.argv[2];
+const { PLAYER_URL, ENGINE, seedLibrary, seed, launch } = require('./lib/harness');
 
 (async () => {
-  const br = await browserType.launch();
+  const br = await launch();
   const p = await br.newPage({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e).slice(0, 120)));
