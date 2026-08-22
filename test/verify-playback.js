@@ -106,12 +106,18 @@ const { PLAYER_URL, seed, seedLibrary, fakeFilesystem, launch } = require('./lib
   // one. The line is three seconds, which is why the fixture is thirty.
   await p.evaluate(() => { document.querySelector('audio').currentTime = 6; });
   await p.waitForTimeout(300);
+  const wasAt = (await state()).at;
   await click('.player__icon-btn[aria-label="Previous"]');
   await p.waitForTimeout(700);
   const rewound = await state();
+  // Measured as a rewind rather than as a position. Where the seek lands is
+  // the engine's business: Firefox reports 0 and Chromium 0.05 immediately
+  // after, while WebKit's clock keeps running through the seek and comes back
+  // at about 1.2 — the track restarted in all three, which is the rule being
+  // checked here.
   check('Previous restarts the track when you are into it',
-    rewound.title === second.title && rewound.at < 1.0,
-    `"${rewound.title}" at ${rewound.at.toFixed(2)}s`);
+    rewound.title === second.title && rewound.at < wasAt - 4 && rewound.at < 2.5,
+    `"${rewound.title}" ${wasAt.toFixed(2)}s -> ${rewound.at.toFixed(2)}s`);
 
   await click('.player__icon-btn[aria-label="Previous"]');
   await p.waitForTimeout(900);

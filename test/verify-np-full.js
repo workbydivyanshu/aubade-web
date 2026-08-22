@@ -73,13 +73,23 @@ const SIZE = [
     if (!ok) bad++;
   };
 
+  // Lengths come back as strings and the engines round them differently: the
+  // same subtitle reads 16.8px in Chromium and 16.799999px in WebKit. A
+  // hundredth of a pixel is not a design difference, so px values are compared
+  // as numbers and everything else — weights — exactly.
+  const same = (mine, want) => {
+    if (typeof want !== 'string' || !want.endsWith('px')) return mine === want;
+    const a = parseFloat(mine), b = parseFloat(want);
+    return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < 0.01;
+  };
+
   console.log('── type ──');
   for (const [sel, want] of TYPE) {
     const mine = got.type[sel];
     // a missing element is a failure, not a skipped line — the reference has it.
-    check(sel, mine !== 'MISSING' && Object.keys(want).every((k) => mine[k] === want[k]),
+    check(sel, mine !== 'MISSING' && Object.keys(want).every((k) => same(mine[k], want[k])),
       mine === 'MISSING' ? 'MISSING'
-        : Object.entries(want).filter(([k, v]) => mine[k] !== v)
+        : Object.entries(want).filter(([k, v]) => !same(mine[k], v))
             .map(([k, v]) => `${k} want ${v} got ${mine[k]}`).join(', '));
   }
   console.log('── size ──');

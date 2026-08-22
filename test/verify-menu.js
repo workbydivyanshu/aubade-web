@@ -265,11 +265,25 @@ const { PLAYER_URL, seedLibrary, seed, launch, permissions } = require('./lib/ha
     !document.getElementById('np-credits').classList.contains('is-open')));
 
   // ── Copy title ─────────────────────────────────────────────────
+  // Read the clipboard back where the engine allows it, and where it does not
+  // — WebKit grants no clipboard read at all — fall back to what the page
+  // handed writeText. The second is a weaker claim about the clipboard and the
+  // same claim about the app, which is what this check is for; the alternative
+  // was a suite that can only ever be red in one engine.
+  await p.evaluate(() => {
+    window.__wrote = null;
+    const real = navigator.clipboard && navigator.clipboard.writeText;
+    if (real) navigator.clipboard.writeText = function (t) { window.__wrote = t; return real.call(this, t); };
+  });
   await clickItem('copy-title');
   const clip = await p.evaluate(() =>
     navigator.clipboard.readText().catch(() => 'CLIPBOARD UNREADABLE'));
+  const wrote = await p.evaluate(() => window.__wrote);
+  const want = `${track.title} - ${track.artist}`;
+  const read = clip !== 'CLIPBOARD UNREADABLE';
   check('Copy title puts "title - artist" on the clipboard',
-    clip === `${track.title} - ${track.artist}`, `"${clip}"`);
+    (read ? clip : wrote) === want,
+    read ? `"${clip}"` : `"${wrote}" — written, not read back: this engine has no clipboard read`);
 
   // ── Dismissal ──────────────────────────────────────────────────
   await openMenu();

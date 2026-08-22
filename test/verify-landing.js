@@ -144,8 +144,22 @@ const CONTRAST = () => {
   await p.setViewportSize({ width: 1440, height: 900 });
   await p.goto(BASE_URL + '/', { waitUntil: 'networkidle' });
   await p.waitForTimeout(400);
-  await p.evaluate(() => scrollTo(0, document.body.scrollHeight));
-  await p.waitForTimeout(1200);
+  // Wheel down the page, rather than scripting a jump to the bottom. Two
+  // separate reasons, both found by running this in WebKit:
+  //
+  // `scrollTo(0, y)` scrolled nothing there at all — the page asks for
+  // `scroll-behavior: smooth` and headless WebKit runs no scroll animation, so
+  // the check was measuring whether a scroll animation ran. And even an
+  // instant scrollTo, which does move the page, never makes WebKit re-evaluate
+  // its observers; a wheel does, in every engine, because it is what a reader
+  // actually does. Scrolling through also matters more than arriving: one jump
+  // to the bottom leaves the sections in between unintersected, and correctly
+  // still hidden.
+  for (let i = 0; i < 6; i++) {
+    await p.mouse.wheel(0, 700);
+    await p.waitForTimeout(250);
+  }
+  await p.waitForTimeout(600);
   const revealed = await p.evaluate(() => [...document.querySelectorAll('.reveal')]
     .every((el) => +getComputedStyle(el).opacity === 1));
   check('sections arrive when scrolled to', revealed);
