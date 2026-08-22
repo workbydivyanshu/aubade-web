@@ -4,8 +4,9 @@
 // not read as "there is nothing here" — it reads as a page that failed to
 // load, and the difference decides whether you go and connect a folder or
 // reload and try again.
+const os = require('os');
 const path = require('path');
-const { PLAYER_URL, ROOT, seed, seedLibrary, answer, launch } = require('./lib/harness');
+const { PLAYER_URL, seed, seedLibrary, answer, launch } = require('./lib/harness');
 
 const EMPTY = { tracks: [], albums: [], artists: [] };
 
@@ -117,10 +118,12 @@ const EMPTY = { tracks: [], albums: [], artists: [] };
   check('the dialog is wearing the app\'s own clothes, not the browser\'s',
     dressed.radius >= 12 && dressed.pad >= 16 && /rgba?\(0, 0, 0/.test(dressed.scrim),
     `radius ${dressed.radius}, padding ${dressed.pad}, scrim ${dressed.scrim}`);
-  // Anchored to the repo, not the shell: run.js runs the suites from test/,
-  // so a relative path quietly wrote a second copy under test/audit/ and left
-  // the tracked shot untouched.
-  await p.screenshot({ path: path.join(ROOT, 'audit/shots/ask-dialog.png') });
+  // Same shape as the other suites that screenshot: somewhere disposable
+  // unless asked. A relative path here wrote a second copy under test/audit/
+  // when run.js ran it from test/, and writing into the tracked shot instead
+  // left the tree dirty after every commit, since the pre-commit hook runs
+  // the suite. Pass a path to refresh audit/shots/ask-dialog.png on purpose.
+  await p.screenshot({ path: process.argv[2] || path.join(os.tmpdir(), 'ask-dialog.png') });
   // Reachable from the sheet's own overflow menu, where the dialog used to be
   // drawn behind it: invisible, unclickable, and escapable only with Escape.
   const layered = await p.evaluate(() => {
