@@ -1,28 +1,24 @@
 # Notes for agents working in this repo
 
-## There are no test files here
+## The suites live in `test/`, and serve themselves
 
-Verification lives in `~/aubade-capture/` as Playwright scripts, not as
-`*.test.js` in the tree. Searching for test files by convention finds nothing
-and means nothing.
+    node test/run.js                 every suite
+    node test/run.js responsive np   only suites whose name matches
+    node test/run.js --verbose       each suite's own output as it goes
+    node test/run.js --engine=firefox   the engine-agnostic subset
 
-    cd ~/aubade-capture
-    node audit.js aubade <home|album|artist|library|search|settings> /tmp/x.json
-    node verify-np-full.js     # 13-point now-playing fidelity check
-    node verify-eq.js          # visualiser reacts to a real frequency sweep
-    node verify-keys.js        # keyboard, and that typing does not fire shortcuts
-    node verify-liked.js /tmp/l.png
-    node verify-menu.js /tmp/m.png
-    node verify-chrome.js
-    node verify-playlists.js /tmp/p.png
+`run.js` serves the repo on an ephemeral port of its own, so it needs no dev
+server and cannot collide with one. A single suite run directly reads
+`AUBADE_URL`, falling back to port 5199.
 
-They need the dev server on port 5199. It is started detached, outside any
-agent's shell, and stays up on its own.
+`~/aubade-capture/` is the older measurement kit — `shot.js`, `audit.js`, and
+the reference captures. It also holds **stale copies of fourteen verify
+scripts** that `test/` has since replaced and gone well past; running those
+measures nothing about this tree. They expect the dev server on 5199.
 
-**Never start or kill anything on that port.** A background job started from an
-agent shell dies as soon as the command returns, so an agent that kills the
-running server cannot replace it — one spent half an hour discovering that.
-If the port does not answer, say so and stop; do not try to fix it.
+**Never kill anything on that port.** A background job started from an agent
+shell dies as soon as the command returns, so an agent that kills the running
+server cannot replace it — one spent half an hour discovering that.
 
 ## Two traps that have cost real time
 
@@ -30,9 +26,11 @@ If the port does not answer, say so and stop; do not try to fix it.
 as binary and prints **nothing** without `-a`. This has been mistaken for
 "the code is missing" twice.
 
-Every test seeds a library, so the empty-library first run is unexercised. The
-worst bug this project shipped lived exactly there: a first run showed a page of
-albums that did not exist.
+The worst bug this project shipped lived in the empty-library first run: it
+showed a page of albums that did not exist. `verify-empty` now seeds nothing
+and asserts that every view says so in words — but it is the one path where a
+suite that quietly seeds a library would stop testing anything, so check what
+a new suite starts from before trusting it there.
 
 ## Things that look broken and are not
 
