@@ -6,9 +6,12 @@
     node test/run.js responsive np   only suites whose name matches
     node test/run.js --verbose       each suite's own output as it goes
     node test/run.js --engine=firefox   the engine-agnostic subset
+    test/webkit.sh                   the same subset in WebKit, via Docker
 
 `run.js` serves the repo on an ephemeral port of its own, so it needs no dev
-server and cannot collide with one. A single suite run directly reads
+server and cannot collide with one. WebKit cannot start on this machine at all
+— its build wants Ubuntu's ICU and libjpeg — so `webkit.sh` runs the same
+suites inside Playwright's own image. A single suite run directly reads
 `AUBADE_URL`, falling back to port 5199.
 
 `~/aubade-capture/` is the older measurement kit — `shot.js`, `audit.js`, and

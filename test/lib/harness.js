@@ -143,6 +143,12 @@ function launch(options = {}) {
     // output device on CI but does on a desktop, and a test run has no
     // business coming out of the speakers.
     opts.args = [...(options.args || []), '--mute-audio'];
+  } else if (engine === 'webkit') {
+    // WebKit takes neither Chromium's flag nor Firefox's preference, and its
+    // Linux build carries no output device of its own — it is run in a
+    // container that has no audio at all, which is why the visualiser suite
+    // stays out of this engine rather than being silenced into passing.
+    delete opts.args;
   } else {
     // Firefox treats an unknown command line argument as fatal, so Chromium's
     // are dropped rather than passed and ignored.
