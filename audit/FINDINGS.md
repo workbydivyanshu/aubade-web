@@ -149,8 +149,15 @@ and clean in a later one.
 
 ## Still open
 
-- **Safari.** Nothing here has been run on it. `backdrop-filter`, the File System
-  Access API and `color-mix()` are the places to look first.
+- **Safari.** Its engine has now been run, via `test/webkit.sh` — 19 of 19,
+  with `backdrop-filter`, `color-mix()` and the absence of the File System
+  Access API all exercised. WebKit on Linux is not Safari on a Mac: no real
+  device, no Apple media stack, and the container has no audio at all. The
+  three failures on its first run were all checks that had written Chromium's
+  behaviour into what they claimed to measure — a scroll that only moves in an
+  engine with a scroll animation, a rewind measured as a position, type
+  compared to the hundredth of a pixel, and a clipboard read no engine but
+  Chromium grants. None was a bug in the app.
 - **A real device.** Touch targets are measured at 390px in a desktop browser,
   which is not the same as a thumb.
 - **`app.js` is over 3000 lines.** Not a defect, but every one of the bugs above
